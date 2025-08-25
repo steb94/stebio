@@ -1,9 +1,3 @@
-git clone https://github.com/steb94/stebio.git
-cd stebio
-# copy the extracted STEB.IO code into this folder
-git add .
-git commit -m "Add full STEB.IO codebase"
-git push origin main
 /*
  * server.js
  *
@@ -78,9 +72,9 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, name, isSeller } = req.body;
     if (!email || !password || !name) {
-      return res
-        .status(400)
-        .json({ error: 'Email, password and name are required' });
+      return res.status(400).json({
+        error: 'Email, password and name are required',
+      });
     }
     const user = await User.create({
       email,
@@ -183,9 +177,9 @@ app.post('/api/store', requireAuth, (req, res) => {
   try {
     const { name, description, category, bannerImage } = req.body;
     if (!name || !category) {
-      return res
-        .status(400)
-        .json({ error: 'Name and category are required' });
+      return res.status(400).json({
+        error: 'Name and category are required',
+      });
     }
     const store = Store.create({
       ownerId: req.currentUser.id,
@@ -268,7 +262,8 @@ app.get('/api/stores/:id', (req, res) => {
 /**
  * Creates a new product within the current user's store.
  *
- * Expects JSON body: { storeId, title, description, price, type, billingInterval, trialDays, deliverables, affiliatePercent }
+ * Expects JSON body: { storeId, title, description, price, type,
+ * billingInterval, trialDays, deliverables, affiliatePercent }
  */
 app.post('/api/products', requireAuth, (req, res) => {
   try {
@@ -288,12 +283,14 @@ app.post('/api/products', requireAuth, (req, res) => {
       return res.status(404).json({ error: 'Store not found' });
     }
     if (store.ownerId !== req.currentUser.id) {
-      return res.status(403).json({ error: 'You do not own this store' });
+      return res.status(403).json({
+        error: 'You do not own this store',
+      });
     }
     if (!title || !price || !type) {
-      return res
-        .status(400)
-        .json({ error: 'Title, price and type are required' });
+      return res.status(400).json({
+        error: 'Title, price and type are required',
+      });
     }
     const product = Product.create({
       storeId: store.id,
@@ -340,12 +337,12 @@ app.get('/api/marketplace/discover', (req, res) => {
 });
 
 /**
- * Creates a new order (checkout). This endpoint simulates the
- * checkout process. In a real implementation you would call Stripe
- * or PayPal to create a payment session and listen for webhooks to
- * confirm payment before activating the order. Here we assume the
- * payment succeeds immediately. Referral codes can be provided in
- * the body to attribute commissions.
+ * Creates a new order (checkout). This endpoint simulates the checkout
+ * process. In a real implementation you would call Stripe or PayPal
+ * to create a payment session and listen for webhooks to confirm
+ * payment before activating the order. Here we assume the payment
+ * succeeds immediately. Referral codes can be provided in the body
+ * to attribute commissions.
  *
  * Expects JSON body: { productId, referralCode }
  */
@@ -359,7 +356,9 @@ app.post('/api/checkout', requireAuth, (req, res) => {
   let referrerId = null;
   let commissionAmount = 0;
   if (referralCode) {
-    const referrer = User._data.find((u) => u.referralCode === referralCode);
+    const referrer = User._data.find(
+      (u) => u.referralCode === referralCode
+    );
     if (referrer && referrer.id !== req.currentUser.id) {
       referrerId = referrer.id;
       commissionAmount = (
@@ -409,7 +408,8 @@ app.post('/api/checkout', requireAuth, (req, res) => {
 });
 
 /**
- * Returns the authenticated user's orders (subscriptions and one‑time purchases).
+ * Returns the authenticated user's orders (subscriptions and
+ * one‑time purchases).
  */
 app.get('/api/orders', requireAuth, (req, res) => {
   const orders = Order.findByUser(req.currentUser.id);
@@ -433,7 +433,9 @@ app.post('/api/orders/:id/cancel', requireAuth, (req, res) => {
   }
   const product = Product.findById(order.productId);
   if (product.type !== 'subscription') {
-    return res.status(400).json({ error: 'Only subscriptions can be cancelled' });
+    return res
+      .status(400)
+      .json({ error: 'Only subscriptions can be cancelled' });
   }
   order.update({
     status: 'cancelled',
@@ -448,7 +450,9 @@ app.post('/api/orders/:id/cancel', requireAuth, (req, res) => {
  * Returns affiliate stats for the current user.
  */
 app.get('/api/affiliates/stats', requireAuth, (req, res) => {
-  const referrals = AffiliateReferral.findByReferrer(req.currentUser.id);
+  const referrals = AffiliateReferral.findByReferrer(
+    req.currentUser.id
+  );
   // Compute earnings from orders
   const orders = Order.findAll().filter(
     (o) => o.affiliateReferrerId === req.currentUser.id
@@ -482,8 +486,8 @@ app.post('/api/support', requireAuth, (req, res) => {
 });
 
 /**
- * Lists support tickets for the current user. In a full implementation
- * admin users would be able to view all tickets.
+ * Lists support tickets for the current user. In a full
+ * implementation admin users would be able to view all tickets.
  */
 app.get('/api/support', requireAuth, (req, res) => {
   const tickets = SupportTicket.findByUser(req.currentUser.id);
