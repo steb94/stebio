@@ -1,0 +1,9 @@
+{
+  "name": "stebio-frontend",
+  "version": "1.0.0",
+  "description": "Simple front‑end for the STEB.IO marketplace",
+  "scripts": {
+    "build": "mkdir -p build && cp -r index.html app.js style.css build/"
+  },
+  "dependencies": {}
+}
