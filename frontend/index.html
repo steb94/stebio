@@ -8,162 +8,100 @@
   </head>
   <body>
     <nav id="nav">
-      <span id="app-title">STEB.IO</span>
-      <span id="user-info"></span>
-      <button id="logout-btn" style="display: none">Logout</button>
+      <div class="nav-left">
+        <span id="app-title">STEB.IO</span>
+        <!-- Navigation links point to dedicated pages. -->
+        <a href="index.html" id="link-explore">Explore Marketplace</a>
+        <a href="dashboard.html?section=create-store" id="link-create-store">Create Store</a>
+        <a href="dashboard.html" id="link-dashboard">Dashboard</a>
+        <a href="support.html" id="link-support">Support</a>
+      </div>
+      <div class="nav-right">
+        <span id="user-info"></span>
+        <button id="logout-btn" style="display: none">Logout</button>
+      </div>
     </nav>
     <div id="messages"></div>
     <!-- Authentication section -->
     <section id="auth-section">
-      <h2>Login</h2>
-      <form id="login-form">
-        <input type="email" id="login-email" placeholder="Email" required />
-        <input
-          type="password"
-          id="login-password"
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      <h2>Register</h2>
-      <form id="register-form">
-        <input type="text" id="register-name" placeholder="Name" required />
-        <input
-          type="email"
-          id="register-email"
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          id="register-password"
-          placeholder="Password"
-          required
-        />
-        <label>
-          <input type="checkbox" id="register-seller" /> Register as seller
-        </label>
-        <button type="submit">Register</button>
-      </form>
+      <!-- Tab buttons to toggle between login and registration forms -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="active">Login</button>
+        <button id="tab-register">Register</button>
+      </div>
+      <!-- Login form container -->
+      <div id="login-form-container">
+        <h2>Login</h2>
+        <form id="login-form">
+          <input type="email" id="login-email" placeholder="Email" required />
+          <input
+            type="password"
+            id="login-password"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+      </div>
+      <!-- Registration form container (hidden by default) -->
+      <div id="register-form-container" style="display: none">
+        <h2>Register</h2>
+        <form id="register-form">
+          <input type="text" id="register-name" placeholder="Name" required />
+          <input
+            type="email"
+            id="register-email"
+            placeholder="Email"
+            required
+          />
+          <input
+            type="password"
+            id="register-password"
+            placeholder="Password"
+            required
+          />
+          <label>
+            <input type="checkbox" id="register-seller" /> Register as seller
+          </label>
+          <button type="submit">Register</button>
+        </form>
+      </div>
     </section>
 
-    <!-- Main app section (hidden until authenticated) -->
+    <!-- Main app section (visible after authentication or for browsing) -->
     <section id="app-section" style="display: none">
-      <h2>Marketplace</h2>
-      <div id="discover-section">
-        <h3>Featured Products</h3>
-        <div id="featured" class="card-grid"></div>
-        <h3>Newest Products</h3>
-        <div id="newest" class="card-grid"></div>
-      </div>
-
-      <h2>Stores</h2>
-      <div id="stores" class="card-grid"></div>
-      <div id="store-details"></div>
-
-      <h2>Your Dashboard</h2>
-      <div id="dashboard">
-        <div id="orders-section">
-          <h3>Your Orders</h3>
-          <div id="orders"></div>
+      <!-- Marketplace home -->
+      <section id="marketplace-home">
+        <section id="hero">
+          <h1>Discover &amp; Sell Digital Goods</h1>
+          <p>Marketplace for communities &amp; software</p>
+          <div class="hero-search">
+            <input type="text" id="search-input" placeholder="Search products..." />
+            <button id="search-button">Search</button>
+          </div>
+        </section>
+        <div id="categoryBar" class="category-bar">
+          <button data-category="All" class="active">All</button>
+          <button data-category="subscription">Subscription</button>
+          <button data-category="one_time">One‑time</button>
         </div>
-        <div id="affiliate-section">
-          <h3>Your Affiliate Stats</h3>
-          <div id="affiliate"></div>
+        <div id="statsRow" class="stats-row">
+          <div class="stat-card"><span id="stat-products" class="stat-value">0</span><span class="stat-label">Products</span></div>
+          <div class="stat-card"><span id="stat-stores" class="stat-value">0</span><span class="stat-label">Stores</span></div>
+          <div class="stat-card"><span id="stat-orders" class="stat-value">0</span><span class="stat-label">Orders</span></div>
         </div>
-        <div id="support-section">
-          <h3>Submit Support Ticket</h3>
-          <form id="support-form">
-            <input
-              type="text"
-              id="support-subject"
-              placeholder="Subject"
-              required
-            />
-            <textarea
-              id="support-message"
-              placeholder="Message"
-              required
-            ></textarea>
-            <button type="submit">Send</button>
-          </form>
-          <div id="tickets"></div>
-        </div>
-      </div>
-
-      <!-- Seller specific section -->
-      <div id="seller-section" style="display: none">
-        <h2>Seller Dashboard</h2>
-        <div id="my-store-section">
-          <h3>Your Store</h3>
-          <div id="my-store"></div>
-        </div>
-        <h3>Create or Update Store</h3>
-        <form id="store-form">
-          <input type="hidden" id="store-id" />
-          <input
-            type="text"
-            id="store-name"
-            placeholder="Store Name"
-            required
-          />
-          <input
-            type="text"
-            id="store-description"
-            placeholder="Description"
-          />
-          <input
-            type="text"
-            id="store-category"
-            placeholder="Category"
-            required
-          />
-          <input
-            type="text"
-            id="store-banner"
-            placeholder="Banner Image URL"
-          />
-          <button type="submit">Save Store</button>
-        </form>
-        <h3>Create Product</h3>
-        <form id="product-form">
-          <!-- The seller can own multiple stores in future; use dropdown for store selection -->
-          <select id="product-store-id" required></select>
-          <input
-            type="text"
-            id="product-title"
-            placeholder="Title"
-            required
-          />
-          <textarea
-            id="product-description"
-            placeholder="Description"
-          ></textarea>
-          <input
-            type="number"
-            id="product-price"
-            placeholder="Price"
-            step="0.01"
-            required
-          />
-          <select id="product-type">
-            <option value="one_time">One‑time</option>
-            <option value="subscription">Subscription</option>
+        <div id="controls" class="controls">
+          <label for="sort-select">Sort by:</label>
+          <select id="sort-select">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low→High</option>
+            <option value="price_desc">Price: High→Low</option>
           </select>
-          <input
-            type="text"
-            id="billing-interval"
-            placeholder="Billing Interval (monthly/yearly)"
-          />
-          <input
-            type="number"
-            id="trial-days"
-            placeholder="Trial Days"
-          />
-          <button type="submit">Create Product</button>
-        </form>
-      </div>
+        </div>
+        <div id="productGrid" class="product-grid"></div>
+      </section>
+      <!-- Placeholder for seller and dashboard sections -->
+      <div id="seller-section" style="display: none"></div>
     </section>
 
     <script src="app.js"></script>
