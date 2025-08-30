@@ -498,7 +498,27 @@
       localStorage.removeItem('stebio_token');
       onLogout();
     });
-    // Support form
+   
+      // Nav login/register links
+  const linkLogin = document.getElementById('link-login');
+  const linkRegister = document.getElementById('link-register');
+  if (linkLogin) {
+    linkLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      authSection.style.display = '';
+      appSection.style.display = 'none';
+      document.getElementById('tab-login').click();
+    });
+  }
+  if (linkRegister) {
+    linkRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      authSection.style.display = '';
+      appSection.style.display = 'none';
+      document.getElementById('tab-register').click();
+    });
+  }
+// Support form
     document
       .getElementById('support-form')
       .addEventListener('submit', async (e) => {
@@ -590,6 +610,8 @@
   function onLogin() {
     authSection.style.display = 'none';
     appSection.style.display = '';
+      document.getElementById('link-login').style.display = 'none';
+  document.getElementById('link-register').style.display = 'none';
     logoutBtn.style.display = '';
     navUserInfo.textContent = `Logged in as ${currentUser.name}`;
     // Load user specific data
@@ -607,17 +629,19 @@
 
   // Called on logout
   function onLogout() {
-    authSection.style.display = '';
-    appSection.style.display = 'none';
-    logoutBtn.style.display = 'none';
-    navUserInfo.textContent = '';
-    // Clear user specific sections
-    ordersDiv.innerHTML = '';
-    affiliateDiv.innerHTML = '';
-    ticketsDiv.innerHTML = '';
-    myStoreDiv.innerHTML = '';
-    sellerSection.style.display = 'none';
-  }
+  authSection.style.display = 'none';
+  appSection.style.display = '';
+    
+  logoutBtn.style.display = 'none';
+  document.getElementById('link-login').style.display = '';
+  document.getElementById('link-register').style.display = '';
+  navUserInfo.textContent = '';
+  // Clear user specific sections
+  ordersDiv.innerHTML = '';
+  affiliateDiv.innerHTML = '';
+  ticketsDiv.innerHTML = '';
+  myStoreDiv.innerHTML = '';
+  sellerSection.style.display = 'none';
 
   // Initialize application: check token and load marketplace/stores
   async function init() {
