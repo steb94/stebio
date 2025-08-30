@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - STEB.IO</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav id="nav">
+      <div class="nav-left">
+        <span id="app-title">STEB.IO</span>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="dashboard.html?section=create-store">Create Store</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="support.html">Support</a>
+      </div>
+      <div class="nav-right">
+        <span id="user-info"></span>
+        <button id="logout-btn" style="display: none">Logout</button>
+      </div>
+    </nav>
+    <div id="messages"></div>
+    <section id="dashboard-page">
+      <!-- Summary cards -->
+      <div class="dashboard-summary" id="dashboard-summary">
+        <!-- Cards will be rendered here -->
+      </div>
+      <!-- Simple bar chart -->
+      <div id="dashboard-chart" class="dashboard-chart"></div>
+      <!-- Links to manage sections -->
+      <div class="dashboard-links">
+        <a href="dashboard.html?section=edit-store">Edit Store</a>
+        <a href="dashboard.html?section=manage-products">Manage Products</a>
+        <a href="dashboard.html?section=orders">Orders</a>
+        <a href="support.html">Support</a>
+      </div>
+      <!-- Orders list (buyer orders) -->
+      <div id="dashboard-orders" class="dashboard-orders"></div>
+    </section>
+    <script src="dashboard.js"></script>
+  </body>
+</html>
