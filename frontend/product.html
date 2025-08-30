@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Details - STEB.IO</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Reuse the same sticky navigation bar from the home page -->
+    <nav id="nav">
+      <div class="nav-left">
+        <span id="app-title">STEB.IO</span>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="dashboard.html?section=create-store">Create Store</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="support.html">Support</a>
+      </div>
+      <div class="nav-right">
+        <span id="user-info"></span>
+        <button id="logout-btn" style="display: none">Logout</button>
+      </div>
+    </nav>
+    <div id="messages"></div>
+    <section id="product-page">
+      <div id="product-details" class="product-detail-container"></div>
+    </section>
+    <script src="product.js"></script>
+  </body>
+</html>
