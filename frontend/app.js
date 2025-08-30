@@ -10,7 +10,158 @@
  */
 
 (() => {
-  const BASE_URL = 'https://stebio.onrender.com';
+  const BASE_URL = 'https
+  // New DOM elements for marketplace home
+  const searchInput = document.getElementById('search-input');
+  const searchButton = document.getElementById('search-button');
+  const categoryBar = document.getElementById('categoryBar');
+  const sortSelect = document.getElementById('sort-select');
+  const productGrid = document.getElementById('productGrid');
+  const statProducts = document.getElementById('stat-products');
+  const statStores = document.getElementById('stat-stores');
+  const statOrders = document.getElementById('stat-orders');
+
+  // Track the current active category for filtering
+  let activeCategory = 'All';
+
+  /**
+   * Render a list of products into the product grid. Each product card
+   * displays a placeholder image (can be replaced with a product image in
+   * future), the title, a truncated description, the price, the type and a
+   * "View" button which loads the product detail view.
+   *
+   * @param {Array} products A list of product objects
+   */
+  function renderProductGrid(products) {
+    if (!productGrid) return;
+    productGrid.innerHTML = '';
+    products.forEach((product) => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      // Use a simple placeholder image; real images can be added via product data
+      const image = document.createElement('div');
+      image.className = 'product-image';
+      card.appendChild(image);
+      const title = document.createElement('h4');
+      title.textContent = product.title;
+      card.appendChild(title);
+      const desc = document.createElement('p');
+      desc.textContent = product.description ? product.description.substring(0, 100) + (product.description.length > 100 ? '…' : '') : '';
+      card.appendChild(desc);
+      const meta = document.createElement('p');
+      meta.className = 'product-meta';
+      meta.innerHTML = `$${product.price.toFixed(2)} · ${product.type.replace('_', ' ')}`;
+      card.appendChild(meta);
+      const viewBtn = document.createElement('button');
+      viewBtn.textContent = 'View';
+      viewBtn.addEventListener('click', () => {
+        window.location.href = `product.html?id=${product.id}`;
+      });
+      card.appendChild(viewBtn);
+      productGrid.appendChild(card);
+    });
+  }
+
+  /**
+   * Update the statistic cards with data returned from the /api/stats endpoint.
+   *
+   * @param {Object} stats An object with totalProducts, totalStores and totalOrders
+   */
+  function renderStats(stats) {
+    if (statProducts) statProducts.textContent = stats.totalProducts;
+    if (statStores) statStores.textContent = stats.totalStores;
+    if (statOrders) statOrders.textContent = stats.totalOrders;
+  }
+
+  /**
+   * Set the currently active category button. Removes the .active class from
+   * all category buttons and adds it to the provided element.
+   *
+   * @param {HTMLElement} btn The category button that was clicked
+   */
+  function setActiveCategory(btn) {
+    if (!categoryBar) return;
+    Array.from(categoryBar.querySelectorAll('button')).forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCategory = btn.getAttribute('data-category');
+  }
+
+  /**
+   * Fetch and render platform statistics. Called on initial load.
+   */
+  async function loadStats() {
+    try {
+      const data = await apiFetch('/api/stats');
+      renderStats(data);
+    } catch (_) {
+      /* handled via showMessage in apiFetch */
+    }
+  }
+
+  /**
+   * Fetch and render products. If a search query is provided, the search API
+   * is used; otherwise the generic products endpoint is called. The type
+   * parameter corresponds to the active category; sort controls the order.
+   *
+   * @param {Object} options Options object
+   * @param {string} [options.query] Search term; if present triggers search
+   * @param {string} [options.type] Product type filter
+   * @param {string} [options.sort] Sort key
+   */
+  async function loadProducts({ query = '', type = 'All', sort = 'newest' } = {}) {
+    try {
+      let data;
+      const params = new URLSearchParams();
+      if (query) {
+        params.set('query', query);
+        if (sort) params.set('sort', sort);
+        data = await apiFetch(`/api/products/search?${params.toString()}`);
+      } else {
+        if (type) params.set('type', type);
+        if (sort) params.set('sort', sort);
+        data = await apiFetch(`/api/products?${params.toString()}`);
+      }
+      renderProductGrid(data.products || []);
+    } catch (_) {
+      /* handled via showMessage */
+    }
+  }
+
+  // Event listeners for search, category selection and sorting
+  if (searchButton && searchInput) {
+    searchButton.addEventListener('click', () => {
+      const term = searchInput.value.trim();
+      loadProducts({ query: term, sort: sortSelect ? sortSelect.value : 'newest' });
+    });
+  }
+  if (categoryBar) {
+    categoryBar.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('button');
+      if (!btn) return;
+      setActiveCategory(btn);
+      if (searchInput) searchInput.value = '';
+      loadProducts({ type: btn.getAttribute('data-category'), sort: sortSelect ? sortSelect.value : 'newest' });
+    });
+  }
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      const sort = sortSelect.value;
+      const term = searchInput ? searchInput.value.trim() : '';
+      if (term) {
+        loadProducts({ query: term, sort });
+      } else {
+        loadProducts({ type: activeCategory, sort });
+      }
+    });
+  }
+
+  // Kick off initial data load once the page is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadProducts({ type: activeCategory, sort: 'newest' });
+  });
+
+://stebio.onrender.com';
   let token = localStorage.getItem('stebio_token') || null;
   let currentUser = null;
 
