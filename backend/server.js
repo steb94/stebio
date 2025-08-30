@@ -493,7 +493,70 @@ app.post('/api/support', requireAuth, (req, res) => {
 app.get('/api/support', requireAuth, (req, res) => {
   const tickets = SupportTicket.findByUser(req.currentUser.id);
   res.json({ tickets });
+})
+/**
+ * Helper to sort products based on sort parameter
+ */
+function sortProducts(products, sort) {
+  if (!sort) return products;
+  if (sort === 'price_asc') {
+    return products.sort((a, b) => a.price - b.price);
+  }
+  if (sort === 'price_desc') {
+    return products.sort((a, b) => b.price - a.price);
+  }
+  if (sort === 'newest') {
+    return products.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+  }
+  return products;
+}
+
+/**
+ * Search products by query across title and description
+ */
+app.get('/api/products/search', (req, res) => {
+  const { query, sort } = req.query;
+  if (!query) {
+    return res.status(400).json({ error: 'query parameter is required' });
+  }
+  const q = query.toLowerCase();
+  let results = Product.findAll().filter(
+    p => p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+  );
+  results = sortProducts(results, sort);
+  const safe = results.map(({ id, storeId, title, description, price, type }) => ({
+    id, storeId, title, description, price, type
+  }));
+  res.json({ products: safe });
 });
+
+/**
+ * List products with optional type filter and sorting
+ */
+app.get('/api/products', (req, res) => {
+  let { type = 'All', sort } = req.query;
+  let list = Product.findAll();
+  if (type && type !== 'All') {
+    const t = type.toLowerCase();
+    list = list.filter(p => p.type && p.type.toLowerCase() === t);
+  }
+  list = sortProducts(list, sort);
+  const safe = list.map(({ id, storeId, title, description, price, type }) => ({
+    id, storeId, title, description, price, type
+  }));
+  res.json({ products: safe });
+});
+
+/**
+ * Returns basic stats for the platform
+ */
+app.get('/api/stats', (req, res) => {
+  const totalProducts = Product.findAll().length;
+  const totalStores = Store.findAll().length;
+  const totalOrders = Order.findAll().length;
+  res.json({ totalProducts, totalStores, totalOrders });
+});
+
 
 // Default route
 app.get('/', (req, res) => {
