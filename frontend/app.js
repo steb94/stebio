@@ -13,7 +13,7 @@
 
 
 (() => {
-  const BASE_URL = 'https
+  xconst BASE_URL = 'https
   // New DOM elements for marketplace home
   const searchInput = document.getElementById('search-input');
   const searchButton = document.getElementById('search-button');
@@ -26,7 +26,6 @@
 
   // Track the current active category for filtering
   let activeCategory = 'All';
-
   /**
    * Render a list of products into the product grid. Each product card
    * displays a placeholder image (can be replaced with a product image in
