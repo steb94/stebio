@@ -1,13 +1,16 @@
-/*
- * app.js
- *
- * Client‑side logic for the STEB.IO front‑end. This script handles
- * authentication, marketplace browsing, store and product management for
- * sellers, order history, affiliate statistics and support tickets. It
- * communicates with the backend running at https://stebio.onrender.com via
- * fetch() and uses localStorage to persist the session token between
- * page reloads.
- */
+(() => {
+  const BASE_URL = "https://stebio.onrender.com";  // fixed
+
+  // New DOM elements for marketplace home
+  const searchInput = document.getElementById('search-input');
+  const searchButton = document.getElementById('search-button');
+  const categoryBar = document.getElementById('categoryBar');
+  const sortSelect = document.getElementById('sort-select');
+  const productGrid = document.getElementById('productGrid');
+  const statProducts = document.getElementById('stat-products');
+  const statStores = document.getElementById('stat-stores');
+  const statOrders = document.getElementById('stat-orders');
+
 
 (() => {
   const BASE_URL = 'https
