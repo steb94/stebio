@@ -8,20 +8,6 @@
   const sortSelect = document.getElementById('sort-select');
   const productGrid = document.getElementById('productGrid');
   const statProducts = document.getElementById('stat-products');
-  const statStores = document.getElementById('stat-stores');
-  const statOrders = document.getElementById('stat-orders');
-
-
-(() => {
-  xconst BASE_URL = 'https
-  // New DOM elements for marketplace home
-  const searchInput = document.getElementById('search-input');
-  const searchButton = document.getElementById('search-button');
-  const categoryBar = document.getElementById('categoryBar');
-  const sortSelect = document.getElementById('sort-select');
-  const productGrid = document.getElementById('productGrid');
-  const statProducts = document.getElementById('stat-products');
-  const statStores = document.getElementById('stat-stores');
   const statOrders = document.getElementById('stat-orders');
 
   // Track the current active category for filtering
@@ -57,6 +43,7 @@
       const viewBtn = document.createElement('button');
       viewBtn.textContent = 'View';
       viewBtn.addEventListener('click', () => {
+        
         window.location.href = `product.html?id=${product.id}`;
       });
       card.appendChild(viewBtn);
