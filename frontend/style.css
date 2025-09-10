@@ -67,6 +67,7 @@ button:hover {
   margin-bottom: 20px;
 }
 
+
 .card {
   border: 1px solid #ccc;
   padding: 10px;
@@ -241,11 +242,14 @@ nav#nav {
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
   padding: 20px;
+
 }
-.product-card {
-  background: #fff;
+
+  .product-card {
+
+    background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  : 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 15px;
   display: flex;
   flex-direction: column;
