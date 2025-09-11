@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm -w build",
+  "installCommand": "pnpm i",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}
