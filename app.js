@@ -1,6 +1,13 @@
 // Client-side logic for Steb.io marketplace
 
-const API_BASE = '/api';
+// Determine API base URL. If running on Render (production), point to the backend
+// domain; otherwise use relative /api for local development. This allows the
+// static frontend hosted at stebio-frontend.onrender.com to call the backend
+// service hosted at stebio.onrender.com. When served locally (e.g. via
+// `node server.js`), the API will be available at the same origin.
+const API_BASE = window.location.hostname.includes('onrender.com')
+  ? 'https://stebio.onrender.com/api'
+  : '/api';
 
 // DOM elements
 const statProductsEl = document.getElementById('statProducts');
@@ -39,7 +46,7 @@ async function fetchProducts(type = 'All', sort = 'newest') {
   currentType = type;
   currentSort = sort;
   try {
-    const url = new URL(`${API_BASE}/products`, window.location.origin);
+    const url = new URL(`${API_BASE}/products`);
     if (type && type !== 'All') {
       url.searchParams.set('type', type);
     } else {
@@ -59,7 +66,7 @@ async function fetchProducts(type = 'All', sort = 'newest') {
 // Search products
 async function searchProducts(query) {
   try {
-    const url = new URL(`${API_BASE}/products/search`, window.location.origin);
+    const url = new URL(`${API_BASE}/products/search`);
     url.searchParams.set('query', query);
     url.searchParams.set('sort', currentSort);
     const res = await fetch(url);

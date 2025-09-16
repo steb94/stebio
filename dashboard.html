@@ -64,10 +64,14 @@
   <!-- Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    // Determine API base URL. Use the backend domain on Render and relative /api locally.
+    const API_BASE = window.location.hostname.includes('onrender.com')
+      ? 'https://stebio.onrender.com/api'
+      : '/api';
     // Fetch dashboard summary
     async function loadDashboard() {
       try {
-        const res = await fetch('/api/dashboard');
+        const res = await fetch(`${API_BASE}/dashboard`);
         const data = await res.json();
         document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
         document.getElementById('dashTotalOrders').textContent = data.totalOrders;
@@ -79,7 +83,7 @@
     // Fetch orders and render table
     async function loadOrders() {
       try {
-        const res = await fetch('/api/orders');
+        const res = await fetch(`${API_BASE}/orders`);
         const orders = await res.json();
         const tbody = document.querySelector('#ordersTable tbody');
         tbody.innerHTML = '';
@@ -109,7 +113,7 @@
       if (e.target.classList.contains('status-select')) {
         const id = e.target.getAttribute('data-id');
         const newStatus = e.target.value;
-        fetch(`/api/orders/${id}`, {
+        fetch(`${API_BASE}/orders/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus })

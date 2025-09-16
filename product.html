@@ -27,6 +27,10 @@
   </main>
 
   <script>
+    // Determine API base URL. When on Render, call the backend domain; otherwise use relative /api
+    const API_BASE = window.location.hostname.includes('onrender.com')
+      ? 'https://stebio.onrender.com/api'
+      : '/api';
     // Fetch product by ID from URL param
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
@@ -34,7 +38,7 @@
     if (!id) {
       container.innerHTML = '<p>Missing product ID.</p>';
     } else {
-      fetch(`/api/products/${id}`)
+      fetch(`${API_BASE}/products/${id}`)
         .then((res) => {
           if (!res.ok) throw new Error('Product not found');
           return res.json();
