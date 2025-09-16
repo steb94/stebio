@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steb.io Marketplace</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html" class="active">Explore Marketplace</a>
+        <a href="start-selling.html">Create Store</a>
+        <a href="#">Dashboard</a>
+        <a href="#">Support</a>
+      </nav>
+      <div class="auth-links">
+        <!-- Placeholder for auth state -->
+        <a href="#" id="login-link">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <section id="hero">
+    <div class="container hero-content">
+      <h1>Unlock top insights &amp; picks from expert creators</h1>
+      <p>Browse communities for sports betting, crypto trading, stocks, courses and more.</p>
+      <div class="search-bar">
+        <input id="searchInput" type="text" placeholder="Search products..." />
+        <button id="searchBtn">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="categories">
+    <div class="container">
+      <div class="category-bar" id="categoryBar">
+        <button data-type="All" class="active">All</button>
+        <button data-type="Sports">Sports</button>
+        <button data-type="Crypto">Crypto</button>
+        <button data-type="Stocks">Stocks</button>
+        <button data-type="Education">Education</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="stats">
+    <div class="container stats-grid">
+      <div class="stat-card">
+        <h3 id="statProducts">0</h3>
+        <p>Products</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="statStores">0</h3>
+        <p>Stores</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="statOrders">0</h3>
+        <p>Orders</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="controls">
+    <div class="container control-bar">
+      <label for="sortSelect">Sort by:</label>
+      <select id="sortSelect">
+        <option value="newest">Newest</option>
+        <option value="price_asc">Price: Low → High</option>
+        <option value="price_desc">Price: High → Low</option>
+      </select>
+    </div>
+  </section>
+
+  <section id="productSection">
+    <div class="container">
+      <div id="productGrid" class="product-grid">
+        <!-- Products loaded via JS -->
+      </div>
+      <div id="loadMoreContainer" class="load-more-container" hidden>
+        <button id="loadMoreBtn">Load more</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
