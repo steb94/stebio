@@ -103,7 +103,8 @@ function renderProducts() {
     typeEl.textContent = p.type;
     // Button
     const btn = document.createElement('a');
-    btn.href = `#`; // Placeholder link to product detail
+    // Link to product detail page with id param
+    btn.href = `product.html?id=${p.id}`;
     btn.classList.add('button');
     btn.textContent = 'View';
     // Append
@@ -145,7 +146,7 @@ function loadMore() {
     typeEl.classList.add('type');
     typeEl.textContent = p.type;
     const btn = document.createElement('a');
-    btn.href = '#';
+    btn.href = `product.html?id=${p.id}`;
     btn.classList.add('button');
     btn.textContent = 'View';
     card.appendChild(img);

@@ -9,7 +9,14 @@
 const express = require('express');
 const cors = require('cors');
 
-const { getAllProducts, getAllStores, getAllOrders } = require('./models');
+const {
+  getAllProducts,
+  getAllStores,
+  getAllOrders,
+  getProductById,
+  getStoreById,
+  getProductsByStoreId
+} = require('./models');
 
 const app = express();
 app.use(cors());
@@ -64,6 +71,40 @@ app.get('/api/products', (req, res) => {
   }
   const sorted = sortProducts(results, sort);
   return res.json(sanitizeProducts(sorted));
+});
+
+// GET /api/products/:id -> single product by id (sanitized)
+app.get('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const product = getProductById(id);
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  // sanitize: remove downloadLink
+  const { downloadLink, ...safeProduct } = product;
+  res.json(safeProduct);
+});
+
+// GET /api/stores/:id -> return store info and its products (sanitized)
+app.get('/api/stores/:id', (req, res) => {
+  const { id } = req.params;
+  const store = getStoreById(id);
+  if (!store) {
+    return res.status(404).json({ error: 'Store not found' });
+  }
+  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => safe);
+  res.json({ store, products });
+});
+
+// GET /api/stores/:id/products -> only products for a store (sanitized)
+app.get('/api/stores/:id/products', (req, res) => {
+  const { id } = req.params;
+  const store = getStoreById(id);
+  if (!store) {
+    return res.status(404).json({ error: 'Store not found' });
+  }
+  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => safe);
+  res.json(products);
 });
 
 // GET /api/stats -> { totalProducts, totalStores, totalOrders }

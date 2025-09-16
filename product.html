@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Details - Steb.io</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="start-selling.html">Create Store</a>
+        <a href="#">Dashboard</a>
+        <a href="#">Support</a>
+      </nav>
+      <div class="auth-links">
+        <a href="#" id="login-link">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="productDetail" class="container" style="padding: 2rem 0;">
+    <!-- Product details loaded here -->
+  </main>
+
+  <script>
+    // Fetch product by ID from URL param
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const container = document.getElementById('productDetail');
+    if (!id) {
+      container.innerHTML = '<p>Missing product ID.</p>';
+    } else {
+      fetch(`/api/products/${id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Product not found');
+          return res.json();
+        })
+        .then((p) => {
+          // Build product detail layout
+          const wrapper = document.createElement('div');
+          wrapper.style.display = 'flex';
+          wrapper.style.flexWrap = 'wrap';
+          wrapper.style.gap = '2rem';
+
+          // Image
+          const img = document.createElement('img');
+          img.src = 'https://via.placeholder.com/500x250?text=Product';
+          img.alt = p.title;
+          img.style.width = '100%';
+          img.style.maxWidth = '500px';
+          img.style.borderRadius = '8px';
+
+          // Info section
+          const info = document.createElement('div');
+          info.style.flex = '1';
+
+          const title = document.createElement('h2');
+          title.textContent = p.title;
+
+          const type = document.createElement('span');
+          type.textContent = p.type;
+          type.classList.add('type');
+
+          const price = document.createElement('div');
+          price.classList.add('price');
+          price.style.fontSize = '1.5rem';
+          price.style.margin = '1rem 0';
+          price.textContent = `$${p.price.toFixed(2)}`;
+
+          const desc = document.createElement('p');
+          desc.textContent = p.description;
+          desc.style.marginBottom = '1rem';
+
+          const storeLink = document.createElement('a');
+          storeLink.href = `store.html?id=${p.storeId}`;
+          storeLink.style.color = '#2b6cb0';
+          storeLink.style.fontWeight = '500';
+          storeLink.textContent = 'View Seller Store';
+
+          const buyBtn = document.createElement('button');
+          buyBtn.textContent = 'Buy Now';
+          buyBtn.style.padding = '0.75rem 1.5rem';
+          buyBtn.style.background = '#667eea';
+          buyBtn.style.color = '#fff';
+          buyBtn.style.border = 'none';
+          buyBtn.style.borderRadius = '4px';
+          buyBtn.style.cursor = 'pointer';
+          buyBtn.style.fontWeight = '600';
+          buyBtn.onclick = () => {
+            alert('Order functionality not implemented yet.');
+          };
+
+          info.appendChild(title);
+          info.appendChild(type);
+          info.appendChild(price);
+          info.appendChild(desc);
+          info.appendChild(storeLink);
+          info.appendChild(buyBtn);
+
+          wrapper.appendChild(img);
+          wrapper.appendChild(info);
+          container.appendChild(wrapper);
+        })
+        .catch(() => {
+          container.innerHTML = '<p>Product not found.</p>';
+        });
+    }
+  </script>
+</body>
+</html>

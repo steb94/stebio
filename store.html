@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Profile - Steb.io</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="start-selling.html">Create Store</a>
+        <a href="#">Dashboard</a>
+        <a href="#">Support</a>
+      </nav>
+      <div class="auth-links">
+        <a href="#" id="login-link">Sign In</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 2rem 0;">
+    <section id="storeInfo">
+      <!-- Store info loaded here -->
+    </section>
+    <section id="storeProducts">
+      <!-- Products will be loaded here -->
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const storeInfoEl = document.getElementById('storeInfo');
+    const storeProductsEl = document.getElementById('storeProducts');
+    if (!id) {
+      storeInfoEl.innerHTML = '<p>Missing store ID.</p>';
+    } else {
+      fetch(`/api/stores/${id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error('Store not found');
+          return res.json();
+        })
+        .then((data) => {
+          const { store, products } = data;
+          // Render store info
+          const title = document.createElement('h2');
+          title.textContent = store.name;
+          const owner = document.createElement('p');
+          owner.textContent = `Owner: ${store.owner}`;
+          owner.style.color = '#4a5568';
+          owner.style.marginBottom = '1rem';
+          storeInfoEl.appendChild(title);
+          storeInfoEl.appendChild(owner);
+
+          // Render products grid
+          const grid = document.createElement('div');
+          grid.classList.add('product-grid');
+          products.forEach((p) => {
+            const card = document.createElement('div');
+            card.classList.add('product-card');
+            const img = document.createElement('img');
+            img.src = 'https://via.placeholder.com/300x150?text=Product';
+            img.alt = p.title;
+            const titleEl = document.createElement('h4');
+            titleEl.textContent = p.title;
+            const desc = document.createElement('p');
+            const descText = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description;
+            desc.textContent = descText;
+            const price = document.createElement('div');
+            price.classList.add('price');
+            price.textContent = `$${p.price.toFixed(2)}`;
+            const typeEl = document.createElement('div');
+            typeEl.classList.add('type');
+            typeEl.textContent = p.type;
+            const btn = document.createElement('a');
+            btn.href = `product.html?id=${p.id}`;
+            btn.classList.add('button');
+            btn.textContent = 'View';
+            card.appendChild(img);
+            card.appendChild(titleEl);
+            card.appendChild(desc);
+            card.appendChild(price);
+            card.appendChild(typeEl);
+            card.appendChild(btn);
+            grid.appendChild(card);
+          });
+          storeProductsEl.appendChild(grid);
+        })
+        .catch(() => {
+          storeInfoEl.innerHTML = '<p>Store not found.</p>';
+        });
+    }
+  </script>
+</body>
+</html>

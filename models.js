@@ -54,11 +54,29 @@ function getAllOrders() {
   return orders;
 }
 
+// Fetch a single product by its id
+function getProductById(id) {
+  return products.find((p) => p.id === id);
+}
+
+// Fetch a single store by its id
+function getStoreById(id) {
+  return stores.find((s) => s.id === id);
+}
+
+// Fetch all products belonging to a specific store
+function getProductsByStoreId(storeId) {
+  return products.filter((p) => p.storeId === storeId);
+}
+
 module.exports = {
   products,
   stores,
   orders,
   getAllProducts,
   getAllStores,
-  getAllOrders
+  getAllOrders,
+  getProductById,
+  getStoreById,
+  getProductsByStoreId
 };
