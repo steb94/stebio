@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Steb.io</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="start-selling.html">Create Store</a>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="#">Support</a>
+      </nav>
+      <div class="auth-links">
+        <a href="#" id="login-link">Sign In</a>
+      </div>
+    </div>
+  </header>
+  <main class="container" style="padding: 2rem 0;">
+    <section id="dashboardSummary">
+      <h2>Seller Dashboard</h2>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="value" id="dashTotalSales">0</div>
+          <div class="label">Total Sales ($)</div>
+        </div>
+        <div class="summary-card">
+          <div class="value" id="dashTotalOrders">0</div>
+          <div class="label">Total Orders</div>
+        </div>
+        <div class="summary-card">
+          <div class="value" id="dashTotalProducts">0</div>
+          <div class="label">Total Products</div>
+        </div>
+      </div>
+    </section>
+    <section id="dashboardChart" style="margin-bottom: 2rem;">
+      <h3>Sales Overview</h3>
+      <canvas id="salesChart" width="400" height="200"></canvas>
+    </section>
+    <section id="dashboardOrders">
+      <h3>Orders</h3>
+      <div style="overflow-x:auto;">
+        <table id="ordersTable" class="orders-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Product</th>
+              <th>Price ($)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <!-- Chart.js library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // Fetch dashboard summary
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+        document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
+        document.getElementById('dashTotalOrders').textContent = data.totalOrders;
+        document.getElementById('dashTotalProducts').textContent = data.totalProducts;
+      } catch (err) {
+        console.error('Error loading dashboard summary', err);
+      }
+    }
+    // Fetch orders and render table
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const orders = await res.json();
+        const tbody = document.querySelector('#ordersTable tbody');
+        tbody.innerHTML = '';
+        orders.forEach((o) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${o.id}</td>
+            <td>${o.productName}</td>
+            <td>${o.price.toFixed(2)}</td>
+            <td><span class="order-status">${o.status}</span></td>
+            <td>
+              <select data-id="${o.id}" class="status-select">
+                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error loading orders', err);
+      }
+    }
+    // Handle status change
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('status-select')) {
+        const id = e.target.getAttribute('data-id');
+        const newStatus = e.target.value;
+        fetch(`/api/orders/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        })
+          .then((res) => res.json())
+          .then(() => {
+            // Update status text in table
+            const statusSpan = e.target.parentElement.previousElementSibling.querySelector('.order-status');
+            statusSpan.textContent = newStatus;
+          })
+          .catch((err) => console.error('Error updating order', err));
+      }
+    });
+    // Render sales chart with dummy monthly data
+    function renderChart() {
+      const ctx = document.getElementById('salesChart');
+      // Generate dummy monthly sales data based on orders (counts per month) for demonstration
+      // We'll just generate 6 months of random totals
+      const labels = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+      const data = {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Orders',
+            data: labels.map(() => Math.floor(Math.random() * 5) + 1),
+            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 1
+          }
+        ]
+      };
+      new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Number of Orders' }
+            },
+            x: {
+              title: { display: true, text: 'Month' }
+            }
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Monthly Orders'
+            }
+          }
+        }
+      });
+    }
+    // Initialize dashboard
+    loadDashboard();
+    loadOrders();
+    renderChart();
+  </script>
+</body>
+</html>

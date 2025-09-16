@@ -16,6 +16,8 @@ const {
   getProductById,
   getStoreById,
   getProductsByStoreId
+  , getOrderById
+  , updateOrderStatus
 } = require('./models');
 
 const app = express();
@@ -113,6 +115,39 @@ app.get('/api/stats', (_req, res) => {
   const totalStores = getAllStores().length;
   const totalOrders = getAllOrders().length;
   res.json({ totalProducts, totalStores, totalOrders });
+});
+
+// GET /api/dashboard -> summary for seller dashboard
+// In a real app this would be scoped to the authenticated seller, but here we return
+// aggregate totals and total revenue for demonstration purposes.
+app.get('/api/dashboard', (_req, res) => {
+  const products = getAllProducts();
+  const orders = getAllOrders();
+  const totalProducts = products.length;
+  const totalOrders = orders.length;
+  // Calculate total sales (sum of order prices)
+  const totalSales = orders.reduce((sum, o) => sum + o.price, 0);
+  res.json({ totalProducts, totalOrders, totalSales });
+});
+
+// GET /api/orders -> return all orders (sanitized)
+app.get('/api/orders', (_req, res) => {
+  const orders = getAllOrders().map(({ id, productId, productName, price, status, storeId }) => ({ id, productId, productName, price, status, storeId }));
+  res.json(orders);
+});
+
+// PATCH /api/orders/:id -> update order status
+app.patch('/api/orders/:id', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!status) {
+    return res.status(400).json({ error: 'Missing status' });
+  }
+  const updated = updateOrderStatus(id, status);
+  if (!updated) {
+    return res.status(404).json({ error: 'Order not found' });
+  }
+  res.json({ id: updated.id, status: updated.status });
 });
 
 /* Placeholder for existing routes (auth, orders, support). In a full implementation

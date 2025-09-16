@@ -38,8 +38,41 @@ const stores = [
   { id: '3', name: 'Stock Picks Store', owner: 'User3' }
 ];
 
-// Orders record purchases
-const orders = [];
+// Orders record purchases; includes id, productId, productName, price, status, storeId
+const orders = [
+  {
+    id: '1',
+    productId: '1',
+    productName: 'Sports Picks Pro',
+    price: 9.99,
+    status: 'Completed',
+    storeId: '1'
+  },
+  {
+    id: '2',
+    productId: '2',
+    productName: 'Crypto Signals Hub',
+    price: 19.99,
+    status: 'Processing',
+    storeId: '2'
+  },
+  {
+    id: '3',
+    productId: '1',
+    productName: 'Sports Picks Pro',
+    price: 9.99,
+    status: 'Completed',
+    storeId: '1'
+  },
+  {
+    id: '4',
+    productId: '3',
+    productName: 'Stock Market Mastery',
+    price: 29.99,
+    status: 'Completed',
+    storeId: '3'
+  }
+];
 
 // Helper functions to fetch data
 function getAllProducts() {
@@ -52,6 +85,19 @@ function getAllStores() {
 
 function getAllOrders() {
   return orders;
+}
+
+// Fetch a single order by its id
+function getOrderById(id) {
+  return orders.find((o) => o.id === id);
+}
+
+// Update an order's status by id; returns updated order or null if not found
+function updateOrderStatus(id, newStatus) {
+  const order = orders.find((o) => o.id === id);
+  if (!order) return null;
+  order.status = newStatus;
+  return order;
 }
 
 // Fetch a single product by its id
@@ -76,6 +122,8 @@ module.exports = {
   getAllProducts,
   getAllStores,
   getAllOrders,
+  getOrderById,
+  updateOrderStatus,
   getProductById,
   getStoreById,
   getProductsByStoreId
