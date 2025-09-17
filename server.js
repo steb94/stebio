@@ -197,6 +197,62 @@ app.get('/api/messages/:user', (req, res) => {
   res.json(msgs);
 });
 
+// Store management endpoints
+
+// Create a new store
+app.post('/api/stores', (req, res) => {
+  const { name, owner } = req.body;
+  if (!name || !owner) {
+    return res.status(400).json({ error: 'Name and owner are required.' });
+  }
+  const storesList = getAllStores();
+  // Generate next numeric ID
+  const nextId = storesList.length > 0 ? Math.max(...storesList.map(s => parseInt(s.id))) + 1 : 1;
+  const newStore = { id: String(nextId), name, owner };
+  storesList.push(newStore);
+  res.status(201).json(newStore);
+});
+
+// List stores with optional owner and search query
+app.get('/api/stores', (req, res) => {
+  const { owner, q } = req.query;
+  let result = getAllStores();
+  if (owner) {
+    result = result.filter(s => s.owner.toLowerCase() === owner.toLowerCase());
+  }
+  if (q) {
+    result = result.filter(s => s.name.toLowerCase().includes(q.toLowerCase()));
+  }
+  res.json(result);
+});
+
+// Create a new product for a store
+app.post('/api/products', (req, res) => {
+  const { storeId, name, price, description, imageUrl } = req.body;
+  if (!storeId || !name || price === undefined) {
+    return res.status(400).json({ error: 'storeId, name, and price are required.' });
+  }
+  const storesList = getAllStores();
+  const storeExists = storesList.some(s => s.id === String(storeId));
+  if (!storeExists) {
+    return res.status(404).json({ error: 'Store not found.' });
+  }
+  const productsList = getAllProducts();
+  const nextProdId = productsList.length > 0 ? Math.max(...productsList.map(p => parseInt(p.id))) + 1 : 1;
+  const newProduct = {
+    id: String(nextProdId),
+    storeId: String(storeId),
+    title: name,
+    description: description || '',
+    price: parseFloat(price),
+    type: 'digital',
+    image: imageUrl || '',
+    downloadLink: ''
+  };
+  productsList.push(newProduct);
+  res.status(201).json(newProduct);
+});
+
 // Start the server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
