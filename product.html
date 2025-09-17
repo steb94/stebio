@@ -52,7 +52,7 @@
 
           // Image
           const img = document.createElement('img');
-          img.src = 'https://via.placeholder.com/500x250?text=Product';
+          img.src = p.image ? p.image : 'https://via.placeholder.com/500x250?text=Product';
           img.alt = p.title;
           img.style.width = '100%';
           img.style.maxWidth = '500px';
@@ -114,5 +114,7 @@
         });
     }
   </script>
+  <!-- Auth script to update navigation based on login state -->
+  <script src="auth.js"></script>
 </body>
 </html>

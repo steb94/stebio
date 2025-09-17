@@ -25,7 +25,7 @@
       });
     }
   } else {
-    // Not logged in: show sign in link pointing to dashboard (login will occur there)
-    authLinks.innerHTML = '<a href="dashboard.html" id="login-link">Sign In</a>';
+    // Not logged in: show sign in and sign up links
+    authLinks.innerHTML = '<a href="dashboard.html" id="login-link">Sign In</a> | <a href="signup.html" id="signup-link">Sign Up</a>';
   }
 })();

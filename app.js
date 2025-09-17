@@ -89,9 +89,9 @@ function renderProducts() {
   slice.forEach((p) => {
     const card = document.createElement('div');
     card.classList.add('product-card');
-    // Placeholder image
+    // Product image (use provided image if available)
     const img = document.createElement('img');
-    img.src = 'https://via.placeholder.com/300x150?text=Product';
+    img.src = p.image ? p.image : 'https://via.placeholder.com/300x150?text=Product';
     img.alt = p.title;
     // Title
     const title = document.createElement('h4');
@@ -139,7 +139,7 @@ function loadMore() {
     const card = document.createElement('div');
     card.classList.add('product-card');
     const img = document.createElement('img');
-    img.src = 'https://via.placeholder.com/300x150?text=Product';
+    img.src = p.image ? p.image : 'https://via.placeholder.com/300x150?text=Product';
     img.alt = p.title;
     const title = document.createElement('h4');
     title.textContent = p.title;

@@ -9,6 +9,7 @@ const products = [
     description: 'Daily sports betting picks from veteran handicappers.',
     price: 9.99,
     type: 'Sports',
+    image: 'images/sports.png',
     downloadLink: 'https://example.com/downloads/picks-pro.pdf'
   },
   {
@@ -18,6 +19,7 @@ const products = [
     description: 'Real‑time crypto trading signals and market analysis.',
     price: 19.99,
     type: 'Crypto',
+    image: 'images/crypto.png',
     downloadLink: 'https://example.com/downloads/crypto-signals.pdf'
   },
   {
@@ -27,7 +29,29 @@ const products = [
     description: 'Weekly stock picks and portfolio insights from analysts.',
     price: 29.99,
     type: 'Stocks',
+    image: 'images/stocks.png',
     downloadLink: 'https://example.com/downloads/stock-mastery.pdf'
+  },
+  // New education products for a course store
+  {
+    id: '4',
+    storeId: '4',
+    title: 'Web Dev Bootcamp',
+    description: 'Comprehensive web development course covering HTML, CSS, JavaScript and backend basics.',
+    price: 49.99,
+    type: 'Education',
+    image: 'images/education.png',
+    downloadLink: 'https://example.com/downloads/web-dev-bootcamp.pdf'
+  },
+  {
+    id: '5',
+    storeId: '4',
+    title: 'Digital Marketing Essentials',
+    description: 'Learn the fundamentals of digital marketing, SEO, and social media strategy.',
+    price: 39.99,
+    type: 'Education',
+    image: 'images/education.png',
+    downloadLink: 'https://example.com/downloads/digital-marketing-essentials.pdf'
   }
 ];
 
@@ -35,7 +59,8 @@ const products = [
 const stores = [
   { id: '1', name: 'Pro Sports Store', owner: 'User1' },
   { id: '2', name: 'Crypto Signals Store', owner: 'User2' },
-  { id: '3', name: 'Stock Picks Store', owner: 'User3' }
+  { id: '3', name: 'Stock Picks Store', owner: 'User3' },
+  { id: '4', name: 'Course Masters', owner: 'User4' }
 ];
 
 // Orders record purchases; includes id, productId, productName, price, status, storeId
