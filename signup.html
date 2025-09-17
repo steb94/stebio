@@ -37,7 +37,7 @@
           <option value="seller">Sell products (create a store)</option>
         </select>
       </div>
-      <button id="signupBtn" style="padding:0.75rem 1.5rem; background:#667eea; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Sign Up</button>
+      
     </div>
   </main>
   <script>
@@ -48,14 +48,14 @@
         alert('Please enter a username.');
         return;
       }
-      localStorage.setItem('loggedIn', 'true');
-      localStorage.setItem('username', username);
-      localStorage.setItem('role', role);
-      if (role === 'seller') {
-        window.location.href = 'dashboard.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+           localStorage.setItem('loggedIn', 'true');
+        localStorage.setItem('username', username);
+        localStorage.setItem('role', role);
+        if (role === 'seller') {
+          window.location.href = 'create-store.html';
+        } else {
+          window.location.href = 'index.html';
+       }
     });
   </script>
   <script src="auth.js"></script>
