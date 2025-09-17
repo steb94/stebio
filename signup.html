@@ -31,31 +31,38 @@
         <input type="text" id="signupUsername" placeholder="Username" style="padding:0.5rem; width:100%;" />
       </div>
       <div style="margin-bottom: 1rem;">
+        <label for="signupPassword" style="display:block; margin-bottom:0.5rem;">Password</label>
+        <input type="password" id="signupPassword" placeholder="Password" style="padding:0.5rem; width:100%;" />
+      </div>
+      <div style="margin-bottom: 1rem;">
         <label for="signupRole" style="display:block; margin-bottom:0.5rem;">I want to</label>
         <select id="signupRole" style="padding:0.5rem; width:100%;">
           <option value="buyer">Buy products</option>
           <option value="seller">Sell products (create a store)</option>
         </select>
       </div>
-      
+      <button id="signupBtn" style="padding: 0.75rem 1.5rem; background:#667eea; color:#fff; border:none; border-radius:4px; font-weight:600;">Sign Up</button>
     </div>
   </main>
   <script>
+    // Handle sign up button click
     document.getElementById('signupBtn').addEventListener('click', function() {
       const username = document.getElementById('signupUsername').value.trim();
+      const password = document.getElementById('signupPassword').value;
       const role = document.getElementById('signupRole').value;
-      if (!username) {
-        alert('Please enter a username.');
+      if (!username || !password) {
+        alert('Please enter a username and password.');
         return;
       }
-           localStorage.setItem('loggedIn', 'true');
-        localStorage.setItem('username', username);
-        localStorage.setItem('role', role);
-        if (role === 'seller') {
-          window.location.href = 'create-store.html';
-        } else {
-          window.location.href = 'index.html';
-       }
+      localStorage.setItem('loggedIn', 'true');
+      localStorage.setItem('username', username);
+      localStorage.setItem('password', password);
+      localStorage.setItem('role', role);
+      if (role === 'seller') {
+        window.location.href = 'create-store.html';
+      } else {
+        window.location.href = 'index.html';
+      }
     });
   </script>
   <script src="auth.js"></script>
