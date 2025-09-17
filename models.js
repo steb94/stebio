@@ -420,7 +420,7 @@ const products = [
     description: 'Recipes, techniques and troubleshooting for cakes, breads and pastries.',
     price: 22.99,
     type: 'Cooking',
-    image: 'store40.png'
+    image: 'store40.png',
     downloadLink: 'https://example.com/downloads/baking-essentials-course.pdf'
   }
 ];
