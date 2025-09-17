@@ -49,7 +49,18 @@ function sortProducts(list, sort) {
 
 // Remove sensitive fields from product response
 function sanitizeProducts(list) {
-  return list.map(({ downloadLink, ...safeFields }) => safeFields);
+  // Remove sensitive downloadLink and normalize image paths by stripping
+  // any leading "images/" directory so the frontend can load images at the
+  // root of the static site. This avoids broken image links if the static
+  // hosting platform does not preserve directory structure.
+  return list.map(({ downloadLink, ...safeFields }) => {
+    const sanitized = { ...safeFields };
+    // Normalize image path: if it starts with 'images/', strip the prefix
+    if (sanitized.image && typeof sanitized.image === 'string' && sanitized.image.startsWith('images/')) {
+      sanitized.image = sanitized.image.replace(/^images\//, '');
+    }
+    return sanitized;
+  });
 }
 
 // GET /api/products/search?query=keyword&sort={price_asc|price_desc|newest}
@@ -87,6 +98,10 @@ app.get('/api/products/:id', (req, res) => {
   }
   // sanitize: remove downloadLink
   const { downloadLink, ...safeProduct } = product;
+  // Normalize image path if stored in images folder
+  if (safeProduct.image && typeof safeProduct.image === 'string' && safeProduct.image.startsWith('images/')) {
+    safeProduct.image = safeProduct.image.replace(/^images\//, '');
+  }
   res.json(safeProduct);
 });
 
@@ -97,7 +112,13 @@ app.get('/api/stores/:id', (req, res) => {
   if (!store) {
     return res.status(404).json({ error: 'Store not found' });
   }
-  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => safe);
+  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => {
+    // Normalize image path for each product
+    if (safe.image && typeof safe.image === 'string' && safe.image.startsWith('images/')) {
+      safe.image = safe.image.replace(/^images\//, '');
+    }
+    return safe;
+  });
   res.json({ store, products });
 });
 
@@ -108,7 +129,12 @@ app.get('/api/stores/:id/products', (req, res) => {
   if (!store) {
     return res.status(404).json({ error: 'Store not found' });
   }
-  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => safe);
+  const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => {
+    if (safe.image && typeof safe.image === 'string' && safe.image.startsWith('images/')) {
+      safe.image = safe.image.replace(/^images\//, '');
+    }
+    return safe;
+  });
   res.json(products);
 });
 

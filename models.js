@@ -9,7 +9,7 @@ const products = [
     description: 'Daily sports betting picks from veteran handicappers.',
     price: 9.99,
     type: 'Sports',
-    image: 'images/sports.png',
+    image: 'sports.png',
     downloadLink: 'https://example.com/downloads/picks-pro.pdf'
   },
   {
@@ -19,7 +19,7 @@ const products = [
     description: 'Real‑time crypto trading signals and market analysis.',
     price: 19.99,
     type: 'Crypto',
-    image: 'images/crypto.png',
+    image: 'crypto.png',
     downloadLink: 'https://example.com/downloads/crypto-signals.pdf'
   },
   {
@@ -29,7 +29,7 @@ const products = [
     description: 'Weekly stock picks and portfolio insights from analysts.',
     price: 29.99,
     type: 'Stocks',
-    image: 'images/stocks.png',
+    image: 'stocks.png',
     downloadLink: 'https://example.com/downloads/stock-mastery.pdf'
   },
   // New education products for a course store
@@ -40,7 +40,7 @@ const products = [
     description: 'Comprehensive web development course covering HTML, CSS, JavaScript and backend basics.',
     price: 49.99,
     type: 'Education',
-    image: 'images/education.png',
+    image: 'education.png',
     downloadLink: 'https://example.com/downloads/web-dev-bootcamp.pdf'
   },
   {
@@ -50,7 +50,7 @@ const products = [
     description: 'Learn the fundamentals of digital marketing, SEO, and social media strategy.',
     price: 39.99,
     type: 'Education',
-    image: 'images/education.png',
+    image: 'education.png',
     downloadLink: 'https://example.com/downloads/digital-marketing-essentials.pdf'
   }
   ,
@@ -62,7 +62,7 @@ const products = [
     description: 'Exclusive gaming strategies, tips and tricks for top titles to help you level up your play.',
     price: 14.99,
     type: 'Gaming',
-    image: 'images/gaming.png',
+    image: 'gaming.png',
     downloadLink: 'https://example.com/downloads/gaming-strategy-pack.pdf'
   },
   {
@@ -72,7 +72,7 @@ const products = [
     description: 'Tools, templates and resources to streamline your workflow and boost productivity.',
     price: 24.99,
     type: 'Productivity',
-    image: 'images/productivity.png',
+    image: 'productivity.png',
     downloadLink: 'https://example.com/downloads/productivity-power-pack.pdf'
   }
   ,
@@ -84,7 +84,7 @@ const products = [
     description: 'High‑quality currency trading signals and analysis from professional forex traders.',
     price: 29.99,
     type: 'Forex',
-    image: 'images/forex.png',
+    image: 'forex.png',
     downloadLink: 'https://example.com/downloads/forex-mastery-signals.pdf'
   },
   {
@@ -94,7 +94,7 @@ const products = [
     description: 'Access to daily workout routines and nutrition tips to kickstart your fitness journey.',
     price: 19.99,
     type: 'Fitness',
-    image: 'images/fitness.png',
+    image: 'fitness.png',
     downloadLink: 'https://example.com/downloads/30-day-fitness-challenge.pdf'
   },
   {
@@ -104,7 +104,7 @@ const products = [
     description: 'Step‑by‑step drawing and painting lessons to help you unleash your inner artist.',
     price: 34.99,
     type: 'Art',
-    image: 'images/art.png',
+    image: 'art.png',
     downloadLink: 'https://example.com/downloads/beginner-art-course.pdf'
   }
   ,
@@ -120,7 +120,7 @@ const products = [
     description: 'Comprehensive photography guides, presets and tips.',
     price: 29.99,
     type: 'Photography',
-    image: 'images/photography.png',
+    image: 'photography.png',
     downloadLink: 'https://example.com/downloads/photography-pro-pack.pdf'
   },
   {
@@ -130,7 +130,7 @@ const products = [
     description: 'Weekly fashion insights, styling tips and trend forecasts.',
     price: 19.99,
     type: 'Fashion',
-    image: 'images/default.png',
+    image: 'default.png',
     downloadLink: 'https://example.com/downloads/fashion-trends-guide.pdf'
   },
   {
@@ -140,7 +140,7 @@ const products = [
     description: 'Sample packs, tutorials and exclusive beats for aspiring producers.',
     price: 24.99,
     type: 'Music',
-    image: 'images/default.png',
+    image: 'default.png',
     downloadLink: 'https://example.com/downloads/music-producer-toolkit.pdf'
   },
   {
