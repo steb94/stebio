@@ -89,9 +89,16 @@ function renderProducts() {
   slice.forEach((p) => {
     const card = document.createElement('div');
     card.classList.add('product-card');
-    // Product image (use provided image if available)
+    // Product image (use provided image if available, otherwise fallback)
     const img = document.createElement('img');
-    img.src = p.image ? p.image : 'https://via.placeholder.com/300x150?text=Product';
+    // Determine the image source. If p.image is defined and not a full URL or data URI, convert it to a GitHub raw URL.
+    let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+    if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+      // Prepend GitHub raw base URL. This allows images stored in the repository to load correctly without depending on Render static hosting.
+      imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server--.js/${imgSrc}`;
+    }
+    // Fallback placeholder if no image is provided
+    img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
     img.alt = p.title;
     // Title
     const title = document.createElement('h4');
@@ -139,7 +146,12 @@ function loadMore() {
     const card = document.createElement('div');
     card.classList.add('product-card');
     const img = document.createElement('img');
-    img.src = p.image ? p.image : 'https://via.placeholder.com/300x150?text=Product';
+    // Determine the image source. If p.image is defined and not a full URL or data URI, convert it to a GitHub raw URL.
+    let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+    if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+      imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server--.js/${imgSrc}`;
+    }
+    img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
     img.alt = p.title;
     const title = document.createElement('h4');
     title.textContent = p.title;
