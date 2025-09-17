@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+  <nav id="top-nav">
+    <div class="nav-left">
+      <a href="index.html" class="logo">Steb.io</a>
+      <a href="create-store.html">Start Selling</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="admin.html" class="active">Admin</a>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" id="nav-login">Marketplace</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section id="login-container">
+      <h2>Admin Login</h2>
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <section id="admin-section" style="display: none;">
+      <h2>Site Summary</h2>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <h3>Total Stores</h3>
+          <p class="value" id="total-stores">0</p>
+        </div>
+        <div class="summary-card">
+          <h3>Total Products</h3>
+          <p class="value" id="total-products">0</p>
+        </div>
+        <div class="summary-card">
+          <h3>Total Orders</h3>
+          <p class="value" id="total-orders">0</p>
+        </div>
+        <div class="summary-card">
+          <h3>Total Sales</h3>
+          <p class="value" id="total-sales">$0.00</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const API_BASE = window.location.origin.includes('localhost') ? 'http://localhost:3000' : '';
+      const loginForm = document.getElementById('login-form');
+      const loginContainer = document.getElementById('login-container');
+      const adminSection = document.getElementById('admin-section');
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        if (username === 'admin' && password === 'admin123') {
+          loginContainer.style.display = 'none';
+          adminSection.style.display = 'block';
+          try {
+            const [stores, products, orders, dashboard] = await Promise.all([
+              fetch(API_BASE + '/api/stores').then(res => res.json()),
+              fetch(API_BASE + '/api/products').then(res => res.json()),
+              fetch(API_BASE + '/api/orders').then(res => res.json()),
+              fetch(API_BASE + '/api/dashboard').then(res => res.json())
+            ]);
+            document.getElementById('total-stores').textContent = stores.length;
+            document.getElementById('total-products').textContent = products.length;
+            document.getElementById('total-orders').textContent = orders.length;
+            const totalSales = dashboard.totalSales || 0;
+            document.getElementById('total-sales').textContent = '$' + totalSales.toFixed(2);
+          } catch (error) {
+            console.error(error);
+            alert('Failed to load summary data.');
+          }
+        } else {
+          alert('Invalid credentials');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
