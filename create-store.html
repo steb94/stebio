@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Store - Steb.io</title>
+<l        <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Explore Marketplace</a>
+        <a href="start-selling.html">Create Store</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="#support">Support</a>
+      </nav>
+      <div class="auth-links">
+        <!-- Auth links updated by auth.js -->
+        <a href="dashboard.html" id="login-link">Sign In</a>
+        <a href="signup.html" id="signup-link">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding: 2rem 0; max-width: 600px;">
+    <h2>Create Your Store</h2>
+    <p>Please enter a name for your new store.</p>
+    <div style="margin-bottom: 1rem;">
+      <input type="text" id="storeName" placeholder="Store Name" style="padding: 0.5rem; width: 100%;" />
+    </div>
+    <button id="createStoreBtn" style="padding: 0.75rem 1.5rem; background:#6772e5; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:600;">Create Store</button>
+  </main>
+
+  <script>
+    document.getElementById('createStoreBtn').addEventListener('click', function() {
+      const storeName = document.getElementById('storeName').value.trim();
+      if (!storeName) {
+        alert('Please enter a store name.');
+        return;
+      }
+      const owner = localStorage.getItem('username');
+      fetch('/api/stores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: storeName, owner })
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to create store');
+        }
+        return res.json();
+      })
+      .then(data => {
+        localStorage.setItem('storeId', data.id);
+        window.location.href = 'dashboard.html';
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Error creating store.');
+      });
+    });
+  </script>
+  <script src="auth.js"></script>
+</body>
+</html>
