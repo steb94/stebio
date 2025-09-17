@@ -1,0 +1,56 @@
+/* Mobile-specific styles for Steb.io marketplace */
+/* Use this file to override layout for screens up to 768px */
+@media (max-width: 768px) {
+  /* navigation vertical stacking */
+  #top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #top-nav .nav-links {
+    flex-direction: column;
+    width: 100%;
+  }
+  #top-nav .nav-links a {
+    padding: 0.5rem 0;
+  }
+  /* search bar vertical stacking */
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-bar input {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  /* Category bar horizontal scroll for small screens */
+  .category-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .category-bar button {
+    white-space: nowrap;
+  }
+  /* Single column product grid */
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+  /* Control bar vertical orientation */
+  .control-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .control-bar select {
+    margin-bottom: 0.5rem;
+  }
+  /* Summary cards single column */
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  /* orders table scroll on x-axis */
+  .orders-table {
+    overflow-x: auto;
+    display: block;
+  }
+}
