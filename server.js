@@ -18,6 +18,9 @@ const {
   getProductsByStoreId
   , getOrderById
   , updateOrderStatus
+  , addMessage
+  , getMessagesForUser
+  , markMessageDelivered
 } = require('./models');
 
 const app = express();
@@ -153,6 +156,28 @@ app.patch('/api/orders/:id', (req, res) => {
 /* Placeholder for existing routes (auth, orders, support). In a full implementation
  * these would be imported from other modules.
  */
+
+// Simple messaging endpoints
+// POST /api/messages -> send a new message from one user to another.  Body should
+// contain fromUser, toUser, content, and optional subject.  Returns the
+// message object.  In a real system this would trigger an email notification.
+app.post('/api/messages', (req, res) => {
+  const { fromUser, toUser, subject, content } = req.body;
+  if (!fromUser || !toUser || !content) {
+    return res.status(400).json({ error: 'Missing fromUser, toUser or content' });
+  }
+  const msg = addMessage({ fromUser, toUser, subject, content });
+  // Simulate immediate delivery for demonstration
+  markMessageDelivered(msg.id);
+  res.status(201).json(msg);
+});
+
+// GET /api/messages/:user -> return all messages sent to or from a user
+app.get('/api/messages/:user', (req, res) => {
+  const { user } = req.params;
+  const msgs = getMessagesForUser(user);
+  res.json(msgs);
+});
 
 // Start the server
 const PORT = process.env.PORT || 3001;
