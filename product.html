@@ -52,7 +52,21 @@
 
           // Image
           const img = document.createElement('img');
-          img.src = p.image ? p.image : 'https://via.placeholder.com/500x250?text=Product';
+          /*
+            Determine the image source. Products in our database only store a
+            filename (e.g. "store39.png"). When running on Render, we can't
+            serve these images directly from the static site because they're
+            stored in the GitHub repository. To display the correct image,
+            convert the filename into a GitHub raw URL. If the image field
+            already contains a full URL or a data URI, leave it unchanged.
+            Otherwise, construct a raw GitHub URL pointing to the
+            backend/server-.-js branch where the images live.
+          */
+          let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+          if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+            imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
+          }
+          img.src = imgSrc || 'https://via.placeholder.com/500x250?text=Product';
           img.alt = p.title;
           img.style.width = '100%';
           img.style.maxWidth = '500px';
