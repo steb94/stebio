@@ -55,10 +55,10 @@ function sanitizeProducts(list) {
   // hosting platform does not preserve directory structure.
   return list.map(({ downloadLink, ...safeFields }) => {
     const sanitized = { ...safeFields };
-    // Normalize image path: if it starts with 'images/', strip the prefix
-    if (sanitized.image && typeof sanitized.image === 'string' && sanitized.image.startsWith('images/')) {
-      sanitized.image = sanitized.image.replace(/^images\//, '');
-    }
+    // Leave image path intact (e.g., "images/store10.png") so the frontend
+    // can load it directly from the images folder.  Previously we removed
+    // the "images/" prefix, but now images reside in an "images" folder
+    // at the root of the static site.
     return sanitized;
   });
 }
@@ -98,10 +98,7 @@ app.get('/api/products/:id', (req, res) => {
   }
   // sanitize: remove downloadLink
   const { downloadLink, ...safeProduct } = product;
-  // Normalize image path if stored in images folder
-  if (safeProduct.image && typeof safeProduct.image === 'string' && safeProduct.image.startsWith('images/')) {
-    safeProduct.image = safeProduct.image.replace(/^images\//, '');
-  }
+  // Leave image path intact so the frontend can load from the images folder
   res.json(safeProduct);
 });
 
@@ -113,10 +110,7 @@ app.get('/api/stores/:id', (req, res) => {
     return res.status(404).json({ error: 'Store not found' });
   }
   const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => {
-    // Normalize image path for each product
-    if (safe.image && typeof safe.image === 'string' && safe.image.startsWith('images/')) {
-      safe.image = safe.image.replace(/^images\//, '');
-    }
+    // Leave image path intact for each product
     return safe;
   });
   res.json({ store, products });
@@ -130,9 +124,7 @@ app.get('/api/stores/:id/products', (req, res) => {
     return res.status(404).json({ error: 'Store not found' });
   }
   const products = getProductsByStoreId(id).map(({ downloadLink, ...safe }) => {
-    if (safe.image && typeof safe.image === 'string' && safe.image.startsWith('images/')) {
-      safe.image = safe.image.replace(/^images\//, '');
-    }
+    // Leave image path intact
     return safe;
   });
   res.json(products);

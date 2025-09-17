@@ -120,7 +120,7 @@ const products = [
     description: 'Comprehensive photography guides, presets and tips.',
     price: 29.99,
     type: 'Photography',
-    image: 'photography.png',
+    image: 'store10.png',
     downloadLink: 'https://example.com/downloads/photography-pro-pack.pdf'
   },
   {
@@ -130,7 +130,7 @@ const products = [
     description: 'Weekly fashion insights, styling tips and trend forecasts.',
     price: 19.99,
     type: 'Fashion',
-    image: 'default.png',
+    image: 'store11.png',
     downloadLink: 'https://example.com/downloads/fashion-trends-guide.pdf'
   },
   {
@@ -140,7 +140,7 @@ const products = [
     description: 'Sample packs, tutorials and exclusive beats for aspiring producers.',
     price: 24.99,
     type: 'Music',
-    image: 'default.png',
+    image: 'store12.png',
     downloadLink: 'https://example.com/downloads/music-producer-toolkit.pdf'
   },
   {
@@ -150,7 +150,7 @@ const products = [
     description: 'Insider strategies to save on flights and accommodation around the world.',
     price: 27.99,
     type: 'Travel',
-    image: 'images/default.png',
+    image: 'store13.png',
     downloadLink: 'https://example.com/downloads/travel-hacking-secrets.pdf'
   },
   {
@@ -160,7 +160,7 @@ const products = [
     description: 'Video lessons and recipes from professional chefs for delicious meals.',
     price: 34.99,
     type: 'Food',
-    image: 'images/default.png',
+    image: 'store14.png',
     downloadLink: 'https://example.com/downloads/gourmet-cooking-masterclass.pdf'
   },
   {
@@ -170,7 +170,7 @@ const products = [
     description: 'Guides on building and scaling tech startups, including fundraising tips.',
     price: 39.99,
     type: 'Technology',
-    image: 'images/default.png',
+    image: 'store15.png',
     downloadLink: 'https://example.com/downloads/tech-entrepreneur-playbook.pdf'
   },
   {
@@ -180,7 +180,7 @@ const products = [
     description: 'Expert advice and resources for raising happy, healthy children.',
     price: 14.99,
     type: 'Parenting',
-    image: 'images/default.png',
+    image: 'store16.png',
     downloadLink: 'https://example.com/downloads/parenting-strategies-bundle.pdf'
   },
   {
@@ -190,7 +190,7 @@ const products = [
     description: 'Daily audio and video sessions to boost self‑discipline and productivity.',
     price: 21.99,
     type: 'Self‑Help',
-    image: 'images/default.png',
+    image: 'store17.png',
     downloadLink: 'https://example.com/downloads/mindset-and-motivation-course.pdf'
   },
   {
@@ -200,7 +200,7 @@ const products = [
     description: 'Budgeting templates, investment guides and debt reduction plans.',
     price: 29.99,
     type: 'Finance',
-    image: 'images/default.png',
+    image: 'store18.png',
     downloadLink: 'https://example.com/downloads/personal-finance-toolkit.pdf'
   },
   {
@@ -210,7 +210,7 @@ const products = [
     description: 'Training on finding, analyzing and financing profitable real estate deals.',
     price: 49.99,
     type: 'Real Estate',
-    image: 'images/default.png',
+    image: 'store19.png',
     downloadLink: 'https://example.com/downloads/real-estate-investing-blueprint.pdf'
   },
   {
@@ -220,7 +220,7 @@ const products = [
     description: 'Seasonal guides, planting schedules and pest control tips for gardeners.',
     price: 19.99,
     type: 'Gardening',
-    image: 'images/default.png',
+    image: 'store20.png',
     downloadLink: 'https://example.com/downloads/gardening-mastery-course.pdf'
   },
   {
@@ -230,7 +230,7 @@ const products = [
     description: 'Training videos and nutrition plans for dogs, cats and other pets.',
     price: 12.99,
     type: 'Pets',
-    image: 'images/default.png',
+    image: 'store21.png',
     downloadLink: 'https://example.com/downloads/pet-care-essentials.pdf'
   },
   {
@@ -240,7 +240,7 @@ const products = [
     description: 'Interactive experiments and resources for budding scientists of all ages.',
     price: 24.99,
     type: 'Science',
-    image: 'images/default.png',
+    image: 'store22.png',
     downloadLink: 'https://example.com/downloads/science-explorer-pack.pdf'
   },
   {
@@ -250,7 +250,7 @@ const products = [
     description: 'Audio lessons and practice exercises for multiple languages.',
     price: 29.99,
     type: 'Languages',
-    image: 'images/default.png',
+    image: 'store23.png',
     downloadLink: 'https://example.com/downloads/language-learning-kit.pdf'
   },
   {
@@ -260,7 +260,7 @@ const products = [
     description: 'Resources and mastermind sessions for starting and growing your business.',
     price: 34.99,
     type: 'Entrepreneurship',
-    image: 'images/default.png',
+    image: 'store24.png',
     downloadLink: 'https://example.com/downloads/entrepreneur-growth-pack.pdf'
   },
   {
@@ -270,7 +270,7 @@ const products = [
     description: 'Templates, tech recommendations and marketing strategies for podcast hosts.',
     price: 15.99,
     type: 'Podcasting',
-    image: 'images/default.png',
+    image: 'store25.png',
     downloadLink: 'https://example.com/downloads/podcasting-essentials.pdf'
   },
   {
@@ -280,7 +280,7 @@ const products = [
     description: 'Curated design assets, style guides and creative prompts.',
     price: 18.99,
     type: 'Design',
-    image: 'images/default.png',
+    image: 'store26.png',
     downloadLink: 'https://example.com/downloads/design-inspiration-library.pdf'
   },
   {
@@ -290,7 +290,7 @@ const products = [
     description: 'Skincare routines, makeup tutorials and product recommendations.',
     price: 22.99,
     type: 'Beauty',
-    image: 'images/default.png',
+    image: 'store27.png',
     downloadLink: 'https://example.com/downloads/beauty-secrets-course.pdf'
   },
   {
@@ -300,7 +300,7 @@ const products = [
     description: 'Interior design tips, mood boards and DIY projects.',
     price: 17.99,
     type: 'Home Decor',
-    image: 'images/default.png',
+    image: 'store28.png',
     downloadLink: 'https://example.com/downloads/home-decor-guide.pdf'
   },
   {
@@ -310,7 +310,7 @@ const products = [
     description: 'Plans, tutorials and material lists for home improvement projects.',
     price: 27.99,
     type: 'DIY',
-    image: 'images/default.png',
+    image: 'store29.png',
     downloadLink: 'https://example.com/downloads/diy-builder-bundle.pdf'
   },
   {
@@ -320,7 +320,7 @@ const products = [
     description: 'Step‑by‑step guides to diagnose and fix common car issues.',
     price: 23.99,
     type: 'Automotive',
-    image: 'images/default.png',
+    image: 'store30.png',
     downloadLink: 'https://example.com/downloads/automotive-repair-secrets.pdf'
   },
   {
@@ -330,7 +330,7 @@ const products = [
     description: 'Survival guides, packing lists and trail recommendations for adventurers.',
     price: 26.99,
     type: 'Outdoor',
-    image: 'images/default.png',
+    image: 'store31.png',
     downloadLink: 'https://example.com/downloads/outdoor-adventure-kit.pdf'
   },
   {
@@ -340,7 +340,7 @@ const products = [
     description: 'Meditation practices, journaling prompts and mindfulness exercises.',
     price: 19.99,
     type: 'Spirituality',
-    image: 'images/default.png',
+    image: 'store32.png',
     downloadLink: 'https://example.com/downloads/spiritual-journey-course.pdf'
   },
   {
@@ -350,7 +350,7 @@ const products = [
     description: 'Nutrition plans, yoga flows and holistic health resources.',
     price: 29.99,
     type: 'Wellness',
-    image: 'images/default.png',
+    image: 'store33.png',
     downloadLink: 'https://example.com/downloads/wellness-lifestyle-program.pdf'
   },
   {
@@ -360,7 +360,7 @@ const products = [
     description: 'Curated lectures and reading lists on world history topics.',
     price: 15.99,
     type: 'History',
-    image: 'images/default.png',
+    image: 'store34.png',
     downloadLink: 'https://example.com/downloads/history-buff-bundle.pdf'
   },
   {
@@ -370,7 +370,7 @@ const products = [
     description: 'Writing prompts, critique sessions and storytelling techniques.',
     price: 18.99,
     type: 'Writing',
-    image: 'images/default.png',
+    image: 'store35.png',
     downloadLink: 'https://example.com/downloads/creative-writing-workshop.pdf'
   },
   {
@@ -380,7 +380,7 @@ const products = [
     description: 'Strategies for digital marketing, branding and customer acquisition.',
     price: 34.99,
     type: 'Marketing',
-    image: 'images/default.png',
+    image: 'store36.png',
     downloadLink: 'https://example.com/downloads/marketing-masterclass.pdf'
   },
   {
@@ -390,7 +390,7 @@ const products = [
     description: 'Interactive coding tutorials and projects for beginners and intermediates.',
     price: 29.99,
     type: 'Programming',
-    image: 'images/default.png',
+    image: 'store37.png',
     downloadLink: 'https://example.com/downloads/learn-to-code-bundle.pdf'
   },
   {
@@ -400,7 +400,7 @@ const products = [
     description: 'Introduction to stock, bond and ETF investing for beginners.',
     price: 24.99,
     type: 'Investing',
-    image: 'images/default.png',
+    image: 'store38.png',
     downloadLink: 'https://example.com/downloads/investing-fundamentals-course.pdf'
   },
   {
@@ -410,7 +410,7 @@ const products = [
     description: 'Learn sleight of hand, card tricks and stage magic secrets.',
     price: 16.99,
     type: 'Magic',
-    image: 'images/default.png',
+    image: 'store39.png',
     downloadLink: 'https://example.com/downloads/magic-tricks-library.pdf'
   },
   {
@@ -420,7 +420,7 @@ const products = [
     description: 'Recipes, techniques and troubleshooting for cakes, breads and pastries.',
     price: 22.99,
     type: 'Cooking',
-    image: 'images/default.png',
+    image: 'store40.png'
     downloadLink: 'https://example.com/downloads/baking-essentials-course.pdf'
   }
 ];
