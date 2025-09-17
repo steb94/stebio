@@ -21,6 +21,10 @@
         // Clear login info and reload page
         localStorage.removeItem('loggedIn');
         localStorage.removeItem('username');
+        // also remove password, role and storeId to fully log out
+        localStorage.removeItem('password');
+        localStorage.removeItem('role');
+        localStorage.removeItem('storeId');
         location.reload();
       });
     }
