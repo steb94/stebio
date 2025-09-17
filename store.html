@@ -63,14 +63,25 @@
           // Render products grid
           const grid = document.createElement('div');
           grid.classList.add('product-grid');
-          products.forEach((p) => {
-            const card = document.createElement('div');
-            card.classList.add('product-card');
-            const img = document.createElement('img');
-            img.src = 'https://via.placeholder.com/300x150?text=Product';
-            img.alt = p.title;
-            const titleEl = document.createElement('h4');
-            titleEl.textContent = p.title;
+               products.forEach((p) => {
+                 const card = document.createElement('div');
+                 card.classList.add('product-card');
+                 const img = document.createElement('img');
+                 /*
+                   Determine the product image. If the product only stores a
+                   filename (e.g. "store39.png"), convert it to the GitHub raw
+                   URL used by the marketplace. If the image field is already a
+                   full URL or data URI, leave it unchanged. Otherwise
+                   fallback to a placeholder.
+                 */
+                 let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+                 if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+                   imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
+                 }
+                 img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
+                 img.alt = p.title;
+                 const titleEl = document.createElement('h4');
+                 titleEl.textContent = p.title;
             const desc = document.createElement('p');
             const descText = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description;
             desc.textContent = descText;
@@ -99,5 +110,7 @@
         });
     }
   </script>
+  <!-- Auth script to update navigation based on login state -->
+  <script src="auth.js"></script>
 </body>
 </html>
