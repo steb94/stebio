@@ -53,6 +53,28 @@ const products = [
     image: 'images/education.png',
     downloadLink: 'https://example.com/downloads/digital-marketing-essentials.pdf'
   }
+  ,
+  // Additional products for gaming and productivity categories
+  {
+    id: '6',
+    storeId: '5',
+    title: 'Gaming Strategy Pack',
+    description: 'Exclusive gaming strategies, tips and tricks for top titles to help you level up your play.',
+    price: 14.99,
+    type: 'Gaming',
+    image: 'images/gaming.png',
+    downloadLink: 'https://example.com/downloads/gaming-strategy-pack.pdf'
+  },
+  {
+    id: '7',
+    storeId: '6',
+    title: 'Productivity Power Pack',
+    description: 'Tools, templates and resources to streamline your workflow and boost productivity.',
+    price: 24.99,
+    type: 'Productivity',
+    image: 'images/productivity.png',
+    downloadLink: 'https://example.com/downloads/productivity-power-pack.pdf'
+  }
 ];
 
 // Stores hold owner and basic info
@@ -61,6 +83,10 @@ const stores = [
   { id: '2', name: 'Crypto Signals Store', owner: 'User2' },
   { id: '3', name: 'Stock Picks Store', owner: 'User3' },
   { id: '4', name: 'Course Masters', owner: 'User4' }
+  ,
+  // New stores for additional categories
+  { id: '5', name: 'Gaming Insider Store', owner: 'User5' },
+  { id: '6', name: 'Productivity Tools Store', owner: 'User6' }
 ];
 
 // Orders record purchases; includes id, productId, productName, price, status, storeId
