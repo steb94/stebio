@@ -22,6 +22,7 @@
       </div>
     </div>
   </header>
+
   <main class="container" style="padding: 2rem 0;">
     <!-- Login section: shown when user is not signed in -->
     <section id="loginSection" style="display:none; text-align:center; margin-top:2rem;">
@@ -30,11 +31,10 @@
       <div style="margin-bottom:1rem;">
         <input type="text" id="usernameInput" placeholder="Username" style="padding:0.5rem; width:200px;" />
       </div>
-     
-        <div style="margin-bottm:1rem;">
-  <input type="password" id="passwordInput" placeholder="Password" style="padding:0.5rem; width:200px;" />
-  </div>
-<button id="loginBtn" style="padding:0.5rem 1rem;">Sign In</button>
+      <div style="margin-bottom:1rem;">
+        <input type="password" id="passwordInput" placeholder="Password" style="padding:0.5rem; width:200px;" />
+      </div>
+      <button id="loginBtn" style="padding:0.5rem 1rem;">Sign In</button>
     </section>
 
     <!-- Dashboard summary: hidden until user is signed in -->
@@ -57,13 +57,13 @@
     </section>
 
     <!-- Chart section: hidden until user is signed in -->
-    <section id="dashboardChart" style="display:none; margin-bottom: 2rem;">
-      <h3>Sales Overview</h3>
+    <section id="dashboardChart" style="display:none; margin-top:2rem;">
+      <h3>Sales overview</h3>
       <canvas id="salesChart" width="400" height="200"></canvas>
     </section>
 
     <!-- Orders section: hidden until user is signed in -->
-    <section id="dashboardOrders" style="display:none;">
+    <section id="dashboardOrders" style="display:none; margin-top:2rem;">
       <h3>Orders</h3>
       <div style="overflow-x:auto;">
         <table id="ordersTable" class="orders-table">
@@ -81,17 +81,19 @@
       </div>
     </section>
   </main>
+
   <!-- Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Determine API base URL. Use the backend domain on Render and relative /api locally.
+    // Determine API base URL. Use the backend domain on render or /api locally.
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
+
     // Fetch dashboard summary
     async function loadDashboard() {
       try {
-        const res = await fetch(`${API_BASE}/dashboard`);
+        const res = await fetch(\`\${API_BASE}/dashboard\`);
         const data = await res.json();
         document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
         document.getElementById('dashTotalOrders').textContent = data.totalOrders;
@@ -100,64 +102,66 @@
         console.error('Error loading dashboard summary', err);
       }
     }
+
     // Fetch orders and render table
     async function loadOrders() {
       try {
-        const res = await fetch(`${API_BASE}/orders`);
+        const res = await fetch(\`\${API_BASE}/orders\`);
         const orders = await res.json();
         const tbody = document.querySelector('#ordersTable tbody');
         tbody.innerHTML = '';
         orders.forEach((o) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${o.id}</td>
-            <td>${o.productName}</td>
-            <td>${o.price.toFixed(2)}</td>
-            <td><span class="order-status">${o.status}</span></td>
+          tr.innerHTML = \`
+            <td>\${o.id}</td>
+            <td>\${o.productName}</td>
+            <td>\${o.price.toFixed(2)}</td>
+            <td><span class="order-status">\${o.status}</span></td>
             <td>
-              <select data-id="${o.id}" class="status-select">
-                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                <option value="Completed" ${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              <select data-id="\${o.id}" class="status-select">
+                <option value="Processing" \${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                <option value="Completed" \${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                <option value="Cancelled" \${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
               </select>
             </td>
-          `;
+          \`;
           tbody.appendChild(tr);
         });
       } catch (err) {
         console.error('Error loading orders', err);
       }
     }
+
     // Handle status change
     document.addEventListener('change', (e) => {
       if (e.target.classList.contains('status-select')) {
         const id = e.target.getAttribute('data-id');
         const newStatus = e.target.value;
-        fetch(`${API_BASE}/orders/${id}`, {
+        fetch(\`\${API_BASE}/orders/\${id}\`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus })
         })
-          .then((res) => res.json())
+          .then(res => res.json())
           .then(() => {
-            // Update status text in table
+            // update status text
             const statusSpan = e.target.parentElement.previousElementSibling.querySelector('.order-status');
             statusSpan.textContent = newStatus;
           })
-          .catch((err) => console.error('Error updating order', err));
+          .catch(err => console.error('Error updating order', err));
       }
     });
+
     // Render sales chart with dummy monthly data
     function renderChart() {
       const ctx = document.getElementById('salesChart');
-      // Generate dummy monthly sales data based on orders (counts per month) for demonstration
       const labels = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
       const data = {
         labels: labels,
         datasets: [
           {
             label: 'Orders',
-            data: labels.map(() => Math.floor(Math.random() * 5) + 1),
+            data: labels.map(() => Math.floor(Math.random() * 8) + 2),
             backgroundColor: 'rgba(102, 126, 234, 0.6)',
             borderColor: 'rgba(102, 126, 234, 1)',
             borderWidth: 1
@@ -178,14 +182,12 @@
             }
           },
           plugins: {
-            title: {
-              display: true,
-              text: 'Monthly Orders'
-            }
+            title: { display: true, text: 'Monthly Orders' }
           }
         }
       });
     }
+
     // Initialize dashboard depending on login state
     function initDashboard() {
       const loggedIn = localStorage.getItem('loggedIn') === 'true';
@@ -194,42 +196,18 @@
       const summarySection = document.getElementById('dashboardSummary');
       const chartSection = document.getElementById('dashboardChart');
       const ordersSection = document.getElementById('dashboardOrders');
-      // Section for buyers (no dashboard)
-      let buyerNotice = document.getElementById('buyerNotice');
-      if (!buyerNotice) {
-        buyerNotice = document.createElement('section');
-        buyerNotice.id = 'buyerNotice';
-        buyerNotice.style.display = 'none';
-        buyerNotice.style.textAlign = 'center';
-        buyerNotice.style.marginTop = '2rem';
-        buyerNotice.innerHTML = `
-          <h2>Buyer Account</h2>
-          <p>You are signed in as a buyer. The dashboard is available only to sellers who create a store.</p>
-          <div style="margin-top:1rem;">
-            <a href="start-selling.html" class="button" style="background:#667eea; color:#fff; padding:0.5rem 1rem; border-radius:4px; text-decoration:none;">Become a Seller</a>
-          </div>`;
-        // insert after loginSection
-        loginSection.parentElement.insertBefore(buyerNotice, summarySection);
-      }
       if (!loggedIn) {
-        // Show login form, hide dashboard sections and buyer notice
         loginSection.style.display = 'block';
         summarySection.style.display = 'none';
         chartSection.style.display = 'none';
         ordersSection.style.display = 'none';
-        buyerNotice.style.display = 'none';
       } else {
-        // Hide login form
         loginSection.style.display = 'none';
         if (role !== 'seller') {
-          // Show buyer notice if not a seller
-          buyerNotice.style.display = 'block';
           summarySection.style.display = 'none';
           chartSection.style.display = 'none';
           ordersSection.style.display = 'none';
         } else {
-          // Show full dashboard for sellers
-          buyerNotice.style.display = 'none';
           summarySection.style.display = 'block';
           chartSection.style.display = 'block';
           ordersSection.style.display = 'block';
@@ -241,40 +219,29 @@
     }
 
     // Login button handler
-  document.getElementById('loginBtn').addEventListener('click', () => {
-  // Login button handler
-doc// Login button handler
-document.getElementById('loginBtn').addEventListener('click', () => {
-  const usernameInput = document.getElementById('usernameInput');
-  const passwordInput = document.getElementById('passwordInput');
-  // Validate that both fields are filled in
-  if (!usernameInput || !passwordInput ||
-      usernameInput.value.trim() === '' ||
-      passwordInput.value.trim() === '') {
-    alert('Please enter a username and password to sign in.');
-    return;
-  }
-  // Retrieve stored credentials from localStorage (set on signup)
-  const storedUsername = localStorage.getItem('username');
-  const storedPassword = localStorage.getItem('password');
-  // Compare entered credentials with stored ones
-  if (storedUsername === usernameInput.value.trim() &&
-      storedPassword === passwordInput.value.trim()) {
-    localStorage.setItem('loggedIn', 'true');
-    // Refresh page to display the dashboard
-    location.reload();
-  } else {
-    alert('Invalid username or password.');
-  }
-});on.reload();
-  } else {
-    alert('Invalid username or password.');
-  }
-});itialize on page load
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const usernameInput = document.getElementById('usernameInput');
+      const passwordInput = document.getElementById('passwordInput');
+      if (!usernameInput || !passwordInput ||
+          usernameInput.value.trim() === '' ||
+          passwordInput.value.trim() === '') {
+        alert('Please enter a username and password to sign in.');
+        return;
+      }
+      const storedUsername = localStorage.getItem('username');
+      const storedPassword = localStorage.getItem('password');
+      if (storedUsername === usernameInput.value.trim() &&
+          storedPassword === passwordInput.value.trim()) {
+        localStorage.setItem('loggedIn', 'true');
+        location.reload();
+      } else {
+        alert('Invalid username or password.');
+      }
+    });
+
+    // Initialize on page load
     initDashboard();
   </script>
-
-  <!-- Auth script to update navigation based on login state -->
   <script src="auth.js"></script>
 </body>
 </html>
