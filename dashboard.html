@@ -30,7 +30,11 @@
       <div style="margin-bottom:1rem;">
         <input type="text" id="usernameInput" placeholder="Username" style="padding:0.5rem; width:200px;" />
       </div>
-      <button id="loginBtn" style="padding:0.5rem 1rem;">Sign In</button>
+     
+        <div style="margin-bottm:1rem;">
+  <input type="password" id="passwordInput" placeholder="Password" style="padding:0.5rem; width:200px;" />
+  </div>
+<button id="loginBtn" style="padding:0.5rem 1rem;">Sign In</button>
     </section>
 
     <!-- Dashboard summary: hidden until user is signed in -->
@@ -237,18 +241,36 @@
     }
 
     // Login button handler
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      const usernameInput = document.getElementById('usernameInput');
-      if (usernameInput && usernameInput.value.trim() !== '') {
-        localStorage.setItem('loggedIn', 'true');
-        localStorage.setItem('username', usernameInput.value.trim());
-        // reload page to initialize dashboard
-        location.reload();
-      } else {
-        alert('Please enter a username to sign in.');
-      }
-    });
-    // Initialize on page load
+  document.getElementById('loginBtn').addEventListener('click', () => {
+  // Login button handler
+doc// Login button handler
+document.getElementById('loginBtn').addEventListener('click', () => {
+  const usernameInput = document.getElementById('usernameInput');
+  const passwordInput = document.getElementById('passwordInput');
+  // Validate that both fields are filled in
+  if (!usernameInput || !passwordInput ||
+      usernameInput.value.trim() === '' ||
+      passwordInput.value.trim() === '') {
+    alert('Please enter a username and password to sign in.');
+    return;
+  }
+  // Retrieve stored credentials from localStorage (set on signup)
+  const storedUsername = localStorage.getItem('username');
+  const storedPassword = localStorage.getItem('password');
+  // Compare entered credentials with stored ones
+  if (storedUsername === usernameInput.value.trim() &&
+      storedPassword === passwordInput.value.trim()) {
+    localStorage.setItem('loggedIn', 'true');
+    // Refresh page to display the dashboard
+    location.reload();
+  } else {
+    alert('Invalid username or password.');
+  }
+});on.reload();
+  } else {
+    alert('Invalid username or password.');
+  }
+});itialize on page load
     initDashboard();
   </script>
 
