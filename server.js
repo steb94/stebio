@@ -1,3 +1,6 @@
+const path = require('path');
+app.use(express.static(path.join(__dirname)));
+
 // server.js
 
 const express = require('express');
