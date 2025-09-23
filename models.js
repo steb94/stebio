@@ -41,12 +41,12 @@ const products = [
   }
 ];
 
-// Arrays for orders, messages, chat rooms and posts
+// Dynamic arrays
 const orders = [];
 const messages = [];
 let nextMessageId = 1;
 
-const chatRooms = []; // { id, productId, members:[{username, expiresAt}], messages:[...] }
+const chatRooms = []; // { id, productId, members:[{ username, expiresAt }], messages:[{ id, username, message, timestamp }] }
 const posts = [];     // { id, storeId, username, mediaUrl, content, timestamp }
 let nextPostId = 1;
 
@@ -81,7 +81,7 @@ function updateOrderStatus(id, status) {
   return o;
 }
 
-/* ===== Messaging helpers ===== */
+/* ===== Personal messages ===== */
 function addMessage(sender, recipient, content) {
   const msg = {
     id: nextMessageId++,
@@ -174,7 +174,7 @@ function getPostsByStoreId(storeId) {
   return posts.filter(p => p.storeId === Number(storeId));
 }
 
-/* ===== Export helpers ===== */
+/* ===== Exports ===== */
 module.exports = {
   products,
   stores,
