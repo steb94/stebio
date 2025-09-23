@@ -29,12 +29,11 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to serve static files and parse JSON
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname))); // serves index.html, css, js, images
+app.use(express.static(path.join(__dirname))); // serve index.html, css, js, images
 
-/* ===== Products ===== */
+/* ===== Product endpoints ===== */
 app.get('/api/products', (req, res) => {
   let result = getAllProducts();
   const { q, sort, type, minPrice, maxPrice } = req.query;
@@ -73,7 +72,7 @@ app.post('/api/products', (req, res) => {
   res.json(product);
 });
 
-/* ===== Stores ===== */
+/* ===== Store endpoints ===== */
 app.get('/api/stores', (req, res) => {
   res.json(getAllStores());
 });
@@ -91,7 +90,7 @@ app.post('/api/stores', (req, res) => {
   res.json(createStore(name, owner));
 });
 
-/* ===== Orders ===== */
+/* ===== Order endpoints ===== */
 app.get('/api/orders', (req, res) => {
   res.json(getAllOrders());
 });
@@ -114,8 +113,10 @@ app.post('/api/orders', (req, res) => {
     status: 'Processing',
     buyerName
   });
-  // Grant chat access (defaults to 7 days if not provided)
-  const expiry = expiresAt ? new Date(expiresAt) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  // Grant chat access (default 7 days if not provided)
+  const expiry = expiresAt
+    ? new Date(expiresAt)
+    : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   addUserToChat(productId, buyerName, expiry.toISOString());
   res.json(newOrder);
 });
@@ -126,7 +127,7 @@ app.patch('/api/orders/:id', (req, res) => {
   res.json(updated);
 });
 
-/* ===== Dashboard ===== */
+/* ===== Dashboard summary ===== */
 app.get('/api/dashboard', (req, res) => {
   const products = getAllProducts();
   const stores = getAllStores();
@@ -159,7 +160,7 @@ app.patch('/api/messages/:id', (req, res) => {
   res.json(msg);
 });
 
-/* ===== Chat ===== */
+/* ===== Chat endpoints ===== */
 app.get('/api/chat/:productId/messages', (req, res) => {
   const { username } = req.query;
   const { productId } = req.params;
@@ -181,7 +182,7 @@ app.post('/api/chat/:productId/message', (req, res) => {
   res.json(addChatMessage(productId, username, message));
 });
 
-/* ===== Posts ===== */
+/* ===== Post endpoints ===== */
 app.get('/api/posts/:storeId', (req, res) => {
   res.json(getPostsByStoreId(req.params.storeId));
 });
@@ -193,12 +194,12 @@ app.post('/api/posts/:storeId', (req, res) => {
   res.json(createPost(req.params.storeId, username, mediaUrl, content));
 });
 
-/* ===== Fallback to serve index.html ===== */
+/* ===== Fallback route to load index.html ===== */
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-/* ===== Start server ===== */
+/* ===== Start the server ===== */
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
