@@ -1,13 +1,13 @@
 // models.js
 
-// Sample store data
+// Sample stores
 const stores = [
   { id: 1, name: 'Crypto Store', owner: 'alice' },
   { id: 2, name: 'Fitness Hub', owner: 'bob' },
   { id: 3, name: 'Art Supplies', owner: 'carol' }
 ];
 
-// Sample product data
+// Sample products
 const products = [
   {
     id: 1,
@@ -41,66 +41,56 @@ const products = [
   }
 ];
 
-// Orders (initially empty)
+// Orders
 const orders = [];
 
-// Personal messages
+// Private messages
 const messages = [];
 let nextMessageId = 1;
 
-// Chat rooms (per product)
+// Chat rooms per product: { id, productId, members:[{username, expiresAt}], messages:[{id, username, message, timestamp}] }
 const chatRooms = [];
 
-// Posts (per store)
+// Posts per store: { id, storeId, username, mediaUrl, content, timestamp }
 const posts = [];
 let nextPostId = 1;
 
-/* ===== Basic product/store/order helpers ===== */
+/* -------- Basic helpers -------- */
 function getAllProducts() {
   return products;
 }
-
 function getAllStores() {
   return stores;
 }
-
 function getAllOrders() {
   return orders;
 }
-
 function getProductById(id) {
   return products.find(p => p.id === Number(id));
 }
-
 function getStoreById(id) {
   return stores.find(s => s.id === Number(id));
 }
-
 function getProductsByStoreId(storeId) {
   return products.filter(p => p.storeId === Number(storeId));
 }
-
 function getOrderById(id) {
   return orders.find(o => o.id === Number(id));
 }
-
 function createOrder(order) {
   order.id = orders.length + 1;
   orders.push(order);
   return order;
 }
-
 function updateOrderStatus(id, status) {
-  const order = getOrderById(id);
-  if (order) {
-    order.status = status;
-  }
-  return order;
+  const o = getOrderById(id);
+  if (o) o.status = status;
+  return o;
 }
 
-/* ===== Personal messaging ===== */
+/* -------- Personal messaging -------- */
 function addMessage(sender, recipient, content) {
-  const message = {
+  const msg = {
     id: nextMessageId++,
     sender,
     recipient,
@@ -108,41 +98,35 @@ function addMessage(sender, recipient, content) {
     timestamp: new Date().toISOString(),
     delivered: false
   };
-  messages.push(message);
-  return message;
+  messages.push(msg);
+  return msg;
 }
-
 function getMessagesForUser(username) {
   return messages.filter(m => m.sender === username || m.recipient === username);
 }
-
 function markMessageDelivered(id) {
-  const m = messages.find(msg => msg.id === Number(id));
-  if (m) {
-    m.delivered = true;
-  }
+  const m = messages.find(x => x.id === Number(id));
+  if (m) m.delivered = true;
   return m;
 }
 
-/* ===== Chat room helpers ===== */
+/* -------- Chat helpers -------- */
 function createChatRoom(productId) {
   let room = chatRooms.find(r => r.productId === Number(productId));
   if (!room) {
     room = {
       id: chatRooms.length + 1,
       productId: Number(productId),
-      members: [],   // { username, expiresAt }
-      messages: []   // { id, username, message, timestamp }
+      members: [],
+      messages: []
     };
     chatRooms.push(room);
   }
   return room;
 }
-
-function getChatRoomByProductId(productId) {
-  return chatRooms.find(r => r.productId === Number(productId));
+function getChatRoomByProductId(pid) {
+  return chatRooms.find(r => r.productId === Number(pid));
 }
-
 function addUserToChat(productId, username, expiresAt) {
   const room = createChatRoom(productId);
   const existing = room.members.find(m => m.username === username);
@@ -152,21 +136,17 @@ function addUserToChat(productId, username, expiresAt) {
     room.members.push({ username, expiresAt });
   }
 }
-
 function removeExpiredMembers() {
   const now = new Date();
   chatRooms.forEach(room => {
     room.members = room.members.filter(m => new Date(m.expiresAt) > now);
   });
 }
-
 function isUserInChat(productId, username) {
   removeExpiredMembers();
   const room = getChatRoomByProductId(productId);
-  if (!room) return false;
-  return room.members.some(m => m.username === username);
+  return room ? room.members.some(m => m.username === username) : false;
 }
-
 function addChatMessage(productId, username, message) {
   const room = getChatRoomByProductId(productId);
   if (!room) return null;
@@ -179,13 +159,12 @@ function addChatMessage(productId, username, message) {
   room.messages.push(msg);
   return msg;
 }
-
 function getChatMessages(productId) {
   const room = getChatRoomByProductId(productId);
   return room ? room.messages : [];
 }
 
-/* ===== Posts helpers ===== */
+/* -------- Posts helpers -------- */
 function createPost(storeId, username, mediaUrl, content) {
   const post = {
     id: nextPostId++,
@@ -198,12 +177,11 @@ function createPost(storeId, username, mediaUrl, content) {
   posts.push(post);
   return post;
 }
-
 function getPostsByStoreId(storeId) {
   return posts.filter(p => p.storeId === Number(storeId));
 }
 
-/* ===== Exports ===== */
+/* -------- Exports -------- */
 module.exports = {
   products,
   stores,
