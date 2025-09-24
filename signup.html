@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Sign Up - Steb.io</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,35 +11,37 @@
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
-        <a href="create-store.html">Create Store</a>
+        <a href="index.html">Home</a>
+        <a href="create-store.html">Start Selling</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
       </nav>
       <div class="auth-links"></div>
     </div>
   </header>
-  <main class="container" style="padding: 2rem 0;">
+
+  <main class="container" style="padding:2rem 0;">
     <h2>Create an Account</h2>
-    <form id="signupForm" style="max-width:400px">
+    <form id="signupForm" style="max-width:400px; margin-top:1rem;">
       <div style="margin-bottom:1rem;">
         <label for="signupUsername">Username</label><br>
-        <input type="text" id="signupUsername" placeholder="Enter username" style="width:100%; padding:0.5rem;">
+        <input type="text" id="signupUsername" placeholder="Enter username">
       </div>
       <div style="margin-bottom:1rem;">
         <label for="signupPassword">Password</label><br>
-        <input type="password" id="signupPassword" placeholder="Enter password" style="width:100%; padding:0.5rem;">
+        <input type="password" id="signupPassword" placeholder="Enter password">
       </div>
       <div style="margin-bottom:1rem;">
         <label for="roleSelect">Role</label><br>
-        <select id="roleSelect" style="width:100%; padding:0.5rem;">
+        <select id="roleSelect">
           <option value="buyer">Buy products</option>
           <option value="seller">Sell products (create a store)</option>
         </select>
       </div>
-      <button type="submit" style="padding:0.5rem 1rem;">Sign Up</button>
+      <button type="submit" class="button">Sign Up</button>
     </form>
   </main>
+
   <script src="auth.js"></script>
   <script>
     document.getElementById('signupForm').addEventListener('submit', function(e) {
