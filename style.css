@@ -1,6 +1,12 @@
-/*
- * Base styles for Steb.io marketplace frontend
- */
+/* Steb.io theme variables */
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --secondary: #f5f5f5;
+  --text: #1f2937;
+  --bg: #ffffff;
+  --border: #e5e7eb;
+}
 
 * {
   box-sizing: border-box;
@@ -10,18 +16,18 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  background-color: #f7fafc;
-  color: #2d3748;
+  background-color: var(--bg);
+  color: var(--text);
   line-height: 1.5;
 }
 
 a {
-  color: #4a5568;
+  color: var(--primary-dark);
   text-decoration: none;
 }
 
 a:hover {
-  color: #2b6cb0;
+  text-decoration: underline;
 }
 
 .container {
@@ -30,10 +36,10 @@ a:hover {
   margin: 0 auto;
 }
 
-/* Top navigation */
+/* Navigation */
 #top-nav {
-  background: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -47,73 +53,106 @@ a:hover {
 }
 
 .brand {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #2b6cb0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-dark);
 }
 
 nav a {
-  margin-left: 1.5rem;
+  margin-left: 1.25rem;
   font-weight: 500;
 }
 
 nav a.active {
-  color: #2b6cb0;
-  border-bottom: 2px solid #2b6cb0;
+  color: var(--primary-dark);
+  border-bottom: 2px solid var(--primary-dark);
   padding-bottom: 0.25rem;
 }
 
 .auth-links a {
+  margin-left: 1rem;
   font-weight: 500;
-  margin-left: 1.5rem;
+}
+
+/* Buttons */
+.button {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--primary-dark);
+  color: #fff;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+.button:hover {
+  background: #4338ca;
+}
+
+.button.outline {
+  background: transparent;
+  color: var(--primary-dark);
+  border: 2px solid var(--primary-dark);
+}
+
+.button.outline:hover {
+  background: var(--primary-dark);
+  color: #fff;
 }
 
 /* Hero */
-#hero {
-  background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+.hero {
+  background: linear-gradient(120deg, var(--primary), var(--primary-dark));
   color: #fff;
   padding: 4rem 0;
   text-align: center;
 }
 
-#hero h1 {
-  font-size: 2.2rem;
+.hero h1 {
+  font-size: 2.5rem;
   margin-bottom: 0.5rem;
 }
 
-#hero p {
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.search-bar {
-  display: inline-flex;
+.cta-buttons {
+  display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.search-bar {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
 }
 
 .search-bar input {
+  width: 300px;
   padding: 0.75rem 1rem;
   border: none;
   border-radius: 4px 0 0 4px;
-  width: 250px;
 }
 
 .search-bar button {
-  background: #2b6cb0;
-  border: none;
-  color: #fff;
   padding: 0.75rem 1.25rem;
+  border: none;
   border-radius: 0 4px 4px 0;
-  cursor: pointer;
+  background: var(--primary-dark);
+  color: #fff;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .search-bar button:hover {
-  background: #2c5282;
+  background: #4338ca;
 }
 
 /* Categories */
@@ -122,22 +161,22 @@ nav a.active {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
 }
 
 .category-bar button {
   padding: 0.5rem 1rem;
+  background: var(--secondary);
+  color: var(--text);
   border: none;
-  border-radius: 4px;
-  background: #edf2f7;
-  color: #2d3748;
+  border-radius: 9999px;
   cursor: pointer;
-  font-weight: 500;
+  transition: background 0.2s;
 }
 
 .category-bar button.active,
 .category-bar button:hover {
-  background: #2b6cb0;
+  background: var(--primary-dark);
   color: #fff;
 }
 
@@ -146,53 +185,52 @@ nav a.active {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin: 2rem 0;
+  margin: 3rem 0;
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: var(--secondary);
   padding: 1.5rem;
+  border-radius: 8px;
   text-align: center;
 }
 
 .stat-card h3 {
   font-size: 2rem;
   margin-bottom: 0.25rem;
+  color: var(--primary-dark);
 }
 
 .stat-card p {
-  color: #718096;
+  color: #6b7280;
 }
 
 /* Control bar */
 .control-bar {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  margin-bottom: 1rem;
+  align-items: center;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .control-bar select {
   padding: 0.5rem;
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 /* Product grid */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .product-card {
-  background: #fff;
+  background: var(--secondary);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 1rem;
   display: flex;
   flex-direction: column;
@@ -201,140 +239,96 @@ nav a.active {
 
 .product-card img {
   width: 100%;
-  height: 150px;
+  height: 180px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-bottom: 0.75rem;
-  background: #e2e8f0;
+  background: #e5e7eb;
 }
 
 .product-card h4 {
-  margin-bottom: 0.5rem;
-  color: #2d3748;
   font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-dark);
 }
 
 .product-card p {
   flex-grow: 1;
-  margin-bottom: 0.75rem;
-  color: #4a5568;
   font-size: 0.9rem;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
 }
 
 .product-card .price {
   font-weight: bold;
   margin-bottom: 0.5rem;
+  color: var(--primary-dark);
 }
 
 .product-card .type {
   font-size: 0.8rem;
-  color: #718096;
-  margin-bottom: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
 }
 
-.product-card .button {
-  background: #667eea;
-  color: #fff;
-  text-align: center;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-weight: 600;
+.product-card a.button {
   margin-top: 0.5rem;
-  text-decoration: none;
-  display: inline-block;
+  align-self: flex-start;
 }
 
-.product-card .button:hover {
-  background: #5a67d8;
-}
-
-/* Load more */
-.load-more-container {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.load-more-container button {
-  padding: 0.75rem 1.5rem;
-  background: #2b6cb0;
-  color: #fff;
-  border: none;
+/* Forms */
+input[type="text"],
+input[type="password"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
   border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
+  background: var(--bg);
+  color: var(--text);
 }
 
-.load-more-container button:hover {
-  background: #2c5282;
+textarea {
+  resize: vertical;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  #hero h1 {
-    font-size: 1.8rem;
-  }
-  .search-bar input {
-    width: 180px;
-  }
+form button[type="submit"] {
+  margin-top: 0.5rem;
 }
 
-/* Dashboard summary cards */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-.summary-card {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  text-align: center;
-}
-
-.summary-card .value {
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #2b6cb0;
-  margin-bottom: 0.25rem;
-}
-
-.summary-card .label {
-  color: #4a5568;
-  font-size: 0.9rem;
-}
-
-/* Orders table */
+/* Tables */
 .orders-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 500px;
 }
 
 .orders-table th,
 .orders-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 0.9rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .orders-table th {
-  background: #f7fafc;
   text-align: left;
-  font-weight: 600;
-  color: #2d3748;
+  background: var(--secondary);
 }
 
 .orders-table tr:nth-child(even) {
   background: #f9fafb;
 }
 
-.orders-table select {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid #cbd5e0;
-  font-size: 0.9rem;
-  background: #fff;
+/* Posts */
+.post {
+  background: var(--secondary);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Chat messages spacing */
+#chatMessages div {
+  margin-bottom: 0.5rem;
 }
