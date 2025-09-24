@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Create Product - Steb.io</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
+        <a href="index.html">Home</a>
         <a href="create-store.html">Create Store</a>
         <a href="create-product.html" class="active">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
@@ -20,39 +20,45 @@
       <div class="auth-links"></div>
     </div>
   </header>
+
   <main class="container" style="padding:2rem 0;">
     <h2>Add a New Product</h2>
-    <form id="productForm" style="max-width:600px;">
+    <form id="productForm" style="max-width:600px; margin-top:1rem;">
       <div style="margin-bottom:1rem;">
         <label for="productTitle">Title</label><br>
-        <input type="text" id="productTitle" placeholder="Product title" style="width:100%; padding:0.5rem;">
+        <input type="text" id="productTitle" placeholder="Product title">
       </div>
       <div style="margin-bottom:1rem;">
         <label for="productDescription">Description</label><br>
-        <textarea id="productDescription" rows="4" placeholder="Product description" style="width:100%; padding:0.5rem;"></textarea>
+        <textarea id="productDescription" rows="4" placeholder="Product description"></textarea>
       </div>
       <div style="margin-bottom:1rem;">
         <label for="productImage">Image URL</label><br>
-        <input type="url" id="productImage" placeholder="Image URL (optional)" style="width:100%; padding:0.5rem;">
+        <input type="url" id="productImage" placeholder="Image URL (optional)">
       </div>
       <div style="margin-bottom:1rem;">
         <label for="productType">Type</label><br>
-        <select id="productType" style="width:100%; padding:0.5rem;">
-          <option value="digital">Digital</option>
-          <option value="physical">Physical</option>
+        <select id="productType">
+          <option value="Trading">Trading</option>
+          <option value="Communities">Communities</option>
+          <option value="Courses">Courses</option>
+          <option value="Software">Software</option>
+          <option value="Services">Services</option>
+          <option value="Templates">Templates</option>
         </select>
       </div>
       <div style="margin-bottom:1rem;">
         <label for="productPrice">Price ($)</label><br>
-        <input type="number" id="productPrice" step="0.01" min="0" placeholder="Price" style="width:100%; padding:0.5rem;">
+        <input type="number" id="productPrice" step="0.01" min="0" placeholder="Price">
       </div>
       <div style="margin-bottom:1rem;">
         <label for="productSupply">Max Supply</label><br>
-        <input type="number" id="productSupply" placeholder="Max supply (optional)" style="width:100%; padding:0.5rem;">
+        <input type="number" id="productSupply" placeholder="Max supply (optional)">
       </div>
-      <button type="submit" style="padding:0.5rem 1rem;">Create Product</button>
+      <button type="submit" class="button">Create Product</button>
     </form>
   </main>
+
   <script src="auth.js"></script>
   <script>
     document.getElementById('productForm').addEventListener('submit', function(e) {
@@ -72,8 +78,10 @@
         alert('Please enter at least a title and a price.');
         return;
       }
-      const API_BASE = window.location.hostname.includes('onrender.com') ? 'https://stebio.onrender.com/api' : '/api';
-      fetch(\`\${API_BASE}/products\`, {
+      const API_BASE = window.location.hostname.includes('onrender.com')
+        ? 'https://stebio.onrender.com/api'
+        : '/api';
+      fetch(`${API_BASE}/products`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -86,18 +94,18 @@
           maxSupply: supply ? parseInt(supply) : 0
         })
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to create product');
-        return res.json();
-      })
-      .then(() => {
-        alert('Product created successfully.');
-        window.location.href = 'dashboard.html';
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Error creating product.');
-      });
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to create product');
+          return res.json();
+        })
+        .then(() => {
+          alert('Product created successfully.');
+          window.location.href = 'dashboard.html';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Error creating product.');
+        });
     });
   </script>
 </body>
