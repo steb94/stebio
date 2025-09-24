@@ -1,3 +1,62 @@
+const {
+  ChatRoom,
+  ChatRoomMessage,
+  ChatAccess,
+} = require('./models');
+
+// Email/SMS notification helpers (configure your own credentials)
+const nodemailer = require('nodemailer');
+const twilio = require('twilio');
+
+// Configure these environment variables or replace with your own values.
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
+const twilioSid = process.env.TWILIO_SID;
+const twilioToken = process.env.TWILIO_TOKEN;
+const twilioFrom = process.env.TWILIO_FROM;
+
+let mailTransporter = null;
+if (smtpUser && smtpPass) {
+  mailTransporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user: smtpUser, pass: smtpPass },
+  });
+}
+
+function sendEmail(to, subject, text) {
+  if (!mailTransporter) {
+    console.log(`Email to ${to}: ${subject} – ${text}`);
+    return;
+  }
+  return mailTransporter.sendMail({
+    from: smtpUser,
+    to,
+    subject,
+    text,
+  }).catch((err) => {
+    console.error('Email error:', err);
+  });
+}
+
+let twilioClient = null;
+if (twilioSid && twilioToken) {
+  twilioClient = twilio(twilioSid, twilioToken);
+}
+
+function sendSms(to, body) {
+  if (!twilioClient) {
+    console.log(`SMS to ${to}: ${body}`);
+    return;
+  }
+  return twilioClient.messages.create({
+    body,
+    from: twilioFrom,
+    to,
+  }).catch((err) => {
+    console.error('SMS error:', err);
+  });
+}
+
 // server.js
 
 const express = require('express');
