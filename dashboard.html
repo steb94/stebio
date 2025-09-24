@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="mobile.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
   <header id="top-nav">
@@ -13,312 +13,207 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Explore Marketplace</a>
-        <a href="start-selling.html">Create Store</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
         <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="#">Support</a>
+        <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links">
-        <a href="#" id="login-link">Sign In</a>
-      </div>
+      <div class="auth-links"></div>
     </div>
   </header>
-
-  <main class="container" style="padding: 2rem 0;">
-    <!-- Login section: shown when user is not signed in -->
-    <section id="loginSection" style="display:none; text-align:center; margin-top:2rem;">
+  <main class="container" style="padding:2rem 0;">
+    <!-- Login form shown if not logged in -->
+    <section id="loginSection" style="display:none;">
       <h2>Sign In to Your Dashboard</h2>
-      <p>Please sign in to view your store statistics and manage your orders.</p>
-      <div style="margin-bottom:1rem;">
-        <input type="text" id="usernameInput" placeholder="Username" style="padding:0.5rem; width:200px;" />
-      </div>
-      <div style="margin-bottom:1rem;">
-        <input type="password" id="passwordInput" placeholder="Password" style="padding:0.5rem; width:200px;" />
-      </div>
-      <button id="loginBtn" style="padding:0.5rem 1rem;">Sign In</button>
+      <form id="dashLoginForm" style="max-width:400px;">
+        <div style="margin-bottom:1rem;">
+          <label for="dashUsername">Username</label><br>
+          <input type="text" id="dashUsername" placeholder="Username" style="width:100%; padding:0.5rem;">
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label for="dashPassword">Password</label><br>
+          <input type="password" id="dashPassword" placeholder="Password" style="width:100%; padding:0.5rem;">
+        </div>
+        <button type="submit" style="padding:0.5rem 1rem;">Sign In</button>
+      </form>
     </section>
-
-    <!-- Dashboard summary: hidden until user is signed in -->
-    <section id="dashboardSummary" style="display:none;">
+    <!-- Seller dashboard content -->
+    <section id="dashboardContent" style="display:none;">
       <h2>Seller Dashboard</h2>
-      <div class="summary-cards">
-        <div class="summary-card">
+      <div class="summary-cards" style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
+        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
           <div class="value" id="dashTotalSales">0</div>
           <div class="label">Total Sales ($)</div>
         </div>
-        <div class="summary-card">
+        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
           <div class="value" id="dashTotalOrders">0</div>
           <div class="label">Total Orders</div>
         </div>
-        <div class="summary-card">
+        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
           <div class="value" id="dashTotalProducts">0</div>
           <div class="label">Total Products</div>
         </div>
       </div>
-    </section>
-
-    <!-- Chart section: hidden until user is signed in -->
-    <section id="dashboardChart" style="display:none; margin-top:2rem;">
-      <h3>Sales overview</h3>
-      <canvas id="salesChart" width="400" height="200"></canvas>
-    </section>
-
-    <!-- Orders section: hidden until user is signed in -->
-    <section id="dashboardOrders" style="display:none; margin-top:2rem;">
-      <h3>Orders</h3>
-      <div style="overflow-x:auto;">
-        <table id="ordersTable" class="orders-table">
+      <section id="ordersSection" style="margin-top:2rem;">
+        <h3>Your Orders</h3>
+        <table id="ordersTable" style="width:100%; border-collapse:collapse;">
           <thead>
             <tr>
               <th>ID</th>
               <th>Product</th>
+              <th>Buyer</th>
               <th>Price ($)</th>
               <th>Status</th>
-              <th>Action</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-      </div>
-    </section>
-
-    <!-- Posts section: visible to sellers -->
-    <section id="dashboardPosts" style="display:none; margin-top:2rem;">
-      <h3>Posts</h3>
-      <div id="postsList"></div>
-      <form id="postForm" style="margin-top:1rem;">
-        <textarea id="postContent" rows="3" style="width:100%;" placeholder="Share an update..."></textarea>
-        <input id="postMedia" type="url" style="width:100%; margin-top:0.5rem;" placeholder="Media URL (optional)" />
-        <button type="submit" style="margin-top:0.5rem;">Create Post</button>
-      </form>
+      </section>
+      <section id="postsSection" style="margin-top:2rem;">
+        <h3>Your Store Posts</h3>
+        <div id="postList"></div>
+        <form id="postForm" style="margin-top:1rem; max-width:600px;">
+          <textarea id="postText" rows="3" placeholder="Write something..." style="width:100%; padding:0.5rem;"></textarea>
+          <input type="url" id="postMedia" placeholder="Media URL (optional)" style="width:100%; padding:0.5rem; margin-top:0.5rem;">
+          <button type="submit" style="padding:0.5rem 1rem; margin-top:0.5rem;">Create Post</button>
+        </form>
+      </section>
     </section>
   </main>
-
-  <!-- Chart.js library -->
+  <script src="auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // Determine API base URL. Use the backend domain on render or /api locally.
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
 
-    // Fetch dashboard summary
-    async function loadDashboard() {
-      try {
-        const res = await fetch(\`\${API_BASE}/dashboard\`);
-        const data = await res.json();
-        document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
-        document.getElementById('dashTotalOrders').textContent = data.totalOrders;
-        document.getElementById('dashTotalProducts').textContent = data.totalProducts;
-      } catch (err) {
-      console.error('Error loading dashboard summary', err);
-      }
+    function showLogin() {
+      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('dashboardContent').style.display = 'none';
     }
-
-    // Fetch orders and render table
-    async function loadOrders() {
-      try {
-        const res = await fetch(\`\${API_BASE}/orders\`);
-        const orders = await res.json();
-        const tbody = document.querySelector('#ordersTable tbody');
-        tbody.innerHTML = '';
-        orders.forEach((o) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = \`
-            <td>\${o.id}</td>
-            <td>\${o.productName}</td>
-            <td>\${o.price.toFixed(2)}</td>
-            <td><span class="order-status">\${o.status}</span></td>
-            <td>
-              <select data-id="\${o.id}" class="status-select">
-                <option value="Processing" \${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                <option value="Completed" \${o.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                <option value="Cancelled" \${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </td>
-          \`;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        console.error('Error loading orders', err);
-      }
+    function showDashboard() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboardContent').style.display = 'block';
     }
-
-    // Handle status change
-    document.addEventListener('change', (e) => {
-      if (e.target.classList.contains('status-select')) {
-        const id = e.target.getAttribute('data-id');
-        const newStatus = e.target.value;
-        fetch(\`\${API_BASE}/orders/\${id}\`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
+    function loadSummary() {
+      fetch(\`\${API_BASE}/dashboard\`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
+          document.getElementById('dashTotalOrders').textContent = data.totalOrders;
+          document.getElementById('dashTotalProducts').textContent = data.totalProducts;
         })
-          .then(res => res.json())
-          .then(() => {
-            // update status text
-            const statusSpan = e.target.parentElement.previousElementSibling.querySelector('.order-status');
-            statusSpan.textContent = newStatus;
-          })
-          .catch(err => console.error('Error updating order', err));
-      }
-    });
-
-    // Render sales chart with dummy monthly data
-    function renderChart() {
-      const ctx = document.getElementById('salesChart');
-      const labels = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-      const data = {
-        labels: labels,
-        datasets: [
-          {
-            label: 'Orders',
-            data: labels.map(() => Math.floor(Math.random() * 8) + 2),
-            backgroundColor: 'rgba(102, 126, 234, 0.6)',
-            borderColor: 'rgba(102, 126, 234, 1)',
-            borderWidth: 1
-          }
-        ]
-      };
-      new Chart(ctx, {
-        type: 'bar',
-        data: data,
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Number of Orders' }
-            },
-            x: {
-              title: { display: true, text: 'Month' }
-            }
-          },
-          plugins: {
-            title: { display: true, text: 'Monthly Orders' }
-          }
-        }
-      });
+        .catch(err => console.error('Error loading summary', err));
     }
-
-    // Initialize dashboard depending on login state
-    function initDashboard() {
+    function loadOrders() {
+      const tbody = document.querySelector('#ordersTable tbody');
+      tbody.innerHTML = '';
+      fetch(\`\${API_BASE}/orders\`)
+        .then(res => res.json())
+        .then(orders => {
+          orders.forEach(o => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = \`
+              <td>\${o.id}</td>
+              <td>\${o.productName}</td>
+              <td>\${o.buyerName}</td>
+              <td>\${o.price.toFixed(2)}</td>
+              <td>\${o.status}</td>
+            \`;
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => console.error('Error loading orders', err));
+    }
+    function loadPosts() {
+      const storeId = localStorage.getItem('storeId');
+      const username = localStorage.getItem('username');
+      if (!storeId || !username) return;
+      fetch(\`\${API_BASE}/posts/\${storeId}?username=\${encodeURIComponent(username)}\`)
+        .then(res => res.json())
+        .then(data => {
+          const postList = document.getElementById('postList');
+          postList.innerHTML = '';
+          const posts = data.posts || [];
+          if (posts.length === 0) {
+            postList.innerHTML = '<p>No posts yet.</p>';
+          } else {
+            posts.forEach(p => {
+              const div = document.createElement('div');
+              div.style.border = '1px solid #eee';
+              div.style.padding = '0.5rem';
+              div.style.marginBottom = '0.5rem';
+              div.innerHTML = \`
+                \${p.content ? '<p>' + p.content + '</p>' : ''}
+                \${p.mediaUrl ? '<div><a href="' + p.mediaUrl + '" target="_blank">Media</a></div>' : ''}
+                <small>\${new Date(p.timestamp || p.createdAt).toLocaleString()}</small>
+              \`;
+              postList.appendChild(div);
+            });
+          }
+        })
+        .catch(err => console.error('Error loading posts', err));
+    }
+    function init() {
       const loggedIn = localStorage.getItem('loggedIn') === 'true';
-      const role = localStorage.getItem('role') || 'buyer';
-      const loginSection = document.getElementById('loginSection');
-      const summarySection = document.getElementById('dashboardSummary');
-      const chartSection = document.getElementById('dashboardChart');
-      const ordersSection = document.getElementById('dashboardOrders');
+      const role = localStorage.getItem('role');
       if (!loggedIn) {
-        loginSection.style.display = 'block';
-        summarySection.style.display = 'none';
-        chartSection.style.display = 'none';
-        ordersSection.style.display = 'none';
-      } else {
-        loginSection.style.display = 'none';
-        if (role !== 'seller') {
-          summarySection.style.display = 'none';
-          chartSection.style.display = 'none';
-          ordersSection.style.display = 'none';
-        } else {
-          summarySection.style.display = 'block';
-          chartSection.style.display = 'block';
-          ordersSection.style.display = 'block';
-          loadDashboard();
-          loadOrders();
-          renderChart();
-        }
-      }
-    }
-
-    // Login button handler
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      const usernameInput = document.getElementById('usernameInput');
-      const passwordInput = document.getElementById('passwordInput');
-      if (!usernameInput || !passwordInput ||
-          usernameInput.value.trim() === '' ||
-          passwordInput.value.trim() === '') {
-        alert('Please enter a username and password to sign in.');
+        showLogin();
         return;
       }
+      if (role !== 'seller') {
+        alert('You are not a seller.');
+        showLogin();
+        return;
+      }
+      const storeId = localStorage.getItem('storeId');
+      if (!storeId) {
+        alert('Please create a store first.');
+        window.location.href = 'create-store.html';
+        return;
+      }
+      showDashboard();
+      loadSummary();
+      loadOrders();
+      loadPosts();
+    }
+    document.getElementById('dashLoginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const user = document.getElementById('dashUsername').value.trim();
+      const pass = document.getElementById('dashPassword').value.trim();
       const storedUsername = localStorage.getItem('username');
       const storedPassword = localStorage.getItem('password');
-      if (storedUsername === usernameInput.value.trim() &&
-          storedPassword === passwordInput.value.trim()) {
+      if (user === storedUsername && pass === storedPassword) {
         localStorage.setItem('loggedIn', 'true');
-        location.reload();
+        init();
       } else {
         alert('Invalid username or password.');
       }
     });
-
-    // Initialize on page load
-    initDashboard();
-  </script>
-  <script src="auth.js"></script>
-
-  <!-- Posts script -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const postsSection = document.getElementById('dashboardPosts');
-      const postsList = document.getElementById('postsList');
-      const postForm = document.getElementById('postForm');
-      const postContent = document.getElementById('postContent');
-      const postMedia = document.getElementById('postMedia');
+    document.getElementById('postForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const content = document.getElementById('postText').value.trim();
+      const mediaUrl = document.getElementById('postMedia').value.trim();
       const storeId = localStorage.getItem('storeId');
       const username = localStorage.getItem('username');
-      const role = localStorage.getItem('role') || 'buyer';
-
-      async function loadPosts() {
-        if (!storeId || !username) return;
-        try {
-          const res = await fetch(\`\${API_BASE}/posts/\${storeId}?username=\${encodeURIComponent(username)}\`);
-          const data = await res.json();
-          postsList.innerHTML = '';
-          const posts = data.posts || [];
-          if (posts.length === 0) {
-            postsList.innerHTML = '<p>No posts yet.</p>';
-          } else {
-            posts.forEach((p) => {
-              const div = document.createElement('div');
-              div.className = 'post';
-              div.innerHTML = \`
-                \${p.content ? \`<p>\${p.content}</p>\` : ''}
-                \${p.mediaUrl ? \`<div><a href="\${p.mediaUrl}" target="_blank" rel="noopener">Media</a></div>\` : ''}
-                <small>\${new Date(p.createdAt || p.timestamp).toLocaleString()}</small>
-              \`;
-              postsList.appendChild(div);
-            });
-          }
-        } catch (err) {
-          console.error('Error loading posts', err);
-        }
+      if (!content && !mediaUrl) {
+        alert('Post content or media URL is required.');
+        return;
       }
-
-      // Show posts section only for sellers with a store
-      if (role === 'seller' && storeId) {
-        postsSection.style.display = '';
+      fetch(\`\${API_BASE}/posts/\${storeId}\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, content, mediaUrl })
+      })
+      .then(res => res.json())
+      .then(() => {
+        document.getElementById('postForm').reset();
         loadPosts();
-      }
-
-      if (postForm) {
-        postForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const content = postContent.value.trim();
-          const mediaUrl = postMedia.value.trim();
-          if (!content && !mediaUrl) return;
-          try {
-            await fetch(\`\${API_BASE}/posts/\${storeId}\`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username, content, mediaUrl })
-            });
-            postForm.reset();
-            loadPosts();
-          } catch (err) {
-            console.error('Error creating post', err);
-          }
-        });
-      }
+      })
+      .catch(err => console.error('Error creating post', err));
     });
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
+
