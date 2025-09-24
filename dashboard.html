@@ -2,17 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Seller Dashboard - Steb.io</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
+        <a href="index.html">Home</a>
         <a href="create-store.html">Create Store</a>
         <a href="create-product.html">Add Product</a>
         <a href="dashboard.html" class="active">Dashboard</a>
@@ -21,42 +20,45 @@
       <div class="auth-links"></div>
     </div>
   </header>
+
   <main class="container" style="padding:2rem 0;">
     <!-- Login form shown if not logged in -->
     <section id="loginSection" style="display:none;">
       <h2>Sign In to Your Dashboard</h2>
-      <form id="dashLoginForm" style="max-width:400px;">
+      <form id="dashLoginForm" style="max-width:400px; margin-top:1rem;">
         <div style="margin-bottom:1rem;">
           <label for="dashUsername">Username</label><br>
-          <input type="text" id="dashUsername" placeholder="Username" style="width:100%; padding:0.5rem;">
+          <input type="text" id="dashUsername" placeholder="Username">
         </div>
         <div style="margin-bottom:1rem;">
           <label for="dashPassword">Password</label><br>
-          <input type="password" id="dashPassword" placeholder="Password" style="width:100%; padding:0.5rem;">
+          <input type="password" id="dashPassword" placeholder="Password">
         </div>
-        <button type="submit" style="padding:0.5rem 1rem;">Sign In</button>
+        <button type="submit" class="button">Sign In</button>
       </form>
     </section>
+
     <!-- Seller dashboard content -->
     <section id="dashboardContent" style="display:none;">
       <h2>Seller Dashboard</h2>
-      <div class="summary-cards" style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
-        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
+      <div class="stats-grid summary-cards">
+        <div class="summary-card">
           <div class="value" id="dashTotalSales">0</div>
           <div class="label">Total Sales ($)</div>
         </div>
-        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
+        <div class="summary-card">
           <div class="value" id="dashTotalOrders">0</div>
           <div class="label">Total Orders</div>
         </div>
-        <div class="summary-card" style="flex:1; min-width:150px; padding:1rem; border:1px solid #eee;">
+        <div class="summary-card">
           <div class="value" id="dashTotalProducts">0</div>
           <div class="label">Total Products</div>
         </div>
       </div>
+
       <section id="ordersSection" style="margin-top:2rem;">
         <h3>Your Orders</h3>
-        <table id="ordersTable" style="width:100%; border-collapse:collapse;">
+        <table id="ordersTable" class="orders-table">
           <thead>
             <tr>
               <th>ID</th>
@@ -69,17 +71,19 @@
           <tbody></tbody>
         </table>
       </section>
+
       <section id="postsSection" style="margin-top:2rem;">
         <h3>Your Store Posts</h3>
         <div id="postList"></div>
-        <form id="postForm" style="margin-top:1rem; max-width:600px;">
-          <textarea id="postText" rows="3" placeholder="Write something..." style="width:100%; padding:0.5rem;"></textarea>
-          <input type="url" id="postMedia" placeholder="Media URL (optional)" style="width:100%; padding:0.5rem; margin-top:0.5rem;">
-          <button type="submit" style="padding:0.5rem 1rem; margin-top:0.5rem;">Create Post</button>
+        <form id="postForm" style="max-width:600px; margin-top:1rem;">
+          <textarea id="postText" rows="3" placeholder="Write something..."></textarea>
+          <input id="postMedia" type="url" placeholder="Media URL (optional)" style="margin-top:0.5rem;">
+          <button type="submit" class="button" style="margin-top:0.5rem;">Create Post</button>
         </form>
       </section>
     </section>
   </main>
+
   <script src="auth.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -91,12 +95,14 @@
       document.getElementById('loginSection').style.display = 'block';
       document.getElementById('dashboardContent').style.display = 'none';
     }
+
     function showDashboard() {
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('dashboardContent').style.display = 'block';
     }
+
     function loadSummary() {
-      fetch(\`\${API_BASE}/dashboard\`)
+      fetch(`${API_BASE}/dashboard`)
         .then(res => res.json())
         .then(data => {
           document.getElementById('dashTotalSales').textContent = data.totalSales.toFixed(2);
@@ -105,10 +111,11 @@
         })
         .catch(err => console.error('Error loading summary', err));
     }
+
     function loadOrders() {
       const tbody = document.querySelector('#ordersTable tbody');
       tbody.innerHTML = '';
-      fetch(\`\${API_BASE}/orders\`)
+      fetch(`${API_BASE}/orders`)
         .then(res => res.json())
         .then(orders => {
           orders.forEach(o => {
@@ -125,11 +132,12 @@
         })
         .catch(err => console.error('Error loading orders', err));
     }
+
     function loadPosts() {
       const storeId = localStorage.getItem('storeId');
       const username = localStorage.getItem('username');
       if (!storeId || !username) return;
-      fetch(\`\${API_BASE}/posts/\${storeId}?username=\${encodeURIComponent(username)}\`)
+      fetch(`${API_BASE}/posts/${storeId}?username=${encodeURIComponent(username)}`)
         .then(res => res.json())
         .then(data => {
           const postList = document.getElementById('postList');
@@ -140,9 +148,7 @@
           } else {
             posts.forEach(p => {
               const div = document.createElement('div');
-              div.style.border = '1px solid #eee';
-              div.style.padding = '0.5rem';
-              div.style.marginBottom = '0.5rem';
+              div.classList.add('post');
               div.innerHTML = \`
                 \${p.content ? '<p>' + p.content + '</p>' : ''}
                 \${p.mediaUrl ? '<div><a href="' + p.mediaUrl + '" target="_blank">Media</a></div>' : ''}
@@ -154,7 +160,8 @@
         })
         .catch(err => console.error('Error loading posts', err));
     }
-    function init() {
+
+    function initDashboard() {
       const loggedIn = localStorage.getItem('loggedIn') === 'true';
       const role = localStorage.getItem('role');
       if (!loggedIn) {
@@ -162,7 +169,7 @@
         return;
       }
       if (role !== 'seller') {
-        alert('You are not a seller.');
+        alert('You are not a seller. Please sign in with a seller account.');
         showLogin();
         return;
       }
@@ -177,19 +184,21 @@
       loadOrders();
       loadPosts();
     }
+
     document.getElementById('dashLoginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const user = document.getElementById('dashUsername').value.trim();
       const pass = document.getElementById('dashPassword').value.trim();
-      const storedUsername = localStorage.getItem('username');
-      const storedPassword = localStorage.getItem('password');
-      if (user === storedUsername && pass === storedPassword) {
+      const storedUser = localStorage.getItem('username');
+      const storedPass = localStorage.getItem('password');
+      if (user === storedUser && pass === storedPass) {
         localStorage.setItem('loggedIn', 'true');
-        init();
+        initDashboard();
       } else {
         alert('Invalid username or password.');
       }
     });
+
     document.getElementById('postForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const content = document.getElementById('postText').value.trim();
@@ -200,20 +209,20 @@
         alert('Post content or media URL is required.');
         return;
       }
-      fetch(\`\${API_BASE}/posts/\${storeId}\`, {
+      fetch(`${API_BASE}/posts/${storeId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, content, mediaUrl })
       })
-      .then(res => res.json())
-      .then(() => {
-        document.getElementById('postForm').reset();
-        loadPosts();
-      })
-      .catch(err => console.error('Error creating post', err));
+        .then(res => res.json())
+        .then(() => {
+          document.getElementById('postForm').reset();
+          loadPosts();
+        })
+        .catch(err => console.error('Error creating post', err));
     });
-    document.addEventListener('DOMContentLoaded', init);
+
+    document.addEventListener('DOMContentLoaded', initDashboard);
   </script>
 </body>
 </html>
-
