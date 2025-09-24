@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
-  
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Steb.io Marketplace</title>
-  <link rel="stylesheet" href="style.css" />
-     <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
-     
-    <div ="container nav">
+    <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html" class="active">Explore Marketplace</a>
-        <a href="start-selling.html">Create Store</a>
+        <a href="index.html" class="active">Home</a>
+        <a href="create-store.html">Start Selling</a>
         <a href="dashboard.html">Dashboard</a>
-        <a href="admin.html">Admin</a>
-
-             
-
-        <a href="#">Support</a>
+        <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links">
-        <!-- Placeholder for auth state -->
-        <a href="#" id="login-link">Sign In</a>
-      </div>
+      <div class="auth-links"></div>
     </div>
   </header>
 
-  <section id="hero">
-    <div class="container hero-content">
-      <h1>Unlock top insights &amp; picks from expert creators</h1>
-      <p>Browse communities for sports betting, crypto trading, stocks, courses and more.</p>
+  <section class="hero">
+    <div class="container">
+      <h1>Turn your passion into profit</h1>
+      <p>Discover and support digital creators, or start your own business in minutes.</p>
+      <div class="cta-buttons">
+        <a href="create-store.html" class="button">Start Selling</a>
+        <a href="#productSection" class="button">Explore Marketplace</a>
+      </div>
       <div class="search-bar">
-        <input id="searchInput" type="text" placeholder="Search products..." />
+        <input id="searchInput" type="text" placeholder="Search products, communities, courses…">
         <button id="searchBtn">Search</button>
       </div>
     </div>
@@ -45,12 +39,12 @@
     <div class="container">
       <div class="category-bar" id="categoryBar">
         <button data-type="All" class="active">All</button>
-        <button data-type="Sports">Sports</button>
-        <button data-type="Crypto">Crypto</button>
-        <button data-type="Stocks">Stocks</button>
-        <button data-type="Education">Education</button>
-        <button data-type="Gaming">Gaming</button>
-        <button data-type="Productivity">Productivity</button>
+        <button data-type="Trading">Trading</button>
+        <button data-type="Communities">Communities</button>
+        <button data-type="Courses">Courses</button>
+        <button data-type="Software">Software</button>
+        <button data-type="Services">Services</button>
+        <button data-type="Templates">Templates</button>
       </div>
     </div>
   </section>
@@ -89,13 +83,12 @@
         <!-- Products loaded via JS -->
       </div>
       <div id="loadMoreContainer" class="load-more-container" hidden>
-        <button id="loadMoreBtn">Load more</button>
+        <button id="loadMoreBtn" class="button">Load more</button>
       </div>
     </div>
   </section>
 
   <script src="app.js"></script>
-  <!-- Auth script to update navigation based on login state -->
   <script src="auth.js"></script>
 </body>
 </html>
