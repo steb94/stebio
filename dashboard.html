@@ -236,3 +236,49 @@
   </script>
 </body>
 </html>
+// Load chat rooms for this store
+function loadChatRooms() {
+  const storeId = localStorage.getItem('storeId');
+  fetch(`${API_BASE}/chatrooms/${storeId}`)
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById('chatRoomList');
+      list.innerHTML = '';
+      (data.rooms || []).forEach((room) => {
+        const div = document.createElement('div');
+        div.style.border = '1px solid var(--border)';
+        div.style.padding = '0.5rem';
+        div.style.marginBottom = '0.5rem';
+        div.innerHTML = `
+          <strong>${room.title}</strong> – 
+          ${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
+          <a href="chatroom.html?id=${room.id}" style="margin-left:1rem;">Open</a>
+        `;
+        list.appendChild(div);
+      });
+    })
+    .catch(err => console.error('Error loading chat rooms', err));
+}
+
+document.getElementById('chatRoomForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const title = document.getElementById('chatRoomTitle').value.trim();
+  const price = parseFloat(document.getElementById('chatRoomPrice').value) || 0;
+  const storeId = localStorage.getItem('storeId');
+  const username = localStorage.getItem('username');
+  if (!title) {
+    alert('Please enter a chat room title.');
+    return;
+  }
+  fetch(`${API_BASE}/chatrooms`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ storeId, title, price }),
+  })
+  .then(res => res.json())
+  .then(() => {
+    document.getElementById('chatRoomForm').reset();
+    loadChatRooms();
+  })
+  .catch(err => console.error('Error creating chat room', err));
+});
