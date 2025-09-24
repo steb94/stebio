@@ -218,6 +218,120 @@ app.patch('/api/messages/:id', (req, res) => {
   if (!msg) return res.status(404).json({ error: 'Message not found' });
   res.json(msg);
 });
+// -----------------------------------------------------------------------------
+// Chat rooms – sellers can create free or paid rooms; buyers can join and chat
+// -----------------------------------------------------------------------------
+
+// Create a chat room for a store (seller only)
+app.post('/api/chatrooms', requireAuth, (req, res) => {
+  const { storeId, title, price } = req.body;
+  const store = Store.findById(parseInt(storeId, 10));
+  if (!store) return res.status(404).json({ error: 'Store not found' });
+  // Only the store owner may create rooms
+  if (store.ownerId !== req.currentUser.id) {
+    return res.status(403).json({ error: 'You do not own this store' });
+  }
+  if (!title || title.trim() === '') {
+    return res.status(400).json({ error: 'Chat room title is required' });
+  }
+  const room = ChatRoom.create({
+    storeId: store.id,
+    ownerId: req.currentUser.id,
+    title: title.trim(),
+    price: parseFloat(price) || 0,
+  });
+  // Owners automatically have access to their room
+  ChatAccess.grant(room.id, req.currentUser.id);
+  res.json({ room });
+});
+
+// List chat rooms for a store (public)
+app.get('/api/chatrooms/:storeId', (req, res) => {
+  const storeId = parseInt(req.params.storeId, 10);
+  const store = Store.findById(storeId);
+  if (!store) return res.status(404).json({ error: 'Store not found' });
+  const rooms = ChatRoom.listByStore(storeId);
+  res.json({ rooms });
+});
+
+// Get a chat room by ID (public)
+app.get('/api/chatroom/:id', (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const room = ChatRoom.findById(id);
+  if (!room) return res.status(404).json({ error: 'Chat room not found' });
+  res.json(room);
+});
+
+// Join a chat room (requires payment if price > 0)
+app.post('/api/chatroom/:id/join', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const room = ChatRoom.findById(id);
+  if (!room) return res.status(404).json({ error: 'Chat room not found' });
+  // Owners always have access
+  if (room.ownerId === req.currentUser.id) {
+    ChatAccess.grant(id, req.currentUser.id);
+    return res.json({ access: true });
+  }
+  // Paid rooms require an order – for demo, simply grant access; integrate Stripe etc. here
+  if (room.price > 0) {
+    // TODO: integrate payment gateway here (e.g. Stripe checkout)
+    // After successful payment, grant access:
+    ChatAccess.grant(id, req.currentUser.id);
+    return res.json({ access: true });
+  }
+  // Free room: grant access instantly
+  ChatAccess.grant(id, req.currentUser.id);
+  res.json({ access: true });
+});
+
+// Fetch messages in a chat room (requires access)
+app.get('/api/chatroom/:id/messages', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const room = ChatRoom.findById(id);
+  if (!room) return res.status(404).json({ error: 'Chat room not found' });
+  const userId = req.currentUser.id;
+  if (room.ownerId !== userId && room.price > 0 && !ChatAccess.hasAccess(id, userId)) {
+    return res.status(403).json({ error: 'You do not have access to this chat room' });
+  }
+  const messages = ChatRoomMessage.listByChatRoom(id, 200);
+  res.json({ messages });
+});
+
+// Send a message in a chat room (requires access)
+app.post('/api/chatroom/:id/message', requireAuth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const room = ChatRoom.findById(id);
+  if (!room) return res.status(404).json({ error: 'Chat room not found' });
+  const { message } = req.body || {};
+  if (!message || !message.trim()) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  const userId = req.currentUser.id;
+  if (room.ownerId !== userId && room.price > 0 && !ChatAccess.hasAccess(id, userId)) {
+    return res.status(403).json({ error: 'You do not have access to this chat room' });
+  }
+  const m = ChatRoomMessage.create({
+    chatRoomId: id,
+    userId,
+    username: req.currentUser.username,
+    message,
+  });
+  // Notify all participants except the sender
+  const participants = ChatAccess.listUsers(id).filter((a) => a.userId !== userId);
+  participants.forEach((a) => {
+    const user = User.findById(a.userId);
+    if (!user) return;
+    const subject = `New message in chat: ${room.title}`;
+    const text = `${req.currentUser.username} wrote: ${message}`;
+    if (user.email) {
+      sendEmail(user.email, subject, text);
+    }
+    if (user.phone) {
+      sendSms(user.phone, text);
+    }
+  });
+  res.json({ message: m });
+});
 
 /* ===== Chat endpoints ===== */
 app.get('/api/chat/:productId/messages', (req, res) => {
