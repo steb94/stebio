@@ -146,3 +146,23 @@
   </script>
 </body>
 </html>
+// After product details are rendered
+fetch(`${API_BASE}/chatrooms/${p.storeId}`)
+  .then(res => res.json())
+  .then(data => {
+    const list = document.getElementById('storeChatRoomsList');
+    list.innerHTML = '';
+    (data.rooms || []).forEach((room) => {
+      const div = document.createElement('div');
+      div.style.border = '1px solid var(--border)';
+      div.style.padding = '0.5rem';
+      div.style.marginBottom = '0.5rem';
+      div.innerHTML = `
+        <strong>${room.title}</strong> – 
+        ${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
+        <a href="chatroom.html?id=${room.id}" style="margin-left:1rem;">${room.price > 0 ? 'Join' : 'Enter'}</a>
+      `;
+      list.appendChild(div);
+    });
+  })
+  .catch(err => console.error('Error loading store chat rooms', err));
