@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Details - Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
@@ -12,193 +12,125 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Explore Marketplace</a>
-        <a href="start-selling.html">Create Store</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
-        <a href="#">Support</a>
+        <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links">
-        <a href="#" id="login-link">Sign In</a>
-      </div>
+      <div class="auth-links"></div>
     </div>
   </header>
-
-  <main id="productDetail" class="container" style="padding: 2rem 0;">
-    <!-- Product details loaded here -->
+  <main id="productContainer" class="container" style="padding:2rem 0;">
+    <!-- Product details will be injected here -->
   </main>
-
-  <!-- Product chat section -->
-  <section id="chatSection" style="display:none; margin-top:2rem;" class="container">
+  <section id="productChat" class="container" style="display:none; margin-top:1rem;">
     <h3>Product Chat</h3>
-    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; padding:0.5rem;"></div>
+    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:0.5rem;"></div>
     <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;" />
-      <button type="submit">Send</button>
+      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1; padding:0.5rem;">
+      <button type="submit" style="padding:0.5rem 1rem;">Send</button>
     </form>
   </section>
-
+  <script src="auth.js"></script>
   <script>
-    // Determine API base URL. When on Render, call the backend domain; otherwise use relative /api
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
-    // Fetch product by ID from URL param
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    const container = document.getElementById('productDetail');
-    if (!id) {
-      container.innerHTML = '<p>Missing product ID.</p>';
-    } else {
-      fetch(`${API_BASE}/products/${id}`)
-        .then((res) => {
+    function loadProduct() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const container = document.getElementById('productContainer');
+      if (!id) {
+        container.innerHTML = '<p>Product ID missing.</p>';
+        return;
+      }
+      fetch(\`\${API_BASE}/products/\${id}\`)
+        .then(res => {
           if (!res.ok) throw new Error('Product not found');
           return res.json();
         })
-        .then((p) => {
-          // Build product detail layout
+        .then(prod => {
           const wrapper = document.createElement('div');
           wrapper.style.display = 'flex';
           wrapper.style.flexWrap = 'wrap';
           wrapper.style.gap = '2rem';
-
-          // Image
           const img = document.createElement('img');
-          /*
-            Determine the image source. Products in our database only store a
-            filename (e.g. "store39.png"). When running on Render, we can't
-            serve these images directly from the static site because they're
-            stored in the GitHub repository. To display the correct image,
-            convert the filename into a GitHub raw URL. If the image field
-            already contains a full URL or a data URI, leave it unchanged.
-            Otherwise, construct a raw GitHub URL pointing to the
-            backend/server-.-js branch where the images live.
-          */
-          let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-          if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-            imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
+          let imgSrc = prod.image && prod.image.trim() ? prod.image : null;
+          if (imgSrc && !/^https?:\\/\\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+            imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
           }
-          img.src = imgSrc || 'https://via.placeholder.com/500x250?text=Product';
-          img.alt = p.title;
+          img.src = imgSrc || 'https://via.placeholder.com/400x250?text=Product';
+          img.alt = prod.title;
           img.style.width = '100%';
-          img.style.maxWidth = '500px';
+          img.style.maxWidth = '400px';
           img.style.borderRadius = '8px';
-
-          // Info section
           const info = document.createElement('div');
           info.style.flex = '1';
-
-          const title = document.createElement('h2');
-          title.textContent = p.title;
-
-          const type = document.createElement('span');
-          type.textContent = p.type;
-          type.classList.add('type');
-
-          const price = document.createElement('div');
-          price.classList.add('price');
-          price.style.fontSize = '1.5rem';
-          price.style.margin = '1rem 0';
-          price.textContent = `$${p.price.toFixed(2)}`;
-
-          const desc = document.createElement('p');
-          desc.textContent = p.description;
-          desc.style.marginBottom = '1rem';
-
-          const storeLink = document.createElement('a');
-          storeLink.href = `store.html?id=${p.storeId}`;
-          storeLink.style.color = '#2b6cb0';
-          storeLink.style.fontWeight = '500';
-          storeLink.textContent = 'View Seller Store';
-
-          const buyBtn = document.createElement('button');
-          buyBtn.textContent = 'Buy Now';
-          buyBtn.style.padding = '0.75rem 1.5rem';
-          buyBtn.style.background = '#667eea';
-          buyBtn.style.color = '#fff';
-          buyBtn.style.border = 'none';
-          buyBtn.style.borderRadius = '4px';
-          buyBtn.style.cursor = 'pointer';
-          buyBtn.style.fontWeight = '600';
-          buyBtn.onclick = () => {
-            alert('Order functionality not implemented yet.');
-          };
-
-          info.appendChild(title);
-          info.appendChild(type);
-          info.appendChild(price);
-          info.appendChild(desc);
-          info.appendChild(storeLink);
-          info.appendChild(buyBtn);
-
+          info.innerHTML = \`
+            <h2>\${prod.title}</h2>
+            <p><strong>Type:</strong> \${prod.type}</p>
+            <p style="font-size:1.5rem;">$\${prod.price.toFixed(2)}</p>
+            <p>\${prod.description}</p>
+            <p><a href="store.html?id=\${prod.storeId}" style="color:#2b6cb0;">View Seller Store</a></p>
+          \`;
           wrapper.appendChild(img);
           wrapper.appendChild(info);
           container.appendChild(wrapper);
+          loadChat(id);
         })
         .catch(() => {
           container.innerHTML = '<p>Product not found.</p>';
         });
     }
-  </script>
-  <!-- Auth script to update navigation based on login state -->
-  <script src="auth.js"></script>
-
-  <!-- Product chat script -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const chatSection = document.getElementById('chatSection');
-      const chatMessages = document.getElementById('chatMessages');
-      const chatForm = document.getElementById('chatForm');
-      const chatInput = document.getElementById('chatInput');
+    function loadChat(productId) {
       const username = localStorage.getItem('username');
-      const params = new URLSearchParams(window.location.search);
-      const productId = params.get('id');
-
-      async function loadChat() {
-        if (!productId || !username) return;
-        try {
-          const res = await fetch(\`\${API_BASE}/chat/\${productId}/messages?username=\${encodeURIComponent(username)}\`);
+      if (!username) return;
+      fetch(\`\${API_BASE}/chat/\${productId}/messages?username=\${encodeURIComponent(username)}\`)
+        .then(res => {
           if (res.status === 403 || res.status === 401) {
-            chatSection.style.display = 'none';
-            return;
+            document.getElementById('productChat').style.display = 'none';
+            return null;
           }
-          const data = await res.json();
-          chatSection.style.display = '';
+          return res.json();
+        })
+        .then(data => {
+          if (!data) return;
+          document.getElementById('productChat').style.display = '';
+          const msgs = data.messages || [];
+          const chatMessages = document.getElementById('chatMessages');
           chatMessages.innerHTML = '';
-          const messages = data.messages || [];
-          messages.forEach((m) => {
+          msgs.forEach(m => {
             const div = document.createElement('div');
-            const when = new Date(m.createdAt || m.timestamp).toLocaleString();
-            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${when}</small>\`;
+            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.timestamp).toLocaleString()}</small>\`;
             chatMessages.appendChild(div);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
-        } catch (err) {
-          console.error('Error loading chat messages', err);
-        }
-      }
-
-      if (chatForm) {
-        chatForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const message = chatInput.value.trim();
-          if (!message) return;
-          try {
-            await fetch(\`\${API_BASE}/chat/\${productId}/message\`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username, message })
-            });
-            chatInput.value = '';
-            loadChat();
-          } catch (err) {
-            console.error('Error sending message', err);
-          }
-        });
-      }
-
-      loadChat();
-      // Poll chat every 5 seconds
-      setInterval(loadChat, 5000);
+        })
+        .catch(err => console.error('Error loading chat', err));
+    }
+    document.getElementById('chatForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('id');
+      const username = localStorage.getItem('username');
+      const message = document.getElementById('chatInput').value.trim();
+      if (!message) return;
+      fetch(\`\${API_BASE}/chat/\${productId}/message\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, message })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to send message');
+        return res.json();
+      })
+      .then(() => {
+        document.getElementById('chatInput').value = '';
+        loadChat(productId);
+      })
+      .catch(err => console.error('Error sending message', err));
     });
+    document.addEventListener('DOMContentLoaded', loadProduct);
   </script>
 </body>
 </html>
