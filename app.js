@@ -1,7 +1,7 @@
 // Client-side logic for Steb.io marketplace
 
-// Determine API base URL. If running on Render (production), point to the backend
-// domain; otherwise use relative /api for local development. This allows the
+// Determine API base URL. If running on Render (production), point to the 
+// backend domain; otherwise use relative /api for local development. This allows 
 // static frontend hosted at stebio-frontend.onrender.com to call the backend
 // service hosted at stebio.onrender.com. When served locally (e.g. via
 // `node server.js`), the API will be available at the same origin.
@@ -91,7 +91,8 @@ function renderProducts() {
     card.classList.add('product-card');
     // Product image (use provided image if available)
     const img = document.createElement('img');
-    // Determine the image source. If p.image is defined and not a full URL or data URI, convert it to a GitHub raw URL.
+    // Determine the image source. If p.image is defined and not a full URL 
+    // or data URI, convert it to a GitHub raw URL.
     let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
     if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
       // Prepend GitHub raw base URL using the correct branch (backend/server-.-js)
@@ -104,7 +105,8 @@ function renderProducts() {
     title.textContent = p.title;
     // Description (truncate)
     const desc = document.createElement('p');
-    const descText = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description;
+    const descText = p.description.length > 80 ? p.description.slice(0, 77) 
+    + '...' : p.description;
     desc.textContent = descText;
     // Price
     const price = document.createElement('div');
@@ -145,17 +147,18 @@ function loadMore() {
     const card = document.createElement('div');
     card.classList.add('product-card');
     const img = document.createElement('img');
-        let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-        if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-          // Prepend GitHub raw base URL using the correct branch (backend/server-.-js)
-          imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
-        }
-        img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
+    let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+    if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+      // Prepend GitHub raw base URL using the correct branch (backend/server-.-js)
+      imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
+    }
+    img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
     img.alt = p.title;
     const title = document.createElement('h4');
     title.textContent = p.title;
     const desc = document.createElement('p');
-    const descText = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description;
+    const descText = p.description.length > 80 ? p.description.slice(0, 77) 
+    + '...' : p.description;
     desc.textContent = descText;
     const price = document.createElement('div');
     price.classList.add('price');
@@ -186,7 +189,8 @@ categoryBar.addEventListener('click', (e) => {
   if (e.target.tagName === 'BUTTON') {
     const type = e.target.getAttribute('data-type');
     // Set active state
-    Array.from(categoryBar.children).forEach((btn) => btn.classList.remove('active'));
+    Array.from(categoryBar.children).forEach((btn) => 
+      btn.classList.remove('active'));
     e.target.classList.add('active');
     fetchProducts(type, currentSort);
   }
