@@ -173,6 +173,94 @@ function createPost(storeId, username, mediaUrl, content) {
 function getPostsByStoreId(storeId) {
   return posts.filter(p => p.storeId === Number(storeId));
 }
+// --- Chat Room Models -------------------------------------------------------
+
+// Chat rooms belong to stores and can be free or paid.
+class ChatRoom {
+  static _data = [];
+  static _id = 1;
+  static _nextId() { return this._id++; }
+
+  static create({ storeId, ownerId, title, price = 0 }) {
+    const room = {
+      id: this._nextId(),
+      storeId,
+      ownerId,
+      title,
+      price: Number(price) || 0,
+      createdAt: new Date(),
+    };
+    this._data.push(room);
+    return room;
+  }
+
+  static findById(id) {
+    return this._data.find((r) => r.id === id);
+  }
+
+  static listByStore(storeId) {
+    return this._data.filter((r) => r.storeId === storeId);
+  }
+}
+
+// A simple message model scoped to chat rooms.
+class ChatRoomMessage {
+  static _data = [];
+  static _id = 1;
+  static _nextId() { return this._id++; }
+
+  static create({ chatRoomId, userId, username, message }) {
+    const m = {
+      id: this._nextId(),
+      chatRoomId,
+      userId,
+      username,
+      message: String(message || '').slice(0, 2000),
+      createdAt: new Date(),
+    };
+    this._data.push(m);
+    return m;
+  }
+
+  static listByChatRoom(chatRoomId, limit = 200) {
+    return this._data
+      .filter((m) => m.chatRoomId === chatRoomId)
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .slice(-limit);
+  }
+}
+
+// Tracks which users have access to which chat rooms.
+class ChatAccess {
+  static _data = [];
+
+  static grant(chatRoomId, userId) {
+    const existing = this._data.find(
+      (a) => a.chatRoomId === chatRoomId && a.userId === userId,
+    );
+    if (!existing) {
+      this._data.push({
+        chatRoomId,
+        userId,
+        grantedAt: new Date(),
+      });
+    }
+  }
+
+  static hasAccess(chatRoomId, userId) {
+    return this._data.some(
+      (a) => a.chatRoomId === chatRoomId && a.userId === userId,
+    );
+  }
+
+  static listUsers(chatRoomId) {
+    return this._data.filter((a) => a.chatRoomId === chatRoomId);
+  }
+}
+
+module.exports.ChatRoom = ChatRoom;
+module.exports.ChatRoomMessage = ChatRoomMessage;
+module.exports.ChatAccess = ChatAccess;
 
 /* ===== Exports ===== */
 module.exports = {
