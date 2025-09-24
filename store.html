@@ -1,116 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Store Profile - Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Store - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
-        <a href="start-selling.html">Create Store</a>
+        <a href="index.html">Home</a>
+        <a href="create-store.html">Start Selling</a>
         <a href="dashboard.html">Dashboard</a>
-        <a href="#">Support</a>
+        <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links">
-        <a href="#" id="login-link">Sign In</a>
-      </div>
+      <div class="auth-links"></div>
     </div>
   </header>
 
-  <main class="container" style="padding: 2rem 0;">
-    <section id="storeInfo">
-      <!-- Store info loaded here -->
-    </section>
-    <section id="storeProducts">
-      <!-- Products will be loaded here -->
-    </section>
+  <main class="container" style="padding:2rem 0;">
+    <h2 id="storeTitle">Store</h2>
+    <div id="storeProducts" class="product-grid"></div>
   </main>
 
+  <script src="auth.js"></script>
   <script>
-    // Determine API base URL. Use backend domain on Render, relative /api locally.
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    const storeInfoEl = document.getElementById('storeInfo');
-    const storeProductsEl = document.getElementById('storeProducts');
-    if (!id) {
-      storeInfoEl.innerHTML = '<p>Missing store ID.</p>';
-    } else {
-      fetch(`${API_BASE}/stores/${id}`)
-        .then((res) => {
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) {
+        document.getElementById('storeTitle').textContent = 'Store not found.';
+        return;
+      }
+      fetch(\`\${API_BASE}/stores/\${id}\`)
+        .then(res => {
           if (!res.ok) throw new Error('Store not found');
           return res.json();
         })
-        .then((data) => {
-          const { store, products } = data;
-          // Render store info
-          const title = document.createElement('h2');
-          title.textContent = store.name;
-          const owner = document.createElement('p');
-          owner.textContent = `Owner: ${store.owner}`;
-          owner.style.color = '#4a5568';
-          owner.style.marginBottom = '1rem';
-          storeInfoEl.appendChild(title);
-          storeInfoEl.appendChild(owner);
-
-          // Render products grid
-          const grid = document.createElement('div');
-          grid.classList.add('product-grid');
-               products.forEach((p) => {
-                 const card = document.createElement('div');
-                 card.classList.add('product-card');
-                 const img = document.createElement('img');
-                 /*
-                   Determine the product image. If the product only stores a
-                   filename (e.g. "store39.png"), convert it to the GitHub raw
-                   URL used by the marketplace. If the image field is already a
-                   full URL or data URI, leave it unchanged. Otherwise
-                   fallback to a placeholder.
-                 */
-                 let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-                 if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-                   imgSrc = `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${imgSrc}`;
-                 }
-                 img.src = imgSrc || 'https://via.placeholder.com/300x150?text=Product';
-                 img.alt = p.title;
-                 const titleEl = document.createElement('h4');
-                 titleEl.textContent = p.title;
-            const desc = document.createElement('p');
-            const descText = p.description.length > 80 ? p.description.slice(0, 77) + '...' : p.description;
-            desc.textContent = descText;
-            const price = document.createElement('div');
-            price.classList.add('price');
-            price.textContent = `$${p.price.toFixed(2)}`;
-            const typeEl = document.createElement('div');
-            typeEl.classList.add('type');
-            typeEl.textContent = p.type;
-            const btn = document.createElement('a');
-            btn.href = `product.html?id=${p.id}`;
-            btn.classList.add('button');
-            btn.textContent = 'View';
-            card.appendChild(img);
-            card.appendChild(titleEl);
-            card.appendChild(desc);
-            card.appendChild(price);
-            card.appendChild(typeEl);
-            card.appendChild(btn);
-            grid.appendChild(card);
+        .then(store => {
+          document.getElementById('storeTitle').textContent = store.name;
+          return fetch(\`\${API_BASE}/products?storeId=\${id}\`);
+        })
+        .then(res => res.json())
+        .then(products => {
+          const container = document.getElementById('storeProducts');
+          container.innerHTML = '';
+          (products || []).forEach(p => {
+            const card = document.createElement('div');
+            card.classList.add('product-card');
+            let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
+            if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+              imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
+            }
+            card.innerHTML = \`
+              <img src="\${imgSrc || 'https://via.placeholder.com/300x150?text=Product'}" alt="\${p.title}">
+              <h4>\${p.title}</h4>
+              <p>\${p.description.length > 80 ? p.description.slice(0,77) + '...' : p.description}</p>
+              <div class="price">$\${p.price.toFixed(2)}</div>
+              <div class="type">\${p.type}</div>
+              <a href="product.html?id=\${p.id}" class="button">View</a>
+            \`;
+            container.appendChild(card);
           });
-          storeProductsEl.appendChild(grid);
         })
         .catch(() => {
-          storeInfoEl.innerHTML = '<p>Store not found.</p>';
+          document.getElementById('storeTitle').textContent = 'Store not found.';
         });
-    }
+    });
   </script>
-  <!-- Auth script to update navigation based on login state -->
-  <script src="auth.js"></script>
 </body>
 </html>
