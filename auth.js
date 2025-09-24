@@ -1,28 +1,37 @@
-// Update navigation links based on login state and handle logout
-document.addEventListener('DOMContentLoaded', () => {
-  const authLinks = document.querySelector('.auth-links');
-  const loggedIn = localStorage.getItem('loggedIn') === 'true';
-  const username = localStorage.getItem('username');
-
-  function updateNav() {
+<script>
+// auth.js
+(function() {
+  function updateAuthLinks() {
+    const nav = document.querySelector('#top-nav .auth-links');
+    if (!nav) return;
+    nav.innerHTML = '';
+    const loggedIn = localStorage.getItem('loggedIn') === 'true';
+    const username = localStorage.getItem('username');
     if (loggedIn && username) {
-      authLinks.innerHTML = `
-        <span>Hi, ${username}</span>
-        <a href="#" id="logout-link">Logout</a>
-      `;
-      document.getElementById('logout-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.removeItem('loggedIn');
-        localStorage.removeItem('username');
-        localStorage.removeItem('password');
-        localStorage.removeItem('role');
-        localStorage.removeItem('storeId');
-        location.reload();
+      const hi = document.createElement('span');
+      hi.textContent = `Hi, ${username}`;
+      const logoutLink = document.createElement('a');
+      logoutLink.href = '#';
+      logoutLink.textContent = 'Logout';
+      logoutLink.addEventListener('click', () => {
+        localStorage.clear();
+        window.location.href = 'index.html';
       });
+      nav.appendChild(hi);
+      nav.appendChild(document.createTextNode(' '));
+      nav.appendChild(logoutLink);
     } else {
-      authLinks.innerHTML = '<a href="signup.html" id="signup-link">Sign Up</a>';
+      const signupLink = document.createElement('a');
+      signupLink.href = 'signup.html';
+      signupLink.textContent = 'Sign Up';
+      const signinLink = document.createElement('a');
+      signinLink.href = 'login.html';
+      signinLink.textContent = 'Sign In';
+      nav.appendChild(signupLink);
+      nav.appendChild(document.createTextNode(' '));
+      nav.appendChild(signinLink);
     }
   }
-
-  updateNav();
-});
+  document.addEventListener('DOMContentLoaded', updateAuthLinks);
+})();
+</script>
