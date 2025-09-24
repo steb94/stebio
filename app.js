@@ -234,3 +234,30 @@ loadMoreBtn.addEventListener('click', loadMore);
 // Init
 fetchStats();
 fetchProducts('All', 'newest');
+// Fetch and render the list of stores for the homepage
+function fetchStores() {
+  fetch(`${API_BASE}/stores`)
+    .then(res => res.json())
+    .then(data => {
+      const storeGrid = document.getElementById('storeGrid');
+      storeGrid.innerHTML = '';
+      (data.stores || []).forEach(store => {
+        const card = document.createElement('div');
+        card.classList.add('product-card');
+        card.innerHTML = `
+          <h4>${store.name}</h4>
+          <p>Owner: ${store.ownerName || 'Unknown'}</p>
+          <a href="store.html?id=${store.id}" class="button">View Store</a>
+        `;
+        storeGrid.appendChild(card);
+      });
+      // Update stats if needed
+      if (statStoresEl) statStoresEl.textContent = (data.stores || []).length;
+    })
+    .catch(err => console.error('Error fetching stores', err));
+}
+
+// Call fetchStores() alongside other initial loads
+fetchStats();
+fetchProducts('All', 'newest');
+fetchStores();
