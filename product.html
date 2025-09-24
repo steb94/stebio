@@ -26,6 +26,16 @@
     <!-- Product details loaded here -->
   </main>
 
+  <!-- Product chat section -->
+  <section id="chatSection" style="display:none; margin-top:2rem;" class="container">
+    <h3>Product Chat</h3>
+    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid #ccc; padding:0.5rem;"></div>
+    <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;" />
+      <button type="submit">Send</button>
+    </form>
+  </section>
+
   <script>
     // Determine API base URL. When on Render, call the backend domain; otherwise use relative /api
     const API_BASE = window.location.hostname.includes('onrender.com')
@@ -130,5 +140,65 @@
   </script>
   <!-- Auth script to update navigation based on login state -->
   <script src="auth.js"></script>
+
+  <!-- Product chat script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const chatSection = document.getElementById('chatSection');
+      const chatMessages = document.getElementById('chatMessages');
+      const chatForm = document.getElementById('chatForm');
+      const chatInput = document.getElementById('chatInput');
+      const username = localStorage.getItem('username');
+      const params = new URLSearchParams(window.location.search);
+      const productId = params.get('id');
+
+      async function loadChat() {
+        if (!productId || !username) return;
+        try {
+          const res = await fetch(\`\${API_BASE}/chat/\${productId}/messages?username=\${encodeURIComponent(username)}\`);
+          if (res.status === 403 || res.status === 401) {
+            chatSection.style.display = 'none';
+            return;
+          }
+          const data = await res.json();
+          chatSection.style.display = '';
+          chatMessages.innerHTML = '';
+          const messages = data.messages || [];
+          messages.forEach((m) => {
+            const div = document.createElement('div');
+            const when = new Date(m.createdAt || m.timestamp).toLocaleString();
+            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${when}</small>\`;
+            chatMessages.appendChild(div);
+          });
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        } catch (err) {
+          console.error('Error loading chat messages', err);
+        }
+      }
+
+      if (chatForm) {
+        chatForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const message = chatInput.value.trim();
+          if (!message) return;
+          try {
+            await fetch(\`\${API_BASE}/chat/\${productId}/message\`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, message })
+            });
+            chatInput.value = '';
+            loadChat();
+          } catch (err) {
+            console.error('Error sending message', err);
+          }
+        });
+      }
+
+      loadChat();
+      // Poll chat every 5 seconds
+      setInterval(loadChat, 5000);
+    });
+  </script>
 </body>
 </html>
