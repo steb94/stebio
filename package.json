@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "start": "node server_fixed.js"
+  }
+}
+
+{
   "name": "stebio",
   "version": "1.0.0",
   "description": "Steb.io marketplace backend and frontend",
