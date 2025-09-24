@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Sign In - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="create-store.html">Start Selling</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="support.html">Support</a>
+      </nav>
+      <div class="auth-links"></div>
+    </div>
+  </header>
+
+  <main class="container" style="padding:2rem 0;">
+    <h2>Sign In</h2>
+    <form id="loginForm" style="max-width:400px; margin-top:1rem;">
+      <div style="margin-bottom:1rem;">
+        <label for="loginUsername">Username</label><br>
+        <input type="text" id="loginUsername" placeholder="Username">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label for="loginPassword">Password</label><br>
+        <input type="password" id="loginPassword" placeholder="Password">
+      </div>
+      <button type="submit" class="button">Sign In</button>
+    </form>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const storedUser = localStorage.getItem('username');
+      const storedPass = localStorage.getItem('password');
+      const role = localStorage.getItem('role');
+      if (username === storedUser && password === storedPass) {
+        localStorage.setItem('loggedIn', 'true');
+        if (role === 'seller') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      } else {
+        alert('Invalid username or password.');
+      }
+    });
+  </script>
+</body>
+</html>
