@@ -80,6 +80,17 @@
         </table>
       </div>
     </section>
+
+    <!-- Posts section: visible to sellers -->
+    <section id="dashboardPosts" style="display:none; margin-top:2rem;">
+      <h3>Posts</h3>
+      <div id="postsList"></div>
+      <form id="postForm" style="margin-top:1rem;">
+        <textarea id="postContent" rows="3" style="width:100%;" placeholder="Share an update..."></textarea>
+        <input id="postMedia" type="url" style="width:100%; margin-top:0.5rem;" placeholder="Media URL (optional)" />
+        <button type="submit" style="margin-top:0.5rem;">Create Post</button>
+      </form>
+    </section>
   </main>
 
   <!-- Chart.js library -->
@@ -99,7 +110,7 @@
         document.getElementById('dashTotalOrders').textContent = data.totalOrders;
         document.getElementById('dashTotalProducts').textContent = data.totalProducts;
       } catch (err) {
-        console.error('Error loading dashboard summary', err);
+      console.error('Error loading dashboard summary', err);
       }
     }
 
@@ -243,5 +254,71 @@
     initDashboard();
   </script>
   <script src="auth.js"></script>
+
+  <!-- Posts script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const postsSection = document.getElementById('dashboardPosts');
+      const postsList = document.getElementById('postsList');
+      const postForm = document.getElementById('postForm');
+      const postContent = document.getElementById('postContent');
+      const postMedia = document.getElementById('postMedia');
+      const storeId = localStorage.getItem('storeId');
+      const username = localStorage.getItem('username');
+      const role = localStorage.getItem('role') || 'buyer';
+
+      async function loadPosts() {
+        if (!storeId || !username) return;
+        try {
+          const res = await fetch(\`\${API_BASE}/posts/\${storeId}?username=\${encodeURIComponent(username)}\`);
+          const data = await res.json();
+          postsList.innerHTML = '';
+          const posts = data.posts || [];
+          if (posts.length === 0) {
+            postsList.innerHTML = '<p>No posts yet.</p>';
+          } else {
+            posts.forEach((p) => {
+              const div = document.createElement('div');
+              div.className = 'post';
+              div.innerHTML = \`
+                \${p.content ? \`<p>\${p.content}</p>\` : ''}
+                \${p.mediaUrl ? \`<div><a href="\${p.mediaUrl}" target="_blank" rel="noopener">Media</a></div>\` : ''}
+                <small>\${new Date(p.createdAt || p.timestamp).toLocaleString()}</small>
+              \`;
+              postsList.appendChild(div);
+            });
+          }
+        } catch (err) {
+          console.error('Error loading posts', err);
+        }
+      }
+
+      // Show posts section only for sellers with a store
+      if (role === 'seller' && storeId) {
+        postsSection.style.display = '';
+        loadPosts();
+      }
+
+      if (postForm) {
+        postForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const content = postContent.value.trim();
+          const mediaUrl = postMedia.value.trim();
+          if (!content && !mediaUrl) return;
+          try {
+            await fetch(\`\${API_BASE}/posts/\${storeId}\`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username, content, mediaUrl })
+            });
+            postForm.reset();
+            loadPosts();
+          } catch (err) {
+            console.error('Error creating post', err);
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
