@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up - Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="mobile.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
@@ -13,45 +12,43 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Explore Marketplace</a>
-        <a href="start-selling.html">Create Store</a>
+        <a href="create-store.html">Create Store</a>
         <a href="dashboard.html">Dashboard</a>
-        <a href="#">Support</a>
+        <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links">
-        <a href="#" id="login-link">Sign In</a>
-      </div>
+      <div class="auth-links"></div>
     </div>
   </header>
-
-  <main class="container" style="padding:2rem 0;">
+  <main class="container" style="padding: 2rem 0;">
     <h2>Create an Account</h2>
-    <form id="signupForm" class="signup-form" onsubmit="return false;">
+    <form id="signupForm" style="max-width:400px">
       <div style="margin-bottom:1rem;">
-        <label for="signupUsername">Username</label><br />
-        <input type="text" id="signupUsername" placeholder="Enter username" style="padding:0.5rem; width:300px;" />
+        <label for="signupUsername">Username</label><br>
+        <input type="text" id="signupUsername" placeholder="Enter username" style="width:100%; padding:0.5rem;">
       </div>
       <div style="margin-bottom:1rem;">
-        <label for="signupPassword">Password</label><br />
-        <input type="password" id="signupPassword" placeholder="Enter password" style="padding:0.5rem; width:300px;" />
+        <label for="signupPassword">Password</label><br>
+        <input type="password" id="signupPassword" placeholder="Enter password" style="width:100%; padding:0.5rem;">
       </div>
       <div style="margin-bottom:1rem;">
-        <label for="roleSelect">Role</label><br />
-        <select id="roleSelect" style="padding:0.5rem; width:300px;">
+        <label for="roleSelect">Role</label><br>
+        <select id="roleSelect" style="width:100%; padding:0.5rem;">
           <option value="buyer">Buy products</option>
           <option value="seller">Sell products (create a store)</option>
         </select>
       </div>
-      <button id="signupBtn" style="padding:0.5rem 1rem;">Sign Up</button>
+      <button type="submit" style="padding:0.5rem 1rem;">Sign Up</button>
     </form>
   </main>
-
+  <script src="auth.js"></script>
   <script>
-    document.getElementById('signupBtn').addEventListener('click', () => {
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
       const username = document.getElementById('signupUsername').value.trim();
       const password = document.getElementById('signupPassword').value.trim();
       const role = document.getElementById('roleSelect').value;
-      if (username === '' || password === '') {
-        alert('Please enter both username and password.');
+      if (!username || !password) {
+        alert('Please enter a username and password.');
         return;
       }
       localStorage.setItem('username', username);
@@ -59,13 +56,11 @@
       localStorage.setItem('role', role);
       localStorage.setItem('loggedIn', 'true');
       if (role === 'seller') {
-        // redirect sellers to create-store page
         window.location.href = 'create-store.html';
       } else {
         window.location.href = 'index.html';
       }
     });
   </script>
-  <script src="auth.js"></script>
 </body>
 </html>
