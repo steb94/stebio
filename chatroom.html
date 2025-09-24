@@ -1,149 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Chat Room - Steb.io</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Chat Room – Steb.io</title>
+
+  <!-- Set this to your API (override as needed). Example: https://stebio.onrender.com/api -->
+  <meta name="steb-api-base" content="/api" />
+
+  <style>
+    :root{
+      --bg:#0b0b0d; --fg:#fff; --muted:#b9b9c3; --card:#131318;
+      --accent:#6ee7ff; --border:#2a2a35; --danger:#ff5a6d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    .container{max-width:1100px;margin:0 auto;padding:0 1rem}
+    header{border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,11,13,.9);backdrop-filter:blur(8px);z-index:10}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .brand{font-weight:800;letter-spacing:.3px}
+    nav a{color:var(--muted);text-decoration:none;margin:0 .6rem}
+    nav a:hover{color:var(--fg)}
+    .button{
+      background:var(--accent);color:#001219;border:0;border-radius:10px;
+      padding:.65rem 1rem;font-weight:700;cursor:pointer
+    }
+    .button[disabled]{opacity:.6;cursor:not-allowed}
+    .ghost{background:transparent;border:1px solid var(--border);color:var(--fg)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem}
+    .stack{display:flex;flex-direction:column;gap:.75rem}
+    .row{display:flex;gap:.5rem;align-items:center}
+    input[type="text"]{
+      width:100%;padding:.65rem .75rem;border:1px solid var(--border);
+      border-radius:10px;background:#0f0f14;color:var(--fg)
+    }
+    small,time{color:var(--muted)}
+    .messages{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px;background:#0f0f14;padding:.75rem}
+    .msg{padding:.4rem .5rem;border-radius:8px}
+    .msg + .msg{margin-top:.25rem}
+    .msg .meta{display:flex;gap:.5rem;align-items:baseline}
+    .msg .meta strong{font-weight:700}
+    .msg .body{margin-top:.1rem;white-space:pre-wrap;word-wrap:break-word}
+    .notice{border:1px dashed var(--border);border-radius:12px;padding:.9rem;background:#101018}
+    .error{color:var(--danger)}
+    footer{color:var(--muted);font-size:.875rem;margin-top:1rem}
+  </style>
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">Steb.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="create-store.html">Start Selling</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="support.html">Support</a>
-      </nav>
-      <div class="auth-links"></div>
-    </div>
-  </header>
+<header id="top-nav">
+  <div class="container nav">
+    <div class="brand">Steb.io</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="create-store.html">Start Selling</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <div class="auth-links" id="authLinks"></div>
+  </div>
+</header>
 
-  <main class="container" style="padding:2rem 0;">
-    <h2 id="chatRoomTitle">Loading chat room…</h2>
-    <div id="joinBox" style="margin-top:1rem;"></div>
-    <section id="chatSection" style="display:none; margin-top:1rem;">
-      <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); padding:0.5rem; background:var(--secondary);"></div>
-      <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-        <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;">
-        <button type="submit" class="button">Send</button>
-      </form>
-    </section>
-  </main>
+<main class="container" style="padding:1.25rem 0 2rem;">
+  <h2 id="chatRoomTitle">Loading chat room…</h2>
 
-  <script src="auth.js"></script>
-  <script>
-    (function() {
-      const API_BASE = window.location.hostname.includes('onrender.com')
-        ? 'https://stebio.onrender.com/api'
-        : '/api';
-      let pollTimer = null;
+  <div id="status" class="notice" style="display:none;"></div>
 
-      function getChatRoom(id) {
-        return fetch(\`\${API_BASE}/chatroom/\${id}\`)
-          .then(res => {
-            if (!res.ok) throw new Error('Chat room not found');
-            return res.json();
-          });
+  <div id="joinBox" class="card stack" style="margin-top:1rem;display:none;"></div>
+
+  <section id="chatSection" class="stack" style="display:none;margin-top:1rem;">
+    <div id="chatMessages" class="messages" aria-live="polite"></div>
+
+    <form id="chatForm" class="row" autocomplete="off">
+      <input id="chatInput" type="text" placeholder="Type your message…" maxlength="2000" />
+      <button id="sendBtn" type="submit" class="button">Send</button>
+    </form>
+    <footer id="chatHint">Press Enter to send • Messages refresh every 5s</footer>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---------------------------
+  // CONFIG & UTILITIES
+  // ---------------------------
+  const metaBase = document.querySelector('meta[name="steb-api-base"]');
+  const FALLBACK_BASE = '/api';
+  const API_BASE = (metaBase && metaBase.content) ? metaBase.content.replace(/\/+$/,'') : FALLBACK_BASE;
+
+  const $ = sel => document.querySelector(sel);
+  const el = (tag, attrs={}, children=[]) => {
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v]) => {
+      if (k === 'class') n.className = v;
+      else if (k === 'html') n.innerHTML = v;
+      else n.setAttribute(k, v);
+    });
+    children.forEach(c => n.appendChild(c));
+    return n;
+  };
+
+  // Safe text rendering (avoid HTML injection)
+  const text = (str='') => document.createTextNode(String(str));
+
+  // Trim and collapse whitespace for status messages
+  const compact = s => String(s || '').replace(/\s+/g,' ').trim();
+
+  // Show status/notice
+  function showStatus(msg, isError=false){
+    const box = $('#status');
+    box.style.display = 'block';
+    box.classList.toggle('error', !!isError);
+    box.textContent = compact(msg);
+  }
+  function hideStatus(){ const box = $('#status'); box.style.display='none'; box.textContent=''; }
+
+  // Basic auth UI (replace with your real auth state)
+  function renderAuth(){
+    const wrap = $('#authLinks');
+    wrap.innerHTML = '';
+    // Example: read a token cookie/localStorage if you have one
+    const token = localStorage.getItem('steb_token');
+    if (token){
+      const b = el('button', { class:'button ghost', type:'button' }, [text('Sign out')]);
+      b.onclick = () => { localStorage.removeItem('steb_token'); location.reload(); };
+      wrap.appendChild(b);
+    } else {
+      const a = el('a', { href:'login.html', class:'button ghost' }, [text('Sign in')]);
+      wrap.appendChild(a);
+    }
+  }
+
+  // Fetch wrapper with JSON + auth
+  async function api(path, opts={}){
+    const token = localStorage.getItem('steb_token'); // JWT or session token if you use one
+    const headers = Object.assign(
+      { 'Accept':'application/json' },
+      opts.headers || {}
+    );
+    if (!(opts.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
+    // Return structured error detail for better UX
+    let data = null;
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')){
+      try { data = await res.json(); } catch {}
+    } else {
+      data = await res.text().catch(()=>null);
+    }
+    if (!res.ok){
+      const message = (data && (data.error || data.message)) || res.statusText || 'Request failed';
+      const error = new Error(message);
+      error.status = res.status;
+      error.data = data;
+      throw error;
+    }
+    return data;
+  }
+
+  // ---------------------------
+  // CHAT RENDERING
+  // ---------------------------
+  let pollTimer = null;
+  let currentRoomId = null;
+
+  function renderJoinUI(room){
+    const joinBox = $('#joinBox');
+    joinBox.innerHTML = '';
+
+    const details = el('div', { class:'stack' }, [
+      el('div', {}, [
+        el('div', { class:'row', style:'justify-content:space-between;' }, [
+          el('div', {}, [ text(room.description || 'Private chat room') ]),
+          el('div', {}, [ el('strong', {}, [ text(room.price > 0 ? `$${Number(room.price).toFixed(2)}` : 'Free') ]) ])
+        ])
+      ]),
+    ]);
+
+    const joinBtn = el('button', { class:'button', type:'button' }, [
+      text(room.price > 0 ? 'Unlock Chat' : 'Join Chat')
+    ]);
+    joinBtn.onclick = async () => {
+      try{
+        joinBtn.disabled = true;
+        hideStatus();
+        await api(`/chatroom/${encodeURIComponent(currentRoomId)}/join`, { method:'POST', body: JSON.stringify({}) });
+        setupChat(currentRoomId, room);
+      }catch(e){
+        showStatus(`Failed to join: ${e.message}`, true);
+      }finally{
+        joinBtn.disabled = false;
       }
+    };
 
-      function joinChatRoom(id) {
-        return fetch(\`\${API_BASE}/chatroom/\${id}/join\`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
-        }).then(res => res.json());
+    joinBox.append(details, joinBtn);
+    joinBox.style.display = 'block';
+  }
+
+  function renderMessages(list){
+    const container = $('#chatMessages');
+    container.innerHTML = '';
+    list.forEach(m => {
+      const item = el('div', { class:'msg' });
+      const meta = el('div', { class:'meta' }, [
+        el('strong', {}, [ text(m.username || 'User') ]),
+        el('small', {}, [ text('•') ]),
+        el('time', { datetime: m.createdAt ? new Date(m.createdAt).toISOString() : '' }, [
+          text(m.createdAt ? new Date(m.createdAt).toLocaleString() : '')
+        ])
+      ]);
+      const body = el('div', { class:'body' }, [ text(m.message || '') ]);
+      item.append(meta, body);
+      container.appendChild(item);
+    });
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function loadMessagesOnce(){
+    if (!currentRoomId) return;
+    try{
+      const data = await api(`/chatroom/${encodeURIComponent(currentRoomId)}/messages`);
+      renderMessages((data && data.messages) || []);
+      hideStatus();
+    }catch(e){
+      // Specific auth/permission handling
+      if (e.status === 401 || e.status === 403){
+        $('#chatSection').style.display = 'none';
+        $('#joinBox').style.display = 'block';
+        showStatus('You do not have access to this chat room. Please join/unlock first.', true);
+        clearInterval(pollTimer); pollTimer = null;
+        return;
       }
+      showStatus(`Error loading messages: ${e.message}`, true);
+    }
+  }
 
-      function loadMessages(id) {
-        fetch(\`\${API_BASE}/chatroom/\${id}/messages\`)
-          .then(res => {
-            if (res.status === 403 || res.status === 401) {
-              document.getElementById('chatSection').style.display = 'none';
-              document.getElementById('joinBox').innerHTML = '<p>You do not have access to this chat room.</p>';
-              return null;
-            }
-            return res.json();
-          })
-          .then(data => {
-            if (!data) return;
-            const msgs = data.messages || [];
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-            msgs.forEach(m => {
-              const div = document.createElement('div');
-              div.innerHTML = '<strong>' + m.username + '</strong>: ' +
-                              m.message +
-                              ' <small>' + new Date(m.createdAt).toLocaleString() + '</small>';
-              container.appendChild(div);
-            });
-            container.scrollTop = container.scrollHeight;
-          })
-          .catch(err => console.error('Error loading messages', err));
+  function setupChat(id, room){
+    // show chat UI
+    $('#joinBox').style.display = 'none';
+    $('#chatSection').style.display = 'block';
+
+    // Start polling
+    clearInterval(pollTimer);
+    loadMessagesOnce();
+    pollTimer = setInterval(loadMessagesOnce, 5000);
+
+    // Attach form handler (ensure only one binding)
+    const form = $('#chatForm');
+    form.onsubmit = async (ev) => {
+      ev.preventDefault();
+      const input = $('#chatInput');
+      const sendBtn = $('#sendBtn');
+      const msg = input.value.trim();
+      if (!msg) return;
+      try{
+        sendBtn.disabled = true;
+        await api(`/chatroom/${encodeURIComponent(id)}/message`, {
+          method:'POST',
+          body: JSON.stringify({ message: msg })
+        });
+        input.value = '';
+        await loadMessagesOnce();
+      }catch(e){
+        showStatus(`Failed to send: ${e.message}`, true);
+      }finally{
+        sendBtn.disabled = false;
+        input.focus();
       }
+    };
+  }
 
-      function setupChat(id, room) {
-        document.getElementById('joinBox').style.display = 'none';
-        document.getElementById('chatSection').style.display = '';
-        loadMessages(id);
-        if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(() => loadMessages(id), 5000);
-        document.getElementById('chatForm').addEventListener('submit', function(e) {
-          e.preventDefault();
-          const msg = document.getElementById('chatInput').value.trim();
-          if (!msg) return;
-          fetch(\`\${API_BASE}/chatroom/\${id}/message\`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg })
-          })
-            .then(res => {
-              if (!res.ok) throw new Error('Failed to send');
-              return res.json();
-            })
-            .then(() => {
-              document.getElementById('chatInput').value = '';
-              loadMessages(id);
-            })
-            .catch(err => console.error('Error sending message', err));
-        }, { once: true });
-      }
+  // ---------------------------
+  // BOOT
+  // ---------------------------
+  document.addEventListener('visibilitychange', () => {
+    if (!currentRoomId) return;
+    if (document.visibilityState === 'visible'){
+      loadMessagesOnce();
+      if (!pollTimer) pollTimer = setInterval(loadMessagesOnce, 5000);
+    } else {
+      clearInterval(pollTimer); pollTimer = null;
+    }
+  });
 
-      document.addEventListener('DOMContentLoaded', function() {
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        if (!id) {
-          document.getElementById('chatRoomTitle').textContent = 'Chat room not found.';
-          return;
+  (async function init(){
+    renderAuth();
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    currentRoomId = id;
+
+    if (!id){
+      $('#chatRoomTitle').textContent = 'Chat room not found.';
+      showStatus('Missing URL parameter: ?id=ROOM_ID', true);
+      return;
+    }
+
+    try{
+      hideStatus();
+      // Fetch room
+      const room = await api(`/chatroom/${encodeURIComponent(id)}`);
+      $('#chatRoomTitle').textContent = room.title || 'Chat Room';
+      // Check access by trying to load messages once (will 401/403 if locked)
+      try{
+        await loadMessagesOnce();
+        // If we got here with no auth error, show chat immediately
+        $('#joinBox').style.display = 'none';
+        $('#chatSection').style.display = 'block';
+        if (!pollTimer) pollTimer = setInterval(loadMessagesOnce, 5000);
+      }catch(e){
+        if (e.status === 401 || e.status === 403){
+          renderJoinUI(room);
+        } else {
+          throw e;
         }
-        getChatRoom(id)
-          .then(room => {
-            document.getElementById('chatRoomTitle').textContent = room.title;
-            const joinBox = document.getElementById('joinBox');
-            if (room.price > 0) {
-              joinBox.innerHTML = '<p>Price: $' + room.price.toFixed(2) +
-                '</p><button id="joinBtn" class="button">Unlock Chat</button>';
-            } else {
-              joinBox.innerHTML = '<p>This chat room is free.</p>' +
-                '<button id="joinBtn" class="button">Join Chat</button>';
-            }
-            document.getElementById('joinBtn').addEventListener('click', function() {
-              joinChatRoom(id)
-                .then(() => {
-                  setupChat(id, room);
-                })
-                .catch(err => {
-                  console.error('Error joining room', err);
-                  joinBox.innerHTML = '<p>Failed to join chat room.</p>';
-                });
-            }, { once: true });
-          })
-          .catch(() => {
-            document.getElementById('chatRoomTitle').textContent = 'Chat room not found.';
-          });
-      });
-    })();
-  </script>
+      }
+    }catch(e){
+      $('#chatRoomTitle').textContent = 'Chat room not found.';
+      showStatus(`Could not load chat room: ${e.message}. Check API_BASE (${API_BASE}) and CORS.`, true);
+    }
+  })();
+})();
+</script>
 </body>
 </html>
