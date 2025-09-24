@@ -1,4 +1,3 @@
-<script>
 // auth.js
 (function() {
   function updateAuthLinks() {
@@ -34,4 +33,3 @@
   }
   document.addEventListener('DOMContentLoaded', updateAuthLinks);
 })();
-</script>
