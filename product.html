@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Product Details - Steb.io</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
+        <a href="index.html">Home</a>
         <a href="create-store.html">Create Store</a>
         <a href="create-product.html">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
@@ -20,28 +20,32 @@
       <div class="auth-links"></div>
     </div>
   </header>
+
   <main id="productContainer" class="container" style="padding:2rem 0;">
-    <!-- Product details will be injected here -->
+    <!-- Product details loaded here -->
   </main>
+
   <section id="productChat" class="container" style="display:none; margin-top:1rem;">
     <h3>Product Chat</h3>
-    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid #ddd; padding:0.5rem;"></div>
+    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); padding:0.5rem; background: var(--secondary);"></div>
     <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1; padding:0.5rem;">
-      <button type="submit" style="padding:0.5rem 1rem;">Send</button>
+      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;">
+      <button type="submit" class="button">Send</button>
     </form>
   </section>
+
   <script src="auth.js"></script>
   <script>
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
+
     function loadProduct() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
       const container = document.getElementById('productContainer');
       if (!id) {
-        container.innerHTML = '<p>Product ID missing.</p>';
+        container.innerHTML = '<p>Missing product ID.</p>';
         return;
       }
       fetch(\`\${API_BASE}/products/\${id}\`)
@@ -49,29 +53,30 @@
           if (!res.ok) throw new Error('Product not found');
           return res.json();
         })
-        .then(prod => {
+        .then(p => {
           const wrapper = document.createElement('div');
           wrapper.style.display = 'flex';
           wrapper.style.flexWrap = 'wrap';
           wrapper.style.gap = '2rem';
           const img = document.createElement('img');
-          let imgSrc = prod.image && prod.image.trim() ? prod.image : null;
+          let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
           if (imgSrc && !/^https?:\\/\\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
             imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
           }
-          img.src = imgSrc || 'https://via.placeholder.com/400x250?text=Product';
-          img.alt = prod.title;
+          img.src = imgSrc || 'https://via.placeholder.com/500x280?text=Product';
+          img.alt = p.title;
           img.style.width = '100%';
-          img.style.maxWidth = '400px';
+          img.style.maxWidth = '500px';
           img.style.borderRadius = '8px';
           const info = document.createElement('div');
           info.style.flex = '1';
           info.innerHTML = \`
-            <h2>\${prod.title}</h2>
-            <p><strong>Type:</strong> \${prod.type}</p>
-            <p style="font-size:1.5rem;">$\${prod.price.toFixed(2)}</p>
-            <p>\${prod.description}</p>
-            <p><a href="store.html?id=\${prod.storeId}" style="color:#2b6cb0;">View Seller Store</a></p>
+            <h2>\${p.title}</h2>
+            <p><strong>Type:</strong> \${p.type}</p>
+            <p style="font-size:1.5rem; margin:1rem 0;">$\${p.price.toFixed(2)}</p>
+            <p>\${p.description}</p>
+            <p><a href="store.html?id=\${p.storeId}" style="color:\${getComputedStyle(document.documentElement).getPropertyValue('--primary-dark')}">View Seller Store</a></p>
+            <button class="button" onclick="alert('Order functionality not implemented yet.')">Buy Now</button>
           \`;
           wrapper.appendChild(img);
           wrapper.appendChild(info);
@@ -82,6 +87,7 @@
           container.innerHTML = '<p>Product not found.</p>';
         });
     }
+
     function loadChat(productId) {
       const username = localStorage.getItem('username');
       if (!username) return;
@@ -96,18 +102,19 @@
         .then(data => {
           if (!data) return;
           document.getElementById('productChat').style.display = '';
-          const msgs = data.messages || [];
+          const messages = data.messages || [];
           const chatMessages = document.getElementById('chatMessages');
           chatMessages.innerHTML = '';
-          msgs.forEach(m => {
+          messages.forEach(m => {
             const div = document.createElement('div');
-            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.timestamp).toLocaleString()}</small>\`;
+            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.createdAt || m.timestamp).toLocaleString()}</small>\`;
             chatMessages.appendChild(div);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
         })
-        .catch(err => console.error('Error loading chat', err));
+        .catch(err => console.error('Error loading chat messages', err));
     }
+
     document.getElementById('chatForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const params = new URLSearchParams(window.location.search);
@@ -120,16 +127,17 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, message })
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to send message');
-        return res.json();
-      })
-      .then(() => {
-        document.getElementById('chatInput').value = '';
-        loadChat(productId);
-      })
-      .catch(err => console.error('Error sending message', err));
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to send message');
+          return res.json();
+        })
+        .then(() => {
+          document.getElementById('chatInput').value = '';
+          loadChat(productId);
+        })
+        .catch(err => console.error('Error sending message', err));
     });
+
     document.addEventListener('DOMContentLoaded', loadProduct);
   </script>
 </body>
