@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Chat Room - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="support.html">Support</a>
+      </nav>
+      <div class="auth-links"></div>
+    </div>
+  </header>
+
+  <main class="container" style="padding:2rem 0;">
+    <h2 id="chatRoomTitle">Loading chat room...</h2>
+    <div id="joinNotice" style="margin-top:1rem; display:none;"></div>
+    <section id="chatSection" style="display:none; margin-top:1rem;">
+      <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); padding:0.5rem; background: var(--secondary);"></div>
+      <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+        <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;">
+        <button type="submit" class="button">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    const API_BASE = window.location.hostname.includes('onrender.com')
+      ? 'https://stebio.onrender.com/api'
+      : '/api';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      const username = localStorage.getItem('username');
+
+      if (!id) {
+        document.getElementById('chatRoomTitle').textContent = 'Chat room not found.';
+        return;
+      }
+
+      // Fetch chat room details
+      fetch(\`\${API_BASE}/chatroom/\${id}\`)
+        .then(res => {
+          if (!res.ok) throw new Error('Chat room not found');
+          return res.json();
+        })
+        .then(room => {
+          document.getElementById('chatRoomTitle').textContent = room.title;
+          if (room.price > 0) {
+            document.getElementById('joinNotice').innerHTML = \`<p>Price: $\${room.price.toFixed(2)}. You must purchase access.</p><button id="joinBtn" class="button">Unlock Chat</button>\`;
+          } else {
+            document.getElementById('joinNotice').innerHTML = \`<p>This chat room is free.</p><button id="joinBtn" class="button">Join Chat</button>\`;
+          }
+          document.getElementById('joinNotice').style.display = 'block';
+          document.getElementById('joinBtn').addEventListener('click', () => {
+            fetch(\`\${API_BASE}/chatroom/\${id}/join\`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({}),
+            })
+              .then(res => res.json())
+              .then(() => {
+                document.getElementById('joinNotice').style.display = 'none';
+                document.getElementById('chatSection').style.display = '';
+                loadChat();
+                pollChat = setInterval(loadChat, 5000);
+              })
+              .catch(err => console.error('Error joining chat room', err));
+          });
+        })
+        .catch(() => {
+          document.getElementById('chatRoomTitle').textContent = 'Chat room not found.';
+        });
+
+      let pollChat;
+
+      // Load and render messages
+      function loadChat() {
+        fetch(\`\${API_BASE}/chatroom/\${id}/messages\`)
+          .then(res => {
+            if (res.status === 403 || res.status === 401) {
+              document.getElementById('chatSection').style.display = 'none';
+              document.getElementById('joinNotice').style.display = 'block';
+              return null;
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (!data) return;
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            (data.messages || []).forEach(m => {
+              const div = document.createElement('div');
+              div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.createdAt).toLocaleString()}</small>\`;
+              chatMessages.appendChild(div);
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          })
+          .catch(err => console.error('Error loading chat messages', err));
+      }
+
+      // Send a message
+      document.getElementById('chatForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = document.getElementById('chatInput').value.trim();
+        if (!message) return;
+        fetch(\`\${API_BASE}/chatroom/\${id}/message\`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to send message');
+            return res.json();
+          })
+          .then(() => {
+            document.getElementById('chatInput').value = '';
+            loadChat();
+          })
+          .catch(err => console.error('Error sending message', err));
+      });
+    });
+  </script>
+</body>
+</html>
