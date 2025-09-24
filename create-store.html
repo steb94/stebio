@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Create Store - Steb.io</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,7 +11,7 @@
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html">Explore Marketplace</a>
+        <a href="index.html">Home</a>
         <a href="create-store.html" class="active">Create Store</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
@@ -19,16 +19,18 @@
       <div class="auth-links"></div>
     </div>
   </header>
+
   <main class="container" style="padding:2rem 0;">
     <h2>Create Your Store</h2>
-    <form id="storeForm" style="max-width:400px;">
+    <form id="storeForm" style="max-width:400px; margin-top:1rem;">
       <div style="margin-bottom:1rem;">
         <label for="storeName">Store Name</label><br>
-        <input type="text" id="storeName" placeholder="Enter store name" style="width:100%; padding:0.5rem;">
+        <input type="text" id="storeName" placeholder="Enter store name">
       </div>
-      <button type="submit" style="padding:0.5rem 1rem;">Create Store</button>
+      <button type="submit" class="button">Create Store</button>
     </form>
   </main>
+
   <script src="auth.js"></script>
   <script>
     document.getElementById('storeForm').addEventListener('submit', function(e) {
@@ -42,23 +44,23 @@
       const API_BASE = window.location.hostname.includes('onrender.com')
         ? 'https://stebio.onrender.com/api'
         : '/api';
-      fetch(\`\${API_BASE}/stores\`, {
+      fetch(`${API_BASE}/stores`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: storeName, owner })
       })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to create store');
-        return res.json();
-      })
-      .then(data => {
-        localStorage.setItem('storeId', data.id);
-        window.location.href = 'dashboard.html';
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Error creating store.');
-      });
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to create store');
+          return res.json();
+        })
+        .then(data => {
+          localStorage.setItem('storeId', data.id);
+          window.location.href = 'create-product.html';
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Error creating store.');
+        });
     });
   </script>
 </body>
