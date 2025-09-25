@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Steb.io Marketplace</title>
+  <title>STEB Marketplace</title>
+  <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">Steb.io</div>
+      <div class="brand">STEB</div>
       <nav>
         <a href="index.html" class="active">Home</a>
-        <a href="create-store.html">Start Selling</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
       </nav>
@@ -20,83 +22,134 @@
     </div>
   </header>
 
-  <section class="hero">
-    <div class="container">
-      <h1>Turn your passion into profit</h1>
-      <p>Discover and support digital creators, or start your own business in minutes.</p>
-      <div class="cta-buttons">
-        <a href="create-store.html" class="button">Start Selling</a>
-        <a href="#productSection" class="button">Explore Marketplace</a>
-      </div>
-      <div class="search-bar">
-        <input id="searchInput" type="text" placeholder="Search products, communities, courses…">
-        <button id="searchBtn">Search</button>
-      </div>
-    </div>
-  </section>
+  <main class="container" style="padding:2rem 0;">
+    <h1>Discover Your Next Digital Product</h1>
+    <p>STEB is a modern marketplace for courses, communities, software, services, templates, and more.  Browse the latest offerings and connect directly with sellers.</p>
 
-  <section id="categories">
-    <div class="container">
-      <div class="category-bar" id="categoryBar">
-        <button data-type="All" class="active">All</button>
-        <button data-type="Trading">Trading</button>
-        <button data-type="Communities">Communities</button>
-        <button data-type="Courses">Courses</button>
-        <button data-type="Software">Software</button>
-        <button data-type="Services">Services</button>
-        <button data-type="Templates">Templates</button>
+    <!-- Stats -->
+    <section style="margin-top:2rem;">
+      <div class="row summary">
+        <div class="card" style="flex:1;min-width:220px;">
+          <div>Total Products</div>
+          <div class="value" id="statProducts">0</div>
+        </div>
+        <div class="card" style="flex:1;min-width:220px;">
+          <div>Total Stores</div>
+          <div class="value" id="statStores">0</div>
+        </div>
+        <div class="card" style="flex:1;min-width:220px;">
+          <div>Total Orders</div>
+          <div class="value" id="statOrders">0</div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="stats">
-    <div class="container stats-grid">
-      <div class="stat-card">
-        <h3 id="statProducts">0</h3>
-        <p>Products</p>
+    <!-- Search and Filters -->
+    <section style="margin-top:2rem;">
+      <h2>Browse Products</h2>
+      <div class="row" style="flex-wrap:wrap;gap:.75rem;">
+        <select id="typeFilter">
+          <option value="All">All Types</option>
+          <option value="Trading">Trading</option>
+          <option value="Communities">Communities</option>
+          <option value="Courses">Courses</option>
+          <option value="Software">Software</option>
+          <option value="Services">Services</option>
+          <option value="Templates">Templates</option>
+        </select>
+        <select id="sortFilter">
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low→High</option>
+          <option value="price_desc">Price: High→Low</option>
+        </select>
+        <input type="text" id="searchInput" placeholder="Search by keyword…" style="flex:1;">
+        <button id="searchBtn" class="button">Search</button>
       </div>
-      <div class="stat-card">
-        <h3 id="statStores">0</h3>
-        <p>Stores</p>
-      </div>
-      <div class="stat-card">
-        <h3 id="statOrders">0</h3>
-        <p>Orders</p>
-      </div>
-    </div>
-  </section>
+      <div id="productsGrid" class="row" style="margin-top:1rem;"></div>
+    </section>
+  </main>
 
-  <!-- Featured stores -->
-  <section id="storeSection">
-    <div class="container">
-      <h3>Featured Stores</h3>
-      <div id="storeGrid" class="product-grid"></div>
-    </div>
-  </section>
-
-  <section id="controls">
-    <div class="container control-bar">
-      <label for="sortSelect">Sort by:</label>
-      <select id="sortSelect">
-        <option value="newest">Newest</option>
-        <option value="price_asc">Price: Low → High</option>
-        <option value="price_desc">Price: High → Low</option>
-      </select>
-    </div>
-  </section>
-
-  <section id="productSection">
-    <div class="container">
-      <div id="productGrid" class="product-grid">
-        <!-- Products loaded via JS -->
-      </div>
-      <div id="loadMoreContainer" hidden>
-        <button id="loadMoreBtn" class="button">Load more</button>
-      </div>
-    </div>
-  </section>
-
-  <script src="app.js"></script>
   <script src="auth.js"></script>
+  <script>
+  (() => {
+    const meta = document.querySelector('meta[name="steb-api-base"]');
+    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+
+    const $ = sel => document.querySelector(sel);
+
+    function renderProducts(list) {
+      const grid = $('#productsGrid');
+      grid.innerHTML = '';
+      if (list.length === 0) {
+        grid.textContent = 'No products found.';
+        return;
+      }
+      list.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.flex = '1 0 calc(33.333% - 1rem)';
+        card.style.minWidth = '260px';
+        const title = document.createElement('h4');
+        title.textContent = p.title;
+        const desc = document.createElement('p');
+        desc.textContent = p.description.substring(0, 80) + (p.description.length > 80 ? '…' : '');
+        const price = document.createElement('strong');
+        price.textContent = '$' + Number(p.price).toFixed(2);
+        card.appendChild(title);
+        card.appendChild(desc);
+        card.appendChild(price);
+        grid.appendChild(card);
+      });
+    }
+
+    async function loadStats() {
+      try {
+        const data = await fetch(\`\${API_BASE}/stats\`).then(res => res.json());
+        $('#statProducts').textContent = data.totalProducts || 0;
+        $('#statStores').textContent = data.totalStores || 0;
+        $('#statOrders').textContent = data.totalOrders || 0;
+      } catch (e) {
+        console.error('Error loading stats', e);
+      }
+    }
+
+    async function fetchProducts() {
+      const type = $('#typeFilter').value;
+      const sort = $('#sortFilter').value;
+      const query = $('#searchInput').value.trim();
+      let url = \`\${API_BASE}/products\`;
+      const params = new URLSearchParams();
+      if (type && type !== 'All') params.append('type', type);
+      if (sort) params.append('sort', sort);
+      if (query) {
+        url = \`\${API_BASE}/products/search\`;
+        params.append('query', query);
+        params.append('sort', sort);
+      }
+      const full = params.toString() ? url + '?' + params.toString() : url;
+      try {
+        const products = await fetch(full).then(r => r.json());
+        renderProducts(products || []);
+      } catch (e) {
+        console.error('Error fetching products', e);
+      }
+    }
+
+    $('#typeFilter').addEventListener('change', fetchProducts);
+    $('#sortFilter').addEventListener('change', fetchProducts);
+    $('#searchBtn').addEventListener('click', fetchProducts);
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        fetchProducts();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      fetchProducts();
+    });
+  })();
+  </script>
 </body>
 </html>
