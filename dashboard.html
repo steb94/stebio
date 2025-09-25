@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Seller Dashboard – Steb.io</title>
 
-  <!-- Set the API base here; override if hosting on a different domain -->
+  <!-- API base: override this content attribute if your API is hosted elsewhere -->
   <meta name="steb-api-base" content="/api" />
 
   <style>
@@ -166,21 +166,21 @@
   const metaBase = document.querySelector('meta[name="steb-api-base"]');
   const API_BASE = (metaBase && metaBase.content) ? metaBase.content.replace(/\/+$/, '') : '/api';
 
-  // Simple helpers
+  // Helper functions
   const $ = (sel) => document.querySelector(sel);
   const el = (tag, attrs = {}, children = []) => {
-    const n = document.createElement(tag);
+    const node = document.createElement(tag);
     Object.entries(attrs).forEach(([k, v]) => {
-      if (k === 'class') n.className = v;
-      else if (k === 'html') n.innerHTML = v;
-      else n.setAttribute(k, v);
+      if (k === 'class') node.className = v;
+      else if (k === 'html') node.innerHTML = v;
+      else node.setAttribute(k, v);
     });
-    children.forEach(c => n.appendChild(c));
-    return n;
+    children.forEach(child => node.appendChild(child));
+    return node;
   };
   const text = (str = '') => document.createTextNode(String(str));
 
-  // Fetch wrapper with Authorization and JSON handling
+  // API wrapper with auth support
   async function api(path, opts = {}) {
     const token = localStorage.getItem('steb_token');
     const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
@@ -189,16 +189,16 @@
     }
     if (token) headers['Authorization'] = \`Bearer \${token}\`;
     const res = await fetch(\`\${API_BASE}\${path}\`, { credentials:'include', ...opts, headers });
-    const contentType = res.headers.get('content-type') || '';
+    const ct = res.headers.get('content-type') || '';
     let data = null;
-    if (contentType.includes('application/json')) {
+    if (ct.includes('application/json')) {
       try { data = await res.json(); } catch {}
     } else {
       data = await res.text().catch(() => null);
     }
     if (!res.ok) {
-      const message = (data && (data.error || data.message)) || res.statusText || 'Request failed';
-      const err = new Error(message);
+      const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
+      const err = new Error(msg);
       err.status = res.status;
       err.data = data;
       throw err;
@@ -206,26 +206,26 @@
     return data;
   }
 
-  // Authentication UI for nav
+  // Navbar auth control
   function renderAuth() {
     const wrap = $('#authLinks');
     wrap.innerHTML = '';
     const isLoggedIn = localStorage.getItem('loggedIn') === 'true';
     if (isLoggedIn) {
-      const b = el('button', { class:'button ghost', type:'button' }, [ text('Sign out') ]);
-      b.onclick = () => {
+      const btn = el('button', { class:'button ghost', type:'button' }, [ text('Sign out') ]);
+      btn.onclick = () => {
         localStorage.removeItem('loggedIn');
         localStorage.removeItem('steb_token');
         location.reload();
       };
-      wrap.appendChild(b);
+      wrap.appendChild(btn);
     } else {
-      const a = el('a', { href:'login.html', class:'button ghost' }, [ text('Sign in') ]);
-      wrap.appendChild(a);
+      const link = el('a', { href:'login.html', class:'button ghost' }, [ text('Sign in') ]);
+      wrap.appendChild(link);
     }
   }
 
-  // Dashboard display toggles
+  // UI toggles
   function showLogin() {
     $('#loginSection').style.display = 'block';
     $('#dashboardContent').style.display = 'none';
@@ -235,7 +235,7 @@
     $('#dashboardContent').style.display = 'block';
   }
 
-  // Load summary metrics
+  // Load dashboard summary
   async function loadSummary() {
     try {
       const data = await api('/dashboard');
@@ -269,18 +269,18 @@
     }
   }
 
-  // Load store posts
+  // Load posts
   async function loadPosts() {
     const storeId = localStorage.getItem('storeId');
     const username = localStorage.getItem('username');
-    const postList = $('#postList');
-    postList.innerHTML = '';
+    const list = $('#postList');
+    list.innerHTML = '';
     if (!storeId || !username) return;
     try {
-      const data = await api(\`/posts/\${storeId}?username=\${encodeURIComponent(username)}\`);
+      const data = await api(\`/posts/\${encodeURIComponent(storeId)}?username=\${encodeURIComponent(username)}\`);
       const posts = (data && data.posts) || [];
       if (posts.length === 0) {
-        postList.innerHTML = '<div class="post"><p>No posts yet.</p></div>';
+        list.innerHTML = '<div class=\"post\"><p>No posts yet.</p></div>';
       } else {
         posts.forEach(p => {
           const div = el('div', { class:'post' });
@@ -294,7 +294,7 @@
           }
           const date = new Date(p.timestamp || p.createdAt);
           div.appendChild(el('small', {}, [ text(date.toLocaleString()) ]));
-          postList.appendChild(div);
+          list.appendChild(div);
         });
       }
     } catch (e) {
@@ -328,7 +328,7 @@
     }
   }
 
-  // Initialize dashboard: check login/role/store, then load data
+  // Initialize dashboard logic
   function initDashboard() {
     const loggedIn = localStorage.getItem('loggedIn') === 'true';
     const role = localStorage.getItem('role');
@@ -355,7 +355,7 @@
     loadPosts();
   }
 
-  // Handle login form submission
+  // Event handlers
   $('#dashLoginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const user = $('#dashUsername').value.trim();
@@ -370,7 +370,6 @@
     }
   });
 
-  // Handle post creation
   $('#postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const content = $('#postText').value.trim();
@@ -388,12 +387,11 @@
       });
       $('#postForm').reset();
       loadPosts();
-    } catch (e2) {
-      console.error('Error creating post', e2);
+    } catch (err) {
+      console.error('Error creating post', err);
     }
   });
 
-  // Handle chat room creation
   $('#chatRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = $('#chatRoomTitle').value.trim();
@@ -410,12 +408,12 @@
       });
       $('#chatRoomForm').reset();
       loadChatRooms();
-    } catch (e2) {
-      console.error('Error creating chat room', e2);
+    } catch (err) {
+      console.error('Error creating chat room', err);
     }
   });
 
-  // Wait for DOM ready and initialize
+  // Initialise on DOM ready
   document.addEventListener('DOMContentLoaded', () => {
     renderAuth();
     initDashboard();
