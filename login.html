@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Sign In - Steb.io</title>
+  <title>Sign In – Steb.io</title>
+  <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,7 +23,7 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Sign In</h2>
-    <form id="loginForm" style="max-width:400px; margin-top:1rem;">
+    <form id="loginForm" style="max-width:400px;margin-top:1rem;">
       <div style="margin-bottom:1rem;">
         <label for="loginUsername">Username</label><br>
         <input type="text" id="loginUsername" placeholder="Username">
@@ -37,24 +38,42 @@
 
   <script src="auth.js"></script>
   <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+  (() => {
+    const meta = document.querySelector('meta[name="steb-api-base"]');
+    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('loginUsername').value.trim();
       const password = document.getElementById('loginPassword').value.trim();
-      const storedUser = localStorage.getItem('username');
-      const storedPass = localStorage.getItem('password');
-      const role = localStorage.getItem('role');
-      if (username === storedUser && password === storedPass) {
+      if (!username || !password) {
+        alert('Please enter your username and password.');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to sign in');
+        }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.user.username);
+        localStorage.setItem('role', data.user.role);
+        localStorage.setItem('userId', data.user.id);
         localStorage.setItem('loggedIn', 'true');
-        if (role === 'seller') {
+        if (data.user.role === 'seller') {
           window.location.href = 'dashboard.html';
         } else {
           window.location.href = 'index.html';
         }
-      } else {
-        alert('Invalid username or password.');
+      } catch (err) {
+        alert(err.message || 'Error signing in.');
       }
     });
+  })();
   </script>
 </body>
 </html>
