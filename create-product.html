@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Add Product – Steb.io</title>
+  <title>Add Product – Steb</title>
   <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">Steb.io</div>
+      <div class="brand">STEB</div>
       <nav>
         <a href="index.html">Home</a>
         <a href="create-store.html">Create Store</a>
@@ -24,21 +24,21 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Add a New Product</h2>
-    <form id="productForm" style="max-width:600px;margin-top:1rem;">
-      <div style="margin-bottom:1rem;">
-        <label for="productTitle">Title</label><br>
+    <form id="productForm" class="stack" style="max-width:600px;margin-top:1rem;">
+      <div class="stack">
+        <label for="productTitle">Title</label>
         <input type="text" id="productTitle" placeholder="Product title">
       </div>
-      <div style="margin-bottom:1rem;">
-        <label for="productDescription">Description</label><br>
+      <div class="stack">
+        <label for="productDescription">Description</label>
         <textarea id="productDescription" rows="4" placeholder="Product description"></textarea>
       </div>
-      <div style="margin-bottom:1rem;">
-        <label for="productImage">Image URL</label><br>
+      <div class="stack">
+        <label for="productImage">Image URL</label>
         <input type="url" id="productImage" placeholder="Image URL (optional)">
       </div>
-      <div style="margin-bottom:1rem;">
-        <label for="productType">Type</label><br>
+      <div class="stack">
+        <label for="productType">Type</label>
         <select id="productType">
           <option value="Trading">Trading</option>
           <option value="Communities">Communities</option>
@@ -48,12 +48,12 @@
           <option value="Templates">Templates</option>
         </select>
       </div>
-      <div style="margin-bottom:1rem;">
-        <label for="productPrice">Price ($)</label><br>
+      <div class="stack">
+        <label for="productPrice">Price ($)</label>
         <input type="number" id="productPrice" step="0.01" min="0" placeholder="Price">
       </div>
-      <div style="margin-bottom:1rem;">
-        <label for="productSupply">Max Supply</label><br>
+      <div class="stack">
+        <label for="productSupply">Max Supply</label>
         <input type="number" id="productSupply" placeholder="Max supply (optional)">
       </div>
       <button type="submit" class="button">Create Product</button>
@@ -85,9 +85,9 @@
       const token = localStorage.getItem('token');
       try {
         const res = await fetch(`${API_BASE}/products`, {
-          method: 'POST',
+          method:'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type':'application/json',
             'Authorization': token ? `Bearer ${token}` : ''
           },
           body: JSON.stringify({
