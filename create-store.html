@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Create Store – Steb.io</title>
+  <title>Create Store – Steb</title>
   <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">Steb.io</div>
+      <div class="brand">STEB</div>
       <nav>
         <a href="index.html">Home</a>
         <a href="create-store.html" class="active">Create Store</a>
@@ -23,9 +23,9 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Create Your Store</h2>
-    <form id="storeForm" style="max-width:400px;margin-top:1rem;">
-      <div style="margin-bottom:1rem;">
-        <label for="storeName">Store Name</label><br>
+    <form id="storeForm" class="stack" style="max-width:400px;margin-top:1rem;">
+      <div class="stack">
+        <label for="storeName">Store Name</label>
         <input type="text" id="storeName" placeholder="Enter store name">
       </div>
       <button type="submit" class="button">Create Store</button>
@@ -59,6 +59,7 @@
           throw new Error(data.error || 'Failed to create store');
         }
         localStorage.setItem('storeId', data.id);
+        // sellers go directly to add product
         window.location.href = 'create-product.html';
       } catch (err) {
         alert(err.message || 'Error creating store.');
