@@ -1,5 +1,1 @@
-{
-  "scripts": {
-    "start": "node server_fixed.js"
-  }
-}
+"start": "node server_fixed.js"
