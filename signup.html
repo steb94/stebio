@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Sign Up - Steb.io</title>
+  <title>Sign Up – Steb.io</title>
+  <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,7 +23,7 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Create an Account</h2>
-    <form id="signupForm" style="max-width:400px; margin-top:1rem;">
+    <form id="signupForm" style="max-width:400px;margin-top:1rem;">
       <div style="margin-bottom:1rem;">
         <label for="signupUsername">Username</label><br>
         <input type="text" id="signupUsername" placeholder="Enter username">
@@ -44,7 +45,10 @@
 
   <script src="auth.js"></script>
   <script>
-    document.getElementById('signupForm').addEventListener('submit', function(e) {
+  (() => {
+    const meta = document.querySelector('meta[name="steb-api-base"]');
+    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('signupUsername').value.trim();
       const password = document.getElementById('signupPassword').value.trim();
@@ -53,16 +57,31 @@
         alert('Please enter a username and password.');
         return;
       }
-      localStorage.setItem('username', username);
-      localStorage.setItem('password', password);
-      localStorage.setItem('role', role);
-      localStorage.setItem('loggedIn', 'true');
-      if (role === 'seller') {
-        window.location.href = 'create-store.html';
-      } else {
-        window.location.href = 'index.html';
+      try {
+        const res = await fetch(`${API_BASE}/users/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, role })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to sign up');
+        }
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.user.username);
+        localStorage.setItem('role', data.user.role);
+        localStorage.setItem('userId', data.user.id);
+        localStorage.setItem('loggedIn', 'true');
+        if (data.user.role === 'seller') {
+          window.location.href = 'create-store.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        alert(err.message || 'Error signing up.');
       }
     });
+  })();
   </script>
 </body>
 </html>
