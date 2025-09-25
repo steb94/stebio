@@ -1,12 +1,9 @@
-// server.js
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 
-// Import product/store/order/chat helpers from models.js
 const {
   getAllProducts,
   getAllStores,
@@ -26,7 +23,6 @@ const {
   getPostsByStoreId
 } = require('./models');
 
-// Import ChatRoom helpers if defined; otherwise fall back to in‑memory implementations.
 let { ChatRoom, ChatRoomMessage } = require('./models');
 if (!ChatRoom || !ChatRoomMessage) {
   class FallbackChatRoom {
@@ -74,7 +70,6 @@ if (!ChatRoom || !ChatRoomMessage) {
   ChatRoomMessage = FallbackChatRoomMessage;
 }
 
-// Simple in‑memory chat access registry
 class ChatAccess {
   static _data = [];
   static _nextId = 1;
@@ -87,9 +82,6 @@ class ChatAccess {
   static hasAccess(roomId, userId) {
     return this._data.some(a => a.roomId === roomId && a.userId === userId);
   }
-  static listUsers(roomId) {
-    return this._data.filter(a => a.roomId === roomId);
-  }
 }
 
 const app = express();
@@ -99,7 +91,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 /* ===== User management ===== */
-// Load users from JSON file
 const USERS_FILE = path.join(__dirname, 'users.json');
 let users = [];
 try {
@@ -118,12 +109,11 @@ function generateToken() {
   return crypto.randomBytes(16).toString('hex');
 }
 
-// Register a new user
 app.post('/api/users/register', (req, res) => {
   const { username, password, role } = req.body || {};
   if (!username || !password) {
     return res.status(400).json({ error: 'Missing username or password' });
-  }
+    }
   if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
     return res.status(409).json({ error: 'Username already exists' });
   }
@@ -135,7 +125,6 @@ app.post('/api/users/register', (req, res) => {
   res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
 });
 
-// Log in an existing user
 app.post('/api/users/login', (req, res) => {
   const { username, password } = req.body || {};
   const user = users.find(u => u.username === username && u.password === password);
@@ -147,7 +136,6 @@ app.post('/api/users/login', (req, res) => {
   res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
 });
 
-// Get current user based on token
 app.get('/api/users/current', (req, res) => {
   const auth = req.headers.authorization || '';
   const match = auth.match(/^Bearer (.+)$/);
@@ -159,7 +147,6 @@ app.get('/api/users/current', (req, res) => {
   res.json({ id: user.id, username: user.username, role: user.role });
 });
 
-// Log out a user (invalidate token)
 app.post('/api/users/logout', (req, res) => {
   const auth = req.headers.authorization || '';
   const match = auth.match(/^Bearer (.+)$/);
@@ -170,7 +157,6 @@ app.post('/api/users/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// Auth middleware
 function requireAuth(req, res, next) {
   const auth = req.headers.authorization || '';
   const match = auth.match(/^Bearer (.+)$/);
@@ -192,7 +178,7 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
-/* ===== Dashboard summary for sellers ===== */
+/* ===== Dashboard summary ===== */
 app.get('/api/dashboard', requireAuth, (req, res) => {
   const totalSales = getAllOrders().reduce((sum, o) => sum + (o.price || 0), 0);
   const totalOrders = getAllOrders().length;
@@ -414,7 +400,7 @@ app.post('/api/posts/:storeId', requireAuth, (req, res) => {
   res.json(post);
 });
 
-/* ===== Fallback route for HTML5 History API ===== */
+/* ===== Fallback route for SPA ===== */
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
