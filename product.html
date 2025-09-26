@@ -19,7 +19,7 @@
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links"><a href="login.html" class="button ghost">Sign in</a></div>
+      <div class="auth-links"></div>
     </div>
   </header>
 
@@ -29,14 +29,14 @@
   <!-- Chat UI for logged‑in users -->
   <section id="productChat" class="container" style="display:none; margin-top:1rem;">
     <h3>Product Chat</h3>
-    <div id="chatMessages" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); padding:0.5rem; background: var(--secondary);"></div>
+    <div id="chatMessages" class="messages"></div>
     <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
       <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;" />
       <button type="submit" class="button">Send</button>
     </form>
   </section>
 
-  <!-- List of store chat rooms (even for guests) -->
+  <!-- List of store chat rooms -->
   <section id="storeChatRooms" class="container" style="margin-top:1rem;">
     <h3>Store Chat Rooms</h3>
     <div id="storeChatRoomsList"></div>
@@ -50,10 +50,6 @@
       ? 'https://stebio.onrender.com/api'
       : '/api';
 
-    /**
-     * Load and render product details based on the "id" query parameter.
-     * Also triggers chat loading and chat room listing once the product is fetched.
-     */
     function loadProduct() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
@@ -74,11 +70,10 @@
           wrapper.style.flexWrap = 'wrap';
           wrapper.style.gap = '2rem';
 
-          // Image (falls back to placeholder)
+          // Image (fallback to placeholder)
           const img = document.createElement('img');
           let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-          if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-            // If relative path, construct raw URL from GitHub branch
+          if (imgSrc && !/^https?:\\/\\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
             imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
           }
           img.src = imgSrc || 'https://via.placeholder.com/500x280?text=Product';
@@ -90,14 +85,28 @@
           // Product info
           const info = document.createElement('div');
           info.style.flex = '1';
-          info.innerHTML = `
+          const priceLine = p.type === 'ChatRoom' ? \`Chat Room Fee: $\${p.price.toFixed(2)}\` : \`Price: $\${p.price.toFixed(2)}\`;
+          info.innerHTML = \`
             <h2>\${p.title}</h2>
             <p><strong>Type:</strong> \${p.type}</p>
-            <p style="font-size:1.5rem; margin:1rem 0;">$\${p.price.toFixed(2)}</p>
+            <p style="font-size:1.5rem; margin:1rem 0;">\${priceLine}</p>
             <p>\${p.description}</p>
-            <p><a href="store.html?id=\${p.storeId}" style="color:\${getComputedStyle(document.documentElement).getPropertyValue('--primary-dark')}">View Seller Store</a></p>
-            <button class="button" onclick="alert('Order functionality not implemented yet.')">Buy Now</button>
-          `;
+            <p><a href="store.html?id=\${p.storeId}" style="color:\${getComputedStyle(document.documentElement).getPropertyValue('--accent')}">View Seller Store</a></p>
+          \`;
+
+          if (p.type === 'ChatRoom') {
+            const joinLink = document.createElement('a');
+            joinLink.href = \`chatroom.html?id=\${p.chatRoomId}\`;
+            joinLink.className = 'button';
+            joinLink.textContent = p.price > 0 ? 'Purchase and Join Chat' : 'Enter Chat Room';
+            info.appendChild(joinLink);
+          } else {
+            const buyBtn = document.createElement('button');
+            buyBtn.className = 'button';
+            buyBtn.textContent = 'Buy Now';
+            buyBtn.addEventListener('click', () => alert('Order functionality not implemented yet.'));
+            info.appendChild(buyBtn);
+          }
 
           wrapper.appendChild(img);
           wrapper.appendChild(info);
@@ -112,11 +121,6 @@
         });
     }
 
-    /**
-     * Load chat messages for a product if the user is logged in.
-     * Hides the chat UI for guests.
-     * @param {string|number} productId
-     */
     function loadChat(productId) {
       const username = localStorage.getItem('username');
       if (!username) return;
@@ -136,7 +140,8 @@
           chatMessages.innerHTML = '';
           messages.forEach(m => {
             const div = document.createElement('div');
-            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.createdAt || m.timestamp).toLocaleString()}</small>\`;
+            div.className = 'msg';
+            div.innerHTML = \`<div class="meta"><strong>\${m.username}</strong><small>\${new Date(m.createdAt || m.timestamp).toLocaleString()}</small></div><div class="body">\${m.message}</div>\`;
             chatMessages.appendChild(div);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -144,11 +149,6 @@
         .catch(err => console.error('Error loading chat messages', err));
     }
 
-    /**
-     * Fetch and render the list of chat rooms associated with a store.
-     * Display each room with its title, price, and a link to join.
-     * @param {string|number} storeId
-     */
     function loadStoreChatRooms(storeId) {
       fetch(\`\${API_BASE}/chatrooms/\${storeId}\`)
         .then(res => res.json())
@@ -157,23 +157,16 @@
           list.innerHTML = '';
           (data.rooms || []).forEach(room => {
             const div = document.createElement('div');
-            div.style.border = '1px solid var(--border)';
-            div.style.padding = '0.5rem';
-            div.style.marginBottom = '0.5rem';
-            div.innerHTML = `
-              <strong>\${room.title}</strong> – 
-              \${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
-              <a href="chatroom.html?id=\${room.id}" style="margin-left:1rem;">
-                \${room.price > 0 ? 'Join' : 'Enter'}
-              </a>
-            `;
+            div.className = 'card p-2';
+            div.innerHTML = \`
+              <strong>\${room.title}</strong> – \${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
+              <a href="chatroom.html?id=\${room.id}" class="button ghost" style="margin-left:1rem;">\${room.price > 0 ? 'Join' : 'Enter'}</a>\`;
             list.appendChild(div);
           });
         })
         .catch(err => console.error('Error loading store chat rooms', err));
     }
 
-    // Submit handler for sending a chat message
     document.getElementById('chatForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const params = new URLSearchParams(window.location.search);
@@ -197,7 +190,6 @@
         .catch(err => console.error('Error sending message', err));
     });
 
-    // Initialize product view when the page loads
     document.addEventListener('DOMContentLoaded', loadProduct);
   </script>
 </body>
