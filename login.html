@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Sign In – Steb</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - Steb.io</title>
+  <!-- API base for calls to the back‑end -->
+  <meta name="steb-api-base" content="/api" />
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">STEB</div>
+      <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Start Selling</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
       </nav>
@@ -23,56 +26,54 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Sign In</h2>
-    <form id="loginForm" class="stack" style="max-width:400px;margin-top:1rem;">
+    <form id="loginForm" style="max-width:400px;margin-top:1rem;">
       <div class="stack">
         <label for="loginUsername">Username</label>
-        <input type="text" id="loginUsername" placeholder="Username">
+        <input id="loginUsername" type="text" placeholder="Your username" required />
       </div>
       <div class="stack">
         <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" placeholder="Password">
+        <input id="loginPassword" type="password" placeholder="Your password" required />
       </div>
-      <button type="submit" class="button">Sign In</button>
+      <button type="submit" class="button" style="width:100%;">Sign In</button>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">
+        Don't have an account? <a href="signup.html">Sign up here</a>
+      </p>
     </form>
   </main>
 
   <script src="auth.js"></script>
   <script>
-  (() => {
-    const meta = document.querySelector('meta[name="steb-api-base"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('loginUsername').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      if (!username || !password) {
-        alert('Please enter your username and password.');
-        return;
-      }
-      try {
-        const res = await fetch(`${API_BASE}/users/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to sign in');
-        }
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.user.username);
-        localStorage.setItem('role', data.user.role);
-        localStorage.setItem('loggedIn', 'true');
-        if (data.user.role === 'seller') {
+    (function () {
+      const meta = document.querySelector('meta[name="steb-api-base"]');
+      const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!username || !password) return;
+        try {
+          const res = await fetch(\`\${API_BASE}/login\`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
+          // Save credentials and token
+          localStorage.setItem('loggedIn', 'true');
+          localStorage.setItem('username', username);
+          localStorage.setItem('password', password);
+          if (data.token) localStorage.setItem('token', data.token);
+          if (data.role) localStorage.setItem('role', data.role);
+          if (data.storeId) localStorage.setItem('storeId', data.storeId);
+          // Redirect to dashboard
           window.location.href = 'dashboard.html';
-        } else {
-          window.location.href = 'index.html';
+        } catch (err) {
+          alert(err.message || 'Invalid username or password');
         }
-      } catch (err) {
-        alert(err.message || 'Error signing in.');
-      }
-    });
-  })();
+      });
+    })();
   </script>
 </body>
 </html>
