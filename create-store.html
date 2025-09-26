@@ -43,7 +43,7 @@
     return;
   }
   const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
   // Handle store creation
   document.getElementById('storeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -64,7 +64,7 @@
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to create store');
-      // Save storeId and redirect to the product creation page
+      // Save storeId and redirect to product creation page
       localStorage.setItem('storeId', data.id);
       window.location.href = 'create-product.html';
     } catch(err) {
@@ -75,4 +75,3 @@
 </script>
 </body>
 </html>
-
