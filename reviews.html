@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reviews - Steb.io</title>
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header id="top-nav">
+  <div class="container nav">
+    <div class="brand">Steb.io</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="create-store.html">Create Store</a>
+      <a href="create-product.html">Add Product</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <div class="auth-links"></div>
+  </div>
+</header>
+
+<main class="container" style="padding:2rem 0;">
+  <h2>Seller Review Page</h2>
+  <div id="reviewPage" class="card" style="margin-bottom:1.5rem;"></div>
+
+  <section id="reviewsSection" style="display:none;">
+    <h3>Reviews</h3>
+    <div id="reviewsList" class="stack"></div>
+    <h4 style="margin-top:1rem;">Write a Review</h4>
+    <form id="reviewForm" class="stack" style="max-width:600px;">
+      <div class="stack">
+        <label for="reviewAuthor">Your Name</label>
+        <input id="reviewAuthor" type="text" required />
+      </div>
+      <div class="stack">
+        <label for="reviewText">Review</label>
+        <textarea id="reviewText" rows="3" required></textarea>
+      </div>
+      <button type="submit" class="button">Submit Review</button>
+    </form>
+  </section>
+
+  <section id="createPageSection" style="display:none;">
+    <h3>Create a Seller Page</h3>
+    <p>This seller does not have a page yet. You can create one so others can leave reviews. The seller can claim this page later.</p>
+    <form id="createPageForm" class="stack" style="max-width:600px;">
+      <div class="stack">
+        <label for="sellerName">Seller Name</label>
+        <input id="sellerName" type="text" required />
+      </div>
+      <div class="stack">
+        <label for="sellerDescription">Description</label>
+        <textarea id="sellerDescription" rows="3"></textarea>
+      </div>
+      <button type="submit" class="button">Create Page</button>
+    </form>
+  </section>
+</main>
+
+<script src="auth.js"></script>
+<script>
+(() => {
+  const meta = document.querySelector('meta[name="steb-api-base"]');
+  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
+  const params = new URLSearchParams(window.location.search);
+  const storeId = params.get('id'); // page tied to store ID
+  const pageEl = document.getElementById('reviewPage');
+  const reviewsSection = document.getElementById('reviewsSection');
+  const reviewsList = document.getElementById('reviewsList');
+  const reviewForm = document.getElementById('reviewForm');
+  const createPageSection = document.getElementById('createPageSection');
+  const createPageForm = document.getElementById('createPageForm');
+
+  if (!storeId) {
+    createPageSection.style.display = 'block';
+  } else {
+    loadPage();
+  }
+
+  function loadPage() {
+    fetch(\`\${API_BASE}/reviews/page/\${storeId}\`)
+      .then(res => {
+        if (res.status === 404) return null;
+        return res.json();
+      })
+      .then(data => {
+        if (!data) {
+          createPageSection.style.display = 'block';
+          return;
+        }
+          // Display page info
+        pageEl.innerHTML = \`
+          <h3>\${data.name}</h3>
+          <p>\${data.description || 'No description provided.'}</p>
+          \${data.claimed ? '' : '<em>This page has not been claimed by the seller.</em>'}
+        \`;
+        reviewsSection.style.display = '';
+        // Load reviews
+        (data.reviews || []).forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.innerHTML = \`<strong>\${r.author}</strong> – \${new Date(r.createdAt).toLocaleDateString()}<p>\${r.text}</p>\`;
+          reviewsList.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        createPageSection.style.display = 'block';
+      });
+  }
+
+  createPageForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = document.getElementById('sellerName').value.trim();
+    const description = document.getElementById('sellerDescription').value.trim();
+    if (!name) return;
+    fetch(\`\${API_BASE}/reviews/page\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description })
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert('Seller page created successfully!');
+        window.location.href = \`reviews.html?id=\${data.id}\`;
+      })
+      .catch(err => alert(err.message || 'Error creating page'));
+  });
+
+  reviewForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const author = document.getElementById('reviewAuthor').value.trim();
+    const text = document.getElementById('reviewText').value.trim();
+    if (!author || !text) return;
+    fetch(\`\${API_BASE}/reviews/\${storeId}\`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author, text })
+    })
+      .then(res => res.json())
+      .then(() => {
+        alert('Review submitted!');
+        window.location.reload();
+      })
+      .catch(err => alert(err.message || 'Error submitting review'));
+  });
+})();
+</script>
+</body>
+</html>
