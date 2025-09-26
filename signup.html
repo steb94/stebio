@@ -85,3 +85,21 @@
   </script>
 </body>
 </html>
+<form id="signupForm" ...>
+  <input id="signupEmail" type="email" placeholder="Your email" required />
+  ...
+</form>
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = signupUsername.value.trim();
+    const email = signupEmail.value.trim();
+    ...
+    const res = await fetch(`${API_BASE}/users/register`, {  // Correct endpoint
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ username, password, email })
+    });
+    ...
+  });
+</script>
