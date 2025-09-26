@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Sign Up – Steb</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up - Steb.io</title>
+  <!-- API base for calls to the back‑end -->
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">STEB</div>
+      <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Start Selling</a>
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
         <a href="dashboard.html">Dashboard</a>
         <a href="support.html">Support</a>
       </nav>
@@ -23,65 +25,63 @@
 
   <main class="container" style="padding:2rem 0;">
     <h2>Create an Account</h2>
-    <form id="signupForm" class="stack" style="max-width:400px;margin-top:1rem;">
+    <form id="signupForm" style="max-width:400px;margin-top:1rem;">
       <div class="stack">
         <label for="signupUsername">Username</label>
-        <input type="text" id="signupUsername" placeholder="Enter username">
+        <input id="signupUsername" type="text" placeholder="Choose a username" required />
       </div>
       <div class="stack">
         <label for="signupPassword">Password</label>
-        <input type="password" id="signupPassword" placeholder="Enter password">
+        <input id="signupPassword" type="password" placeholder="Create a password" required />
       </div>
       <div class="stack">
-        <label for="roleSelect">Role</label>
-        <select id="roleSelect">
-          <option value="buyer">Buy products</option>
-          <option value="seller">Sell products (create a store)</option>
-        </select>
+        <label for="signupConfirm">Confirm Password</label>
+        <input id="signupConfirm" type="password" placeholder="Confirm your password" required />
       </div>
-      <button type="submit" class="button">Sign Up</button>
+      <button type="submit" class="button" style="width:100%;">Sign Up</button>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">
+        Already have an account? <a href="login.html">Sign in here</a>
+      </p>
     </form>
   </main>
 
   <script src="auth.js"></script>
   <script>
-  (() => {
-    const meta = document.querySelector('meta[name="steb-api-base"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('signupUsername').value.trim();
-      const password = document.getElementById('signupPassword').value.trim();
-      const role = document.getElementById('roleSelect').value;
-      if (!username || !password) {
-        alert('Please enter a username and password.');
-        return;
-      }
-      try {
-        const res = await fetch(`${API_BASE}/users/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, role })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to sign up');
+    (function () {
+      const meta = document.querySelector('meta[name="steb-api-base"]');
+      const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
+      document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('signupUsername').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const confirm = document.getElementById('signupConfirm').value;
+        if (!username || !password) return;
+        if (password !== confirm) {
+          alert('Passwords do not match');
+          return;
         }
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.user.username);
-        localStorage.setItem('role', data.user.role);
-        localStorage.setItem('loggedIn', 'true');
-        localStorage.removeItem('storeId');
-        if (data.user.role === 'seller') {
+        try {
+          const res = await fetch(\`\${API_BASE}/register\`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
+          // Save login state
+          localStorage.setItem('loggedIn', 'true');
+          localStorage.setItem('username', username);
+          localStorage.setItem('password', password);
+          if (data.token) localStorage.setItem('token', data.token);
+          if (data.role) localStorage.setItem('role', data.role);
+          if (data.storeId) localStorage.setItem('storeId', data.storeId);
+          // Redirect new sellers to store creation
           window.location.href = 'create-store.html';
-        } else {
-          window.location.href = 'index.html';
+        } catch (err) {
+          alert(err.message || 'Error registering account');
         }
-      } catch (err) {
-        alert(err.message || 'Error signing up.');
-      }
-    });
-  })();
+      });
+    })();
   </script>
 </body>
 </html>
