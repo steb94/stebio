@@ -1,71 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Create Store – Steb</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Create Store - Steb.io</title>
+  <!-- API base for calls to the back‑end -->
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">STEB</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="create-store.html" class="active">Create Store</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="support.html">Support</a>
-      </nav>
-      <div class="auth-links"></div>
+<header id="top-nav">
+  <div class="container nav">
+    <div class="brand">STEB</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="create-store.html" class="active">Create Store</a>
+      <a href="create-product.html">Add Product</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <div class="auth-links"></div>
+  </div>
+</header>
+
+<main class="container" style="padding:2rem 0;">
+  <h2>Create Your Store</h2>
+  <form id="storeForm" class="stack" style="max-width:400px;margin-top:1rem;">
+    <div class="stack">
+      <label for="storeName">Store Name</label>
+      <input id="storeName" type="text" placeholder="Enter store name" required />
     </div>
-  </header>
+    <button type="submit" class="button">Create Store</button>
+  </form>
+</main>
 
-  <main class="container" style="padding:2rem 0;">
-    <h2>Create Your Store</h2>
-    <form id="storeForm" class="stack" style="max-width:400px;margin-top:1rem;">
-      <div class="stack">
-        <label for="storeName">Store Name</label>
-        <input type="text" id="storeName" placeholder="Enter store name">
-      </div>
-      <button type="submit" class="button">Create Store</button>
-    </form>
-  </main>
-
-  <script src="auth.js"></script>
-  <script>
-  (() => {
-    const meta = document.querySelector('meta[name="steb-api-base"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-    document.getElementById('storeForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const storeName = document.getElementById('storeName').value.trim();
-      if (!storeName) {
-        alert('Please enter a store name.');
-        return;
-      }
-      const token = localStorage.getItem('token');
-      try {
-        const res = await fetch(`${API_BASE}/stores`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          },
-          body: JSON.stringify({ name: storeName })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to create store');
-        }
-        localStorage.setItem('storeId', data.id);
-        // sellers go directly to add product
-        window.location.href = 'create-product.html';
-      } catch (err) {
-        alert(err.message || 'Error creating store.');
-      }
-    });
-  })();
-  </script>
+<script src="auth.js"></script>
+<script>
+(() => {
+  // Redirect users who are not signed in to the login page
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = 'login.html';
+    return;
+  }
+  const meta = document.querySelector('meta[name="steb-api-base"]');
+  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  // Handle store creation
+  document.getElementById('storeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('storeName').value.trim();
+    if (!name) {
+      alert('Please enter a store name.');
+      return;
+    }
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(\`\${API_BASE}/stores\`, {
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': token ? \`Bearer \${token}\` : ''
+        },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed to create store');
+      // Save storeId and redirect to the product creation page
+      localStorage.setItem('storeId', data.id);
+      window.location.href = 'create-product.html';
+    } catch(err) {
+      alert(err.message || 'Error creating store.');
+    }
+  });
+})();
+</script>
 </body>
 </html>
