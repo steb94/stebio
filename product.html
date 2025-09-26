@@ -62,7 +62,7 @@
         container.innerHTML = '<p>Missing product ID.</p>';
         return;
       }
-      fetch(`${API_BASE}/products/${id}`)
+      fetch(\`\${API_BASE}/products/\${id}\`)
         .then(res => {
           if (!res.ok) throw new Error('Product not found');
           return res.json();
@@ -91,11 +91,11 @@
           const info = document.createElement('div');
           info.style.flex = '1';
           info.innerHTML = `
-            <h2>${p.title}</h2>
-            <p><strong>Type:</strong> ${p.type}</p>
-            <p style="font-size:1.5rem; margin:1rem 0;">$${p.price.toFixed(2)}</p>
-            <p>${p.description}</p>
-            <p><a href="store.html?id=${p.storeId}" style="color:${getComputedStyle(document.documentElement).getPropertyValue('--primary-dark')}">View Seller Store</a></p>
+            <h2>\${p.title}</h2>
+            <p><strong>Type:</strong> \${p.type}</p>
+            <p style="font-size:1.5rem; margin:1rem 0;">$\${p.price.toFixed(2)}</p>
+            <p>\${p.description}</p>
+            <p><a href="store.html?id=\${p.storeId}" style="color:\${getComputedStyle(document.documentElement).getPropertyValue('--primary-dark')}">View Seller Store</a></p>
             <button class="button" onclick="alert('Order functionality not implemented yet.')">Buy Now</button>
           `;
 
@@ -120,7 +120,7 @@
     function loadChat(productId) {
       const username = localStorage.getItem('username');
       if (!username) return;
-      fetch(`${API_BASE}/chat/${productId}/messages?username=${encodeURIComponent(username)}`)
+      fetch(\`\${API_BASE}/chat/\${productId}/messages?username=\${encodeURIComponent(username)}\`)
         .then(res => {
           if (res.status === 403 || res.status === 401) {
             document.getElementById('productChat').style.display = 'none';
@@ -136,7 +136,7 @@
           chatMessages.innerHTML = '';
           messages.forEach(m => {
             const div = document.createElement('div');
-            div.innerHTML = `<strong>${m.username}</strong>: ${m.message} <small>${new Date(m.createdAt || m.timestamp).toLocaleString()}</small>`;
+            div.innerHTML = \`<strong>\${m.username}</strong>: \${m.message} <small>\${new Date(m.createdAt || m.timestamp).toLocaleString()}</small>\`;
             chatMessages.appendChild(div);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -150,7 +150,7 @@
      * @param {string|number} storeId
      */
     function loadStoreChatRooms(storeId) {
-      fetch(`${API_BASE}/chatrooms/${storeId}`)
+      fetch(\`\${API_BASE}/chatrooms/\${storeId}\`)
         .then(res => res.json())
         .then(data => {
           const list = document.getElementById('storeChatRoomsList');
@@ -161,10 +161,10 @@
             div.style.padding = '0.5rem';
             div.style.marginBottom = '0.5rem';
             div.innerHTML = `
-              <strong>${room.title}</strong> – 
-              ${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
-              <a href="chatroom.html?id=${room.id}" style="margin-left:1rem;">
-                ${room.price > 0 ? 'Join' : 'Enter'}
+              <strong>\${room.title}</strong> – 
+              \${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
+              <a href="chatroom.html?id=\${room.id}" style="margin-left:1rem;">
+                \${room.price > 0 ? 'Join' : 'Enter'}
               </a>
             `;
             list.appendChild(div);
@@ -181,7 +181,7 @@
       const username = localStorage.getItem('username');
       const message = document.getElementById('chatInput').value.trim();
       if (!message) return;
-      fetch(`${API_BASE}/chat/${productId}/message`, {
+      fetch(\`\${API_BASE}/chat/\${productId}/message\`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, message })
