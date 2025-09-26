@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up - Steb.io</title>
-  <!-- API base for calls to the back‑end -->
   <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -31,6 +30,10 @@
         <input id="signupUsername" type="text" placeholder="Choose a username" required />
       </div>
       <div class="stack">
+        <label for="signupEmail">Email</label>
+        <input id="signupEmail" type="email" placeholder="Your email address" required />
+      </div>
+      <div class="stack">
         <label for="signupPassword">Password</label>
         <input id="signupPassword" type="password" placeholder="Create a password" required />
       </div>
@@ -43,63 +46,55 @@
         Already have an account? <a href="login.html">Sign in here</a>
       </p>
     </form>
+    <p id="signupMessage" style="margin-top:1rem;color:var(--accent);"></p>
   </main>
 
   <script src="auth.js"></script>
   <script>
     (function () {
       const meta = document.querySelector('meta[name="steb-api-base"]');
-      const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
+      const API_BASE = meta && meta.content ? meta.content.replace(/\\/+/g, '') : '/api';
       document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const username = document.getElementById('signupUsername').value.trim();
+        const email    = document.getElementById('signupEmail').value.trim();
         const password = document.getElementById('signupPassword').value;
-        const confirm = document.getElementById('signupConfirm').value;
-        if (!username || !password) return;
+        const confirm  = document.getElementById('signupConfirm').value;
+        const msgEl    = document.getElementById('signupMessage');
+        msgEl.textContent = '';
+        if (!username || !email || !password) return;
         if (password !== confirm) {
-          alert('Passwords do not match');
+          msgEl.textContent = 'Passwords do not match.';
           return;
         }
         try {
-          const res = await fetch(\`\${API_BASE}/register\`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+          const res = await fetch(\`\${API_BASE}/users/register\`, {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json' },
+            body: JSON.stringify({ username, email, password })
           });
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
-          // Save login state
-          localStorage.setItem('loggedIn', 'true');
-          localStorage.setItem('username', username);
-          localStorage.setItem('password', password);
-          if (data.token) localStorage.setItem('token', data.token);
-          if (data.role) localStorage.setItem('role', data.role);
-          if (data.storeId) localStorage.setItem('storeId', data.storeId);
-          // Redirect new sellers to store creation
-          window.location.href = 'create-store.html';
+          // If the API sends back a message to check email, show it
+          if (data.message) {
+            msgEl.textContent = data.message;
+            msgEl.style.color = 'green';
+          }
+          // Store token (optional) and redirect if desired
+          if (data.token) {
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('username', username);
+            localStorage.setItem('token', data.token);
+            if (data.role) localStorage.setItem('role', data.role);
+            if (data.storeId) localStorage.setItem('storeId', data.storeId);
+            // redirect new sellers to create-store.html
+            window.location.href = 'create-store.html';
+          }
         } catch (err) {
-          alert(err.message || 'Error registering account');
+          msgEl.textContent = err.message || 'Error registering account';
         }
       });
     })();
   </script>
 </body>
 </html>
-<form id="signupForm" ...>
-  <input id="signupEmail" type="email" placeholder="Your email" required />
-  ...
-</form>
-<script>
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = signupUsername.value.trim();
-    const email = signupEmail.value.trim();
-    ...
-    const res = await fetch(`${API_BASE}/users/register`, {  // Correct endpoint
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ username, password, email })
-    });
-    ...
-  });
-</script>
