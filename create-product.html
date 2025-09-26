@@ -1,116 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Add Product – Steb</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Add Product - Steb.io</title>
+  <!-- API base for calls to the back‑end -->
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">STEB</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html" class="active">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="support.html">Support</a>
-      </nav>
-      <div class="auth-links"></div>
+<header id="top-nav">
+  <div class="container nav">
+    <div class="brand">STEB</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="create-store.html">Create Store</a>
+      <a href="create-product.html" class="active">Add Product</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <div class="auth-links"></div>
+  </div>
+</header>
+
+<main class="container" style="padding:2rem 0;">
+  <h2>Add a New Product</h2>
+  <form id="productForm" style="max-width:600px;margin-top:1rem;">
+    <div class="stack">
+      <label for="productTitle">Title</label>
+      <input id="productTitle" type="text" placeholder="Product title" required />
     </div>
-  </header>
+    <div class="stack">
+      <label for="productDescription">Description</label>
+      <textarea id="productDescription" rows="4" placeholder="Product description"></textarea>
+    </div>
+    <div class="stack">
+      <label for="productImage">Image URL</label>
+      <input id="productImage" type="url" placeholder="Image URL (optional)" />
+    </div>
+    <div class="stack">
+      <label for="productType">Type</label>
+      <select id="productType">
+        <option value="Trading">Trading</option>
+        <option value="Communities">Communities</option>
+        <option value="Courses">Courses</option>
+        <option value="Software">Software</option>
+        <option value="Services">Services</option>
+        <option value="Templates">Templates</option>
+      </select>
+    </div>
+    <div class="stack">
+      <label for="productPrice">Price ($)</label>
+      <input id="productPrice" type="number" step="0.01" min="0" placeholder="Price" required />
+    </div>
+    <div class="stack">
+      <label for="productSupply">Max Supply</label>
+      <input id="productSupply" type="number" min="0" placeholder="Max supply (optional)" />
+    </div>
+    <button type="submit" class="button">Create Product</button>
+  </form>
+</main>
 
-  <main class="container" style="padding:2rem 0;">
-    <h2>Add a New Product</h2>
-    <form id="productForm" class="stack" style="max-width:600px;margin-top:1rem;">
-      <div class="stack">
-        <label for="productTitle">Title</label>
-        <input type="text" id="productTitle" placeholder="Product title">
-      </div>
-      <div class="stack">
-        <label for="productDescription">Description</label>
-        <textarea id="productDescription" rows="4" placeholder="Product description"></textarea>
-      </div>
-      <div class="stack">
-        <label for="productImage">Image URL</label>
-        <input type="url" id="productImage" placeholder="Image URL (optional)">
-      </div>
-      <div class="stack">
-        <label for="productType">Type</label>
-        <select id="productType">
-          <option value="Trading">Trading</option>
-          <option value="Communities">Communities</option>
-          <option value="Courses">Courses</option>
-          <option value="Software">Software</option>
-          <option value="Services">Services</option>
-          <option value="Templates">Templates</option>
-        </select>
-      </div>
-      <div class="stack">
-        <label for="productPrice">Price ($)</label>
-        <input type="number" id="productPrice" step="0.01" min="0" placeholder="Price">
-      </div>
-      <div class="stack">
-        <label for="productSupply">Max Supply</label>
-        <input type="number" id="productSupply" placeholder="Max supply (optional)">
-      </div>
-      <button type="submit" class="button">Create Product</button>
-    </form>
-  </main>
-
-  <script src="auth.js"></script>
-  <script>
-  (() => {
-    const meta = document.querySelector('meta[name="steb-api-base"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const storeId = localStorage.getItem('storeId');
-      if (!storeId) {
-        alert('Store ID missing. Please create a store first.');
-        return;
-      }
-      const title = document.getElementById('productTitle').value.trim();
-      const description = document.getElementById('productDescription').value.trim();
-      const image = document.getElementById('productImage').value.trim();
-      const type = document.getElementById('productType').value;
-      const price = parseFloat(document.getElementById('productPrice').value);
-      const supply = document.getElementById('productSupply').value.trim();
-      if (!title || isNaN(price)) {
-        alert('Please enter at least a title and a valid price.');
-        return;
-      }
-      const token = localStorage.getItem('token');
-      try {
-        const res = await fetch(`${API_BASE}/products`, {
-          method:'POST',
-          headers: {
-            'Content-Type':'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-          },
-          body: JSON.stringify({
-            storeId: Number(storeId),
-            title,
-            description,
-            image,
-            type,
-            price,
-            maxSupply: supply ? parseInt(supply) : 0
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to create product');
-        }
-        alert('Product created successfully.');
-        window.location.href = 'dashboard.html';
-      } catch (err) {
-        alert(err.message || 'Error creating product.');
-      }
-    });
-  })();
-  </script>
+<script src="auth.js"></script>
+<script>
+(() => {
+  // Redirect if not logged in or no store exists
+  if (localStorage.getItem('loggedIn') !== 'true') {
+    window.location.href = 'login.html';
+    return;
+  }
+  const storeId = localStorage.getItem('storeId');
+  if (!storeId) {
+    window.location.href = 'create-store.html';
+    return;
+  }
+  const meta = document.querySelector('meta[name="steb-api-base"]');
+  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  // Handle product creation
+  document.getElementById('productForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('productTitle').value.trim();
+    const description = document.getElementById('productDescription').value.trim();
+    let image = document.getElementById('productImage').value.trim();
+    const type = document.getElementById('productType').value;
+    const price = parseFloat(document.getElementById('productPrice').value) || 0;
+    const supplyRaw = document.getElementById('productSupply').value;
+    const supply = supplyRaw ? parseInt(supplyRaw) : null;
+    if (!title || !type) {
+      alert('Title and type are required.');
+      return;
+    }
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(\`\${API_BASE}/products\`, {
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization': token ? \`Bearer \${token}\` : ''
+        },
+        body: JSON.stringify({ storeId, title, description, image, type, price, supply })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed to create product');
+      alert('Product created successfully!');
+      document.getElementById('productForm').reset();
+    } catch(err) {
+      alert(err.message || 'Error creating product');
+    }
+  });
+})();
+</script>
 </body>
 </html>
