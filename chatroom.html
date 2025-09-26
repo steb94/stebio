@@ -7,49 +7,6 @@
   <!-- API base for back-end calls -->
   <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* Basic chat styles matching the rest of the site */
-    .messages {
-      max-height: 420px;
-      overflow: auto;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #f0f4f6;
-      padding: .75rem;
-    }
-    .msg {
-      padding: .4rem .5rem;
-      border-radius: 8px;
-    }
-    .msg + .msg {
-      margin-top: .25rem;
-    }
-    .msg .meta {
-      display: flex;
-      gap: .5rem;
-      align-items: baseline;
-    }
-    .msg .meta strong {
-      font-weight: 700;
-    }
-    .msg .body {
-      margin-top: .1rem;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    .notice {
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      padding: .6rem;
-      background: #f0d0d0;
-      color: #dc3545;
-    }
-    footer {
-      color: var(--muted);
-      font-size: .875rem;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
 <body>
 <header id="top-nav">
@@ -82,7 +39,7 @@
       <input id="chatInput" type="text" placeholder="Type your message..." maxlength="2000" />
       <button id="sendBtn" type="submit" class="button">Send</button>
     </form>
-    <footer id="chatHint">Press Enter to send • Messages refresh every 5s</footer>
+    <footer id="chatHint">Press Enter to send &bull; Messages refresh every 5s</footer>
   </section>
 </main>
 
@@ -90,7 +47,7 @@
 <script>
 (() => {
   const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
   const $ = (sel) => document.querySelector(sel);
   const chatTitle = $('#chatRoomTitle');
   const statusBox = $('#status');
