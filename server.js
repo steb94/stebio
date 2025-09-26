@@ -1,503 +1,440 @@
+/**
+ * server.js – complete Node.js backend for Steb.io
+ *
+ * This server handles user registration with email verification,
+ * secure login, store and product management (including chat rooms as products),
+ * posts, chat room messaging, and a Yelp‑style review system.
+ *
+ * Before running, install dependencies:
+ *   npm install express body-parser cors bcryptjs jsonwebtoken nodemailer
+ *
+ * You must also configure environment variables for JWT_SECRET and your SMTP credentials:
+ *   JWT_SECRET – secret key for signing verification and session tokens
+ *   SMTP_HOST  – your email host (e.g. smtp.gmail.com)
+ *   SMTP_PORT  – SMTP port (e.g. 587)
+ *   SMTP_USER  – email username
+ *   SMTP_PASS  – email password or app password
+ *   MAIL_FROM  – from address for outgoing mail (e.g. "Steb.io <no-reply@steb.io>")
+ */
+
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-
-const {
-  getAllProducts,
-  getAllStores,
-  getAllOrders,
-  getProductById,
-  getStoreById,
-  getProductsByStoreId,
-  getOrderById,
-  createStore,
-  createProduct,
-  createOrder,
-  updateOrderStatus,
-  addMessage,
-  getMessagesForUser,
-  markMessageDelivered,
-  createPost,
-  getPostsByStoreId
-} = require('./models');
-
-let { ChatRoom, ChatRoomMessage } = require('./models');
-if (!ChatRoom || !ChatRoomMessage) {
-  class FallbackChatRoom {
-    static _data = [];
-    static _id = 1;
-    static _nextId() { return this._id++; }
-    static create({ storeId, ownerId, title, price = 0 }) {
-      const room = {
-        id: this._nextId(),
-        storeId,
-        ownerId,
-        title,
-        price: Number(price) || 0,
-        createdAt: new Date()
-      };
-      this._data.push(room);
-      return room;
-    }
-    static findById(id) {
-      return this._data.find(r => r.id === id);
-    }
-    static listByStore(storeId) {
-      return this._data.filter(r => r.storeId === storeId);
-    }
-  }
-  class FallbackChatRoomMessage {
-    static _data = [];
-    static create({ chatRoomId, userId, username, message }) {
-      const m = {
-        id: this._data.length + 1,
-        chatRoomId,
-        userId,
-        username,
-        message,
-        createdAt: new Date()
-      };
-      this._data.push(m);
-      return m;
-    }
-    static listByChatRoom(chatRoomId, limit = 200) {
-      return this._data.filter(m => m.chatRoomId === chatRoomId).slice(-limit);
-    }
-  }
-  ChatRoom = FallbackChatRoom;
-  ChatRoomMessage = FallbackChatRoomMessage;
-}
-
-class ChatAccess {
-  static _data = [];
-  static _nextId = 1;
-  static grant(roomId, userId) {
-    if (!this._data.some(a => a.roomId === roomId && a.userId === userId)) {
-      this._data.push({ id: this._nextId++, roomId, userId });
-    }
-    return true;
-  }
-  static hasAccess(roomId, userId) {
-    return this._data.some(a => a.roomId === roomId && a.userId === userId);
-  }
-}
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname)));
-
-/* ===== User management ===== */
-const USERS_FILE = path.join(__dirname, 'users.json');
-let users = [];
-try {
-  if (fs.existsSync(USERS_FILE)) {
-    users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-  }
-} catch {
-  users = [];
-}
-let nextUserId = users.reduce((max, u) => Math.max(max, u.id), 0) + 1;
-function saveUsers() {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
-const sessions = {};
-function generateToken() {
-  return crypto.randomBytes(16).toString('hex');
-}
-
-app.post('/api/users/register', (req, res) => {
-  const { username, password, role } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Missing username or password' });
-    }
-  if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
-    return res.status(409).json({ error: 'Username already exists' });
-  }
-  const user = { id: nextUserId++, username, password, role: role || 'buyer' };
-  users.push(user);
-  saveUsers();
-  const token = generateToken();
-  sessions[token] = user.id;
-  res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
-});
-
-app.post('/api/users/login', (req, res) => {
-  const { username, password } = req.body || {};
-  const user = users.find(u => u.username === username && u.password === password);
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-  const token = generateToken();
-  sessions[token] = user.id;
-  res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
-});
-
-app.get('/api/users/current', (req, res) => {
-  const auth = req.headers.authorization || '';
-  const match = auth.match(/^Bearer (.+)$/);
-  if (!match) return res.status(401).json({ error: 'Unauthorized' });
-  const token = match[1];
-  const userId = sessions[token];
-  const user = users.find(u => u.id === userId);
-  if (!user) return res.status(401).json({ error: 'Unauthorized' });
-  res.json({ id: user.id, username: user.username, role: user.role });
-});
-
-app.post('/api/users/logout', (req, res) => {
-  const auth = req.headers.authorization || '';
-  const match = auth.match(/^Bearer (.+)$/);
-  if (match) {
-    const token = match[1];
-    delete sessions[token];
-  }
-  res.json({ ok: true });
-});
-
-function requireAuth(req, res, next) {
-  const auth = req.headers.authorization || '';
-  const match = auth.match(/^Bearer (.+)$/);
-  if (!match) return res.status(401).json({ error: 'Unauthorized' });
-  const token = match[1];
-  const userId = sessions[token];
-  const user = users.find(u => u.id === userId);
-  if (!user) return res.status(401).json({ error: 'Unauthorized' });
-  req.currentUser = user;
-  return next();
-}
-
-/* ===== Stats endpoint for homepage ===== */
-app.get('/api/stats', (req, res) => {
-  res.json({
-    totalProducts: getAllProducts().length,
-    totalStores: getAllStores().length,
-    totalOrders: getAllOrders().length
-  });
-});
-
-/* ===== Dashboard summary ===== */
-app.get('/api/dashboard', requireAuth, (req, res) => {
-  const totalSales = getAllOrders().reduce((sum, o) => sum + (o.price || 0), 0);
-  const totalOrders = getAllOrders().length;
-  const totalProducts = getAllProducts().length;
-  res.json({ totalSales, totalOrders, totalProducts });
-});
-
-/* ===== Store endpoints ===== */
-app.get('/api/stores', (req, res) => {
-  res.json(getAllStores());
-});
-app.get('/api/stores/:id', (req, res) => {
-  const store = getStoreById(req.params.id);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  res.json(store);
-});
-app.get('/api/stores/:id/products', (req, res) => {
-  res.json(getProductsByStoreId(req.params.id));
-});
-app.post('/api/stores', requireAuth, (req, res) => {
-  const { name } = req.body || {};
-  if (!name) return res.status(400).json({ error: 'Store name is required' });
-  if (req.currentUser.role !== 'seller') {
-    return res.status(403).json({ error: 'Only sellers can create a store' });
-  }
-  const store = createStore(name, req.currentUser.username);
-  res.json(store);
-});
-
-/* ===== Product endpoints ===== */
-app.get('/api/products', (req, res) => {
-  let result = getAllProducts();
-  const { type, sort } = req.query;
-  if (type && type !== 'All') {
-    result = result.filter(p => p.type === type);
-  }
-  if (sort === 'price_asc') result = result.slice().sort((a, b) => a.price - b.price);
-  else if (sort === 'price_desc') result = result.slice().sort((a, b) => b.price - a.price);
-  else if (sort === 'newest') result = result.slice().sort((a, b) => b.id - a.id);
-  res.json(result);
-});
-app.get('/api/products/:id', (req, res) => {
-  const prod = getProductById(req.params.id);
-  if (!prod) return res.status(404).json({ error: 'Product not found' });
-  res.json(prod);
-});
-app.get('/api/products/search', (req, res) => {
-  const query = (req.query.query || '').toLowerCase();
-  const sort = req.query.sort || 'newest';
-  let results = getAllProducts().filter(p =>
-    p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query)
-  );
-  if (sort === 'price_asc') results = results.slice().sort((a, b) => a.price - b.price);
-  else if (sort === 'price_desc') results = results.slice().sort((a, b) => b.price - a.price);
-  else results = results.slice().sort((a, b) => b.id - a.id);
-  res.json(results);
-});
-app.post('/api/products', requireAuth, (req, res) => {
-  if (req.currentUser.role !== 'seller') {
-    return res.status(403).json({ error: 'Only sellers can create products' });
-  }
-  const { storeId, title, description, image, type, price, maxSupply } = req.body || {};
-  if (!storeId || !title || isNaN(parseFloat(price))) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  const store = getStoreById(storeId);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  if (store.owner !== req.currentUser.username) {
-    return res.status(403).json({ error: 'You do not own this store' });
-  }
-  const product = createProduct({
-    storeId: Number(storeId),
-    title,
-    description,
-    image,
-    type,
-    price: parseFloat(price),
-    maxSupply: maxSupply ? parseInt(maxSupply) : 0
-  });
-  res.json(product);
-});
-
-/* ===== Order endpoints ===== */
-app.get('/api/orders', requireAuth, (req, res) => {
-  res.json(getAllOrders());
-});
-app.get('/api/orders/:id', requireAuth, (req, res) => {
-  const order = getOrderById(req.params.id);
-  if (!order) return res.status(404).json({ error: 'Order not found' });
-  res.json(order);
-});
-app.post('/api/orders', requireAuth, (req, res) => {
-  const { productId } = req.body || {};
-  const product = getProductById(productId);
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-  const newOrder = createOrder({
-    storeId: product.storeId,
-    productId: product.id,
-    productName: product.title,
-    price: product.price,
-    status: 'Processing',
-    buyerName: req.currentUser.username
-  });
-  res.json(newOrder);
-});
-app.patch('/api/orders/:id', requireAuth, (req, res) => {
-  const { status } = req.body || {};
-  if (!status) return res.status(400).json({ error: 'Status required' });
-  const updated = updateOrderStatus(req.params.id, status);
-  if (!updated) return res.status(404).json({ error: 'Order not found' });
-  res.json(updated);
-});
-
-/* ===== Personal messages ===== */
-app.get('/api/messages/:username', requireAuth, (req, res) => {
-  res.json(getMessagesForUser(req.params.username));
-});
-app.post('/api/messages', requireAuth, (req, res) => {
-  const { recipient, content } = req.body || {};
-  const sender = req.currentUser.username;
-  if (!recipient || !content) {
-    return res.status(400).json({ error: 'Missing fields' });
-  }
-  res.json(addMessage(sender, recipient, content));
-});
-app.patch('/api/messages/:id', requireAuth, (req, res) => {
-  const msg = markMessageDelivered(req.params.id);
-  if (!msg) return res.status(404).json({ error: 'Message not found' });
-  res.json(msg);
-});
-
-/* ===== Chat room endpoints ===== */
-app.post('/api/chatrooms', requireAuth, (req, res) => {
-  if (req.currentUser.role !== 'seller') {
-    return res.status(403).json({ error: 'Only sellers can create chat rooms' });
-  }
-  const { storeId, title, price } = req.body || {};
-  if (!storeId || !title) return res.status(400).json({ error: 'StoreId and title required' });
-  const store = getStoreById(storeId);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  if (store.owner !== req.currentUser.username) {
-    return res.status(403).json({ error: 'You do not own this store' });
-  }
-  const room = ChatRoom.create({
-    storeId: Number(storeId),
-    ownerId: req.currentUser.id,
-    title: title.trim(),
-    price: parseFloat(price) || 0
-  });
-  ChatAccess.grant(room.id, req.currentUser.id);
-  res.json({ room });
-});
-app.get('/api/chatrooms/:storeId', (req, res) => {
-  const storeId = parseInt(req.params.storeId, 10);
-  const store = getStoreById(storeId);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  const rooms = ChatRoom.listByStore(storeId);
-  res.json({ rooms });
-});
-app.get('/api/chatroom/:id', (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const room = ChatRoom.findById(id);
-  if (!room) return res.status(404).json({ error: 'Chat room not found' });
-  res.json(room);
-});
-app.post('/api/chatroom/:id/join', requireAuth, (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const room = ChatRoom.findById(id);
-  if (!room) return res.status(404).json({ error: 'Chat room not found' });
-  ChatAccess.grant(id, req.currentUser.id);
-  res.json({ access: true });
-});
-app.get('/api/chatroom/:id/messages', requireAuth, (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const room = ChatRoom.findById(id);
-  if (!room) return res.status(404).json({ error: 'Chat room not found' });
-  if (room.ownerId !== req.currentUser.id && !ChatAccess.hasAccess(id, req.currentUser.id)) {
-    return res.status(403).json({ error: 'You do not have access to this chat room' });
-  }
-  const messages = ChatRoomMessage.listByChatRoom(id, 200);
-  res.json({ messages });
-});
-app.post('/api/chatroom/:id/message', requireAuth, (req, res) => {
-  const id = parseInt(req.params.id, 10);
-  const room = ChatRoom.findById(id);
-  if (!room) return res.status(404).json({ error: 'Chat room not found' });
-  const { message } = req.body || {};
-  if (!message || !message.trim()) {
-    return res.status(400).json({ error: 'Message required' });
-  }
-  if (room.ownerId !== req.currentUser.id && !ChatAccess.hasAccess(id, req.currentUser.id)) {
-    return res.status(403).json({ error: 'You do not have access to this chat room' });
-  }
-  const m = ChatRoomMessage.create({
-    chatRoomId: id,
-    userId: req.currentUser.id,
-    username: req.currentUser.username,
-    message
-  });
-  res.json({ message: m });
-});
-
-/* ===== Post endpoints ===== */
-app.get('/api/posts/:storeId', (req, res) => {
-  res.json(getPostsByStoreId(req.params.storeId));
-});
-app.post('/api/posts/:storeId', requireAuth, (req, res) => {
-  const { content, mediaUrl } = req.body || {};
-  if (!content && !mediaUrl) {
-    return res.status(400).json({ error: 'Post content or media URL required' });
-  }
-  const storeId = parseInt(req.params.storeId, 10);
-  const store = getStoreById(storeId);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  if (store.owner !== req.currentUser.username) {
-    return res.status(403).json({ error: 'You do not own this store' });
-  }
-  const post = createPost(storeId, req.currentUser.username, mediaUrl, content);
-  res.json(post);
-});
-
-/* ===== Fallback route for SPA ===== */
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log('Server running on port', PORT);
-});
-const express = require('express');
-const app = express();
-const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
-// Load users from JSON (simplified)
-let users = [];
-if (fs.existsSync('users.json')) {
-  users = JSON.parse(fs.readFileSync('users.json','utf8'));
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static(__dirname)); // serve static files from project root
+
+// In‑memory data stores (replace with database in production)
+const users = [];        // { id, email, username, passwordHash, role, storeId, verified }
+const stores = [];       // { id, ownerId, name }
+const products = [];     // { id, storeId, title, description, image, type, price, supply, chatRoomId }
+const chatRooms = [];    // { id, storeId, title, price, messages: [{ username, message, createdAt }] }
+const posts = [];        // { storeId, posts: [{ content, mediaUrl, createdAt }] }
+const reviews = [];      // { id, name, description, claimed, reviews: [{ author, text, createdAt }] }
+
+/**
+ * Generate a JWT token for email verification or sessions.
+ * @param {Object} payload – data to encode (e.g. userId)
+ * @param {String} expiresIn – token expiry (e.g. "30m", "7d")
+ */
+function generateToken(payload, expiresIn = '30m') {
+  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
 }
 
-// configure mail transport (use your SMTP provider or Mailtrap)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,    // e.g. smtp.mailtrap.io
-  port: Number(process.env.SMTP_PORT || 587),
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+/**
+ * Send a verification email with Nodemailer.
+ * You must set SMTP_* env vars (see top of file).
+ */
+async function sendVerificationEmail(email, token) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
 
-// helper to save users
-function saveUsers() {
-  fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
+  const verificationUrl = `${process.env.BASE_URL || 'https://stebio.onrender.com'}/api/users/verify/${token}`;
+  const mailOptions = {
+    from: process.env.MAIL_FROM || 'Steb.io <no-reply@steb.io>',
+    to: email,
+    subject: 'Verify your Steb.io account',
+    html: `
+      <h2>Welcome to Steb.io!</h2>
+      <p>Thanks for registering. Please click the link below to verify your email address:</p>
+      <p><a href="${verificationUrl}">${verificationUrl}</a></p>
+      <p>This link will expire in 30 minutes.</p>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
 }
 
-app.use(express.json());
+// Helper to find user by username or email
+function findUserByIdentifier(identifier) {
+  return users.find(u => u.username === identifier || u.email === identifier);
+}
 
-// REGISTER endpoint with email verification
-app.post('/api/users/register', async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
-    return res.status(400).json({ error:'username, email and password are required' });
+// Middleware to authenticate using the session token
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  if (!token) {
+    return res.status(401).json({ error: 'Missing authentication token' });
   }
-  if (users.find(u => u.username === username)) {
-    return res.status(400).json({ error:'Username already exists' });
-  }
-  // hash password
-  const hashed = await bcrypt.hash(password, 10);
-  // generate verification token (expires in 24h)
-  const token = jwt.sign({ username }, process.env.JWT_SECRET || 'supersecret', { expiresIn:'24h' });
-  // store user with verified:false
-  const user = { username, email, password: hashed, verified:false };
-  users.push(user);
-  saveUsers();
-  // send email
-  const verifyUrl = \`https://stebio.onrender.com/api/users/verify/\${token}\`;
   try {
-    await transporter.sendMail({
-      from: '"Steb.io" <no-reply@steb.io>',
-      to: email,
-      subject: 'Verify your email',
-      html: \`<p>Hi \${username},</p><p>Click <a href="\${verifyUrl}">here</a> to verify your account. This link is valid for 24 hours.</p>\`,
-    });
-    // do not return token to client; instead tell them to check email
-    res.json({ message:'Registration successful. Please check your email to verify your account.' });
-  } catch(err) {
-    console.error('Email send error:', err);
-    res.status(500).json({ error:'Could not send verification email' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
   }
+}
+
+/* ========== User Routes ========== */
+
+/**
+ * Register a new user.
+ * Requires email, username, password. Sends a verification email.
+ */
+app.post('/api/users/register', async (req, res) => {
+  const { email, username, password } = req.body;
+  if (!email || !username || !password) {
+    return res.status(400).json({ error: 'Email, username and password are required' });
+  }
+  if (users.some(u => u.email === email || u.username === username)) {
+    return res.status(400).json({ error: 'User already exists' });
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const userId = users.length + 1;
+  const newUser = {
+    id: userId,
+    email,
+    username,
+    passwordHash,
+    role: 'seller',
+    storeId: null,
+    verified: false
+  };
+  users.push(newUser);
+  // Generate verification token and send email
+  const token = generateToken({ userId }, '30m');
+  try {
+    await sendVerificationEmail(email, token);
+  } catch (err) {
+    console.error('Error sending verification email:', err.message);
+    return res.status(500).json({ error: 'Failed to send verification email' });
+  }
+  res.json({ message: 'Registration successful. Please check your email for verification link.' });
 });
 
-// EMAIL VERIFICATION endpoint
-app.get('/api/users/verify/:token', (req,res) => {
+/**
+ * Verify a user via email token.
+ */
+app.get('/api/users/verify/:token', (req, res) => {
   const { token } = req.params;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
-    const user = users.find(u => u.username === decoded.username);
-    if (!user) return res.status(400).send('Invalid token');
+    const { userId } = jwt.verify(token, process.env.JWT_SECRET);
+    const user = users.find(u => u.id === userId);
+    if (!user) {
+      return res.status(400).send('Invalid verification token.');
+    }
     user.verified = true;
-    saveUsers();
-    res.send('Email verified! You can now log in.');
-  } catch(err) {
-    res.status(400).send('Verification link expired or invalid.');
+    res.send('Email verified! You may now log in.');
+  } catch (err) {
+    return res.status(400).send('Verification link is invalid or has expired.');
   }
 });
 
-// LOGIN endpoint requiring verified=true
-app.post('/api/users/login', async (req,res) => {
-  const { username, password } = req.body;
-  const user = users.find(u => u.username === username);
-  if (!user) return res.status(401).json({ error:'Invalid username or password' });
-  if (!user.verified) return res.status(403).json({ error:'Please verify your email first' });
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(401).json({ error:'Invalid username or password' });
-  // generate session token (or JWT)
-  const sessionToken = jwt.sign({ username }, process.env.JWT_SECRET || 'supersecret', { expiresIn:'6h' });
-  res.json({ token: sessionToken, username, role:'seller', storeId: user.storeId });
+/**
+ * Login a user (email or username) and return a session token.
+ * Only verified users can log in.
+ */
+app.post('/api/users/login', async (req, res) => {
+  const { identifier, password } = req.body;
+  if (!identifier || !password) {
+    return res.status(400).json({ error: 'Email/username and password are required' });
+  }
+  const user = findUserByIdentifier(identifier);
+  if (!user) {
+    return res.status(400).json({ error: 'User not found' });
+  }
+  if (!user.verified) {
+    return res.status(403).json({ error: 'Please verify your email before logging in' });
+  }
+  const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!passwordMatch) {
+    return res.status(400).json({ error: 'Invalid credentials' });
+  }
+  const token = generateToken({ userId: user.id }, '7d');
+  res.json({
+    token,
+    username: user.username,
+    role: user.role,
+    storeId: user.storeId
+  });
 });
 
-// export or start server below...
+/* ========== Store Routes ========== */
+
+/**
+ * Create a store. User must be authenticated.
+ */
+app.post('/api/stores', authMiddleware, (req, res) => {
+  const { name } = req.body;
+  const user = users.find(u => u.id === req.userId);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid user' });
+  }
+  if (user.storeId) {
+    return res.status(400).json({ error: 'User already has a store' });
+  }
+  const storeId = stores.length + 1;
+  const store = { id: storeId, ownerId: user.id, name };
+  stores.push(store);
+  user.storeId = storeId;
+  res.json({ id: storeId, name });
+});
+
+/* ========== Product Routes ========== */
+
+/**
+ * Get all products.
+ */
+app.get('/api/products', (req, res) => {
+  res.json({ products });
+});
+
+/**
+ * Get a single product by ID.
+ */
+app.get('/api/products/:id', (req, res) => {
+  const product = products.find(p => p.id === Number(req.params.id));
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  res.json(product);
+});
+
+/**
+ * Create a product. User must own a store.
+ */
+app.post('/api/products', authMiddleware, (req, res) => {
+  const user = users.find(u => u.id === req.userId);
+  if (!user || !user.storeId) {
+    return res.status(400).json({ error: 'You must create a store first' });
+  }
+  const { title, description, image, type, price, supply } = req.body;
+  const productId = products.length + 1;
+  let chatRoomId = null;
+  // If product type is ChatRoom, create a chat room and assign its ID to the product
+  if (type === 'ChatRoom') {
+    chatRoomId = chatRooms.length + 1;
+    chatRooms.push({
+      id: chatRoomId,
+      storeId: user.storeId,
+      title,
+      price,
+      messages: []
+    });
+  }
+  const product = {
+    id: productId,
+    storeId: user.storeId,
+    title,
+    description: description || '',
+    image: image || '',
+    type,
+    price: Number(price) || 0,
+    supply: supply || null,
+    chatRoomId
+  };
+  products.push(product);
+  res.json(product);
+});
+
+/* ========== Chat Room Routes ========== */
+
+/**
+ * Get chat rooms for a store.
+ */
+app.get('/api/chatrooms/:storeId', (req, res) => {
+  const storeRooms = chatRooms.filter(r => r.storeId === Number(req.params.storeId));
+  res.json({ rooms: storeRooms });
+});
+
+/**
+ * Create a chat room manually (not via product). Requires storeId.
+ */
+app.post('/api/chatrooms', authMiddleware, (req, res) => {
+  const { storeId, title, price } = req.body;
+  const user = users.find(u => u.id === req.userId);
+  if (!user || user.storeId !== Number(storeId)) {
+    return res.status(403).json({ error: 'Not authorized to create chat room' });
+  }
+  const roomId = chatRooms.length + 1;
+  const room = { id: roomId, storeId: Number(storeId), title, price: Number(price) || 0, messages: [] };
+  chatRooms.push(room);
+  res.json(room);
+});
+
+/**
+ * Get messages for a chat room.
+ */
+app.get('/api/chatrooms/:id/messages', (req, res) => {
+  const room = chatRooms.find(r => r.id === Number(req.params.id));
+  if (!room) {
+    return res.status(404).json({ error: 'Chat room not found' });
+  }
+  res.json({ messages: room.messages });
+});
+
+/**
+ * Post a new message to a chat room.
+ * Requires auth; username comes from req.userId.
+ */
+app.post('/api/chatrooms/:id/message', authMiddleware, (req, res) => {
+  const room = chatRooms.find(r => r.id === Number(req.params.id));
+  if (!room) {
+    return res.status(404).json({ error: 'Chat room not found' });
+  }
+  const user = users.find(u => u.id === req.userId);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid user' });
+  }
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  const newMsg = { username: user.username, message, createdAt: new Date() };
+  room.messages.push(newMsg);
+  res.json(newMsg);
+});
+
+/* ========== Post Routes ========== */
+
+/**
+ * Get posts for a store.
+ */
+app.get('/api/posts/:storeId', (req, res) => {
+  const entry = posts.find(p => p.storeId === Number(req.params.storeId));
+  res.json({ posts: entry ? entry.posts : [] });
+});
+
+/**
+ * Create a post for a store (requires auth and store ownership).
+ */
+app.post('/api/posts/:storeId', authMiddleware, (req, res) => {
+  const { storeId } = req.params;
+  const { content, mediaUrl } = req.body;
+  const user = users.find(u => u.id === req.userId);
+  if (!user || user.storeId !== Number(storeId)) {
+    return res.status(403).json({ error: 'Not authorized to post to this store' });
+  }
+  let entry = posts.find(p => p.storeId === Number(storeId));
+  if (!entry) {
+    entry = { storeId: Number(storeId), posts: [] };
+    posts.push(entry);
+  }
+  const newPost = { content: content || '', mediaUrl: mediaUrl || '', createdAt: new Date() };
+  entry.posts.push(newPost);
+  res.json(newPost);
+});
+
+/* ========== Review Routes ========== */
+
+/**
+ * Create a new review page (unclaimed).
+ */
+app.post('/api/reviews/page', (req, res) => {
+  const { name, description } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  const id = reviews.length + 1;
+  const page = { id, name, description: description || '', claimed: false, reviews: [] };
+  reviews.push(page);
+  res.json(page);
+});
+
+/**
+ * Get a review page by ID.
+ */
+app.get('/api/reviews/page/:id', (req, res) => {
+  const page = reviews.find(r => r.id === Number(req.params.id));
+  if (!page) {
+    return res.status(404).send('Not found');
+  }
+  res.json(page);
+});
+
+/**
+ * Add a review to a page.
+ */
+app.post('/api/reviews/:id', (req, res) => {
+  const page = reviews.find(r => r.id === Number(req.params.id));
+  if (!page) {
+    return res.status(404).json({ error: 'Review page not found' });
+  }
+  const { author, text } = req.body;
+  if (!author || !text) {
+    return res.status(400).json({ error: 'Author and text are required' });
+  }
+  const review = { author, text, createdAt: new Date() };
+  page.reviews.push(review);
+  res.json(review);
+});
+
+/* ========== Dashboard & Stats Routes ========== */
+
+/**
+ * Get dashboard summary for a seller (must own a store).
+ */
+app.get('/api/dashboard', authMiddleware, (req, res) => {
+  const user = users.find(u => u.id === req.userId);
+  if (!user || !user.storeId) {
+    return res.status(403).json({ error: 'Not authorized' });
+  }
+  const userStoreId = user.storeId;
+  const totalOrders = 0; // orders not implemented; placeholder
+  const storeProducts = products.filter(p => p.storeId === userStoreId);
+  const totalSales = storeProducts.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
+  res.json({
+    totalSales: totalSales.toFixed(2),
+    totalOrders,
+    totalProducts: storeProducts.length
+  });
+});
+
+/**
+ * General stats for homepage (total products, stores, orders).
+ */
+app.get('/api/stats', (req, res) => {
+  res.json({
+    totalProducts: products.length,
+    totalStores: stores.length,
+    totalOrders: 0 // orders not implemented
+  });
+});
+
+/**
+ * Health check endpoint.
+ */
+app.get('/api/ping', (req, res) => {
+  res.send('pong');
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
