@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chat Room – Steb</title>
-  <meta name="steb-api-base" content="/api" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room - Steb.io</title>
+  <!-- API base for back-end calls -->
+  <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
   <style>
+    /* Basic chat styles matching the rest of the site */
     .messages {
       max-height: 420px;
       overflow: auto;
       border: 1px solid var(--border);
       border-radius: 12px;
-      background: #0f0f14;
+      background: #f0f4f6;
       padding: .75rem;
     }
     .msg {
@@ -38,9 +40,9 @@
     .notice {
       border: 1px dashed var(--border);
       border-radius: 12px;
-      padding: .9rem;
-      background: #101018;
-      color: var(--danger);
+      padding: .6rem;
+      background: #f0d0d0;
+      color: #dc3545;
     }
     footer {
       color: var(--muted);
@@ -66,15 +68,21 @@
 
 <main class="container" style="padding:1.25rem 0 2rem;">
   <h2 id="chatRoomTitle">Loading chat room…</h2>
+  <!-- Status and notice messages -->
   <div id="status" class="notice" style="display:none;"></div>
-  <div id="joinBox" class="card stack" style="margin-top:1rem;display:none;"></div>
+  <!-- Prompt to sign in for guests -->
+  <div id="joinBox" class="stack" style="margin-top:1rem;display:none;">
+    <p>You must sign in to participate in this chat room.</p>
+    <a class="button" href="login.html">Sign In</a>
+  </div>
+  <!-- Chat section for authenticated users -->
   <section id="chatSection" class="stack" style="display:none;margin-top:1rem;">
     <div id="chatMessages" class="messages" aria-live="polite"></div>
-    <form id="chatForm" class="row" autocomplete="off">
-      <input id="chatInput" type="text" placeholder="Type your message…" maxlength="2000" />
+    <form id="chatForm" class="stack" autocomplete="off">
+      <input id="chatInput" type="text" placeholder="Type your message..." maxlength="2000" />
       <button id="sendBtn" type="submit" class="button">Send</button>
     </form>
-    <footer id="chatHint">Press Enter to send • Messages refresh every 5s</footer>
+    <footer id="chatHint">Press Enter to send &bull; Messages refresh every 5s</footer>
   </section>
 </main>
 
@@ -82,198 +90,116 @@
 <script>
 (() => {
   const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = (meta && meta.content) ? meta.content.replace(/\/+$/, '') : '/api';
-  const $ = sel => document.querySelector(sel);
-
+  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  const $ = (sel) => document.querySelector(sel);
+  const chatTitle = $('#chatRoomTitle');
+  const statusBox = $('#status');
+  const joinBox = $('#joinBox');
+  const chatSection = $('#chatSection');
+  const chatMessages = $('#chatMessages');
+  const chatForm = $('#chatForm');
+  const chatInput = $('#chatInput');
+  const username = localStorage.getItem('username');
+  const token = localStorage.getItem('token');
+  // If not logged in, prompt to sign in
+  if (!username || !token || localStorage.getItem('loggedIn') !== 'true') {
+    joinBox.style.display = 'block';
+    chatSection.style.display = 'none';
+    chatTitle.textContent = 'Chat Room';
+    return;
+  }
   function showStatus(msg, isError = false) {
-    const box = $('#status');
-    box.style.display = 'block';
-    box.classList.toggle('error', !!isError);
-    box.textContent = msg;
+    statusBox.classList.toggle('error', !!isError);
+    statusBox.style.display = 'block';
+    statusBox.textContent = msg;
   }
   function hideStatus() {
-    const box = $('#status');
-    box.style.display = 'none';
-    box.textContent = '';
+    statusBox.style.display = 'none';
+    statusBox.textContent = '';
   }
-
   async function api(path, opts = {}) {
-    const token = localStorage.getItem('token');
-    const headers = Object.assign({ 'Accept':'application/json' }, opts.headers || {});
+    const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
     if (!(opts.body instanceof FormData)) {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     }
     if (token) headers['Authorization'] = \`Bearer \${token}\`;
-    const res = await fetch(\`\${API_BASE}\${path}\`, { credentials:'include', ...opts, headers });
-    let data = null;
+    const res = await fetch(\`\${API_BASE}\${path}\`, Object.assign({}, opts, { headers }));
     const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) {
-      try { data = await res.json(); } catch {}
-    } else {
-      data = await res.text().catch(() => null);
-    }
+    const data = ct.includes('application/json') ? await res.json() : await res.text();
     if (!res.ok) {
-      const message = (data && (data.error || data.message)) || res.statusText || 'Request failed';
-      const error = new Error(message);
-      error.status = res.status;
-      error.data = data;
-      throw error;
+      const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
+      throw new Error(msg);
     }
     return data;
   }
-
-  let pollTimer = null;
-  let currentRoomId = null;
-
-  function renderJoinUI(room) {
-    const joinBox = $('#joinBox');
-    joinBox.innerHTML = '';
-    const details = document.createElement('div');
-    details.className = 'stack';
-    const textRow = document.createElement('div');
-    textRow.className = 'row';
-    textRow.style.justifyContent = 'space-between';
-    const descDiv = document.createElement('div');
-    descDiv.textContent = room.description || 'Private chat room';
-    const priceDiv = document.createElement('div');
-    priceDiv.innerHTML = '<strong>' + (room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free') + '</strong>';
-    textRow.appendChild(descDiv);
-    textRow.appendChild(priceDiv);
-    details.appendChild(textRow);
-    const joinBtn = document.createElement('button');
-    joinBtn.className = 'button';
-    joinBtn.textContent = room.price > 0 ? 'Unlock Chat' : 'Join Chat';
-    joinBtn.onclick = async () => {
-      try {
-        joinBtn.disabled = true;
-        hideStatus();
-        await api(\`/chatroom/\${encodeURIComponent(currentRoomId)}/join\`, { method:'POST', body: JSON.stringify({}) });
-        setupChat(currentRoomId, room);
-      } catch (e) {
-        showStatus(\`Failed to join: \${e.message}\`, true);
-      } finally {
-        joinBtn.disabled = false;
-      }
-    };
-    joinBox.append(details, joinBtn);
-    joinBox.style.display = 'block';
-  }
-
-  function renderMessages(list) {
-    const container = $('#chatMessages');
-    container.innerHTML = '';
-    list.forEach(m => {
-      const item = document.createElement('div');
-      item.className = 'msg';
-      const meta = document.createElement('div');
-      meta.className = 'meta';
-      const strong = document.createElement('strong');
-      strong.textContent = m.username || 'User';
-      const dot = document.createElement('small');
-      dot.textContent = '•';
-      dot.style.margin = '0 .25rem';
-      const time = document.createElement('time');
-      time.dateTime = m.createdAt ? new Date(m.createdAt).toISOString() : '';
-      time.textContent = m.createdAt ? new Date(m.createdAt).toLocaleString() : '';
-      meta.append(strong, dot, time);
-      const body = document.createElement('div');
-      body.className = 'body';
-      body.textContent = m.message || '';
-      item.append(meta, body);
-      container.appendChild(item);
-    });
-    container.scrollTop = container.scrollHeight;
-  }
-
-  async function loadMessagesOnce() {
-    if (!currentRoomId) return;
-    try {
-      const data = await api(\`/chatroom/\${encodeURIComponent(currentRoomId)}/messages\`);
-      renderMessages((data && data.messages) || []);
-      hideStatus();
-    } catch (e) {
-      if (e.status === 401 || e.status === 403) {
-        $('#chatSection').style.display = 'none';
-        $('#joinBox').style.display = 'block';
-        showStatus('You do not have access to this chat room. Please join/unlock first.', true);
-        clearInterval(pollTimer); pollTimer = null;
-        return;
-      }
-      showStatus(\`Error loading messages: \${e.message}\`, true);
-    }
-  }
-
-  function setupChat(id, room) {
-    $('#joinBox').style.display = 'none';
-    $('#chatSection').style.display = 'block';
-    clearInterval(pollTimer);
-    loadMessagesOnce();
-    pollTimer = setInterval(loadMessagesOnce, 5000);
-    const form = $('#chatForm');
-    form.onsubmit = async (ev) => {
-      ev.preventDefault();
-      const input = $('#chatInput');
-      const sendBtn = $('#sendBtn');
-      const msg = input.value.trim();
-      if (!msg) return;
-      try {
-        sendBtn.disabled = true;
-        await api(\`/chatroom/\${encodeURIComponent(id)}/message\`, {
-          method:'POST',
-          body: JSON.stringify({ message: msg })
-        });
-        input.value = '';
-        await loadMessagesOnce();
-      } catch (e) {
-        showStatus(\`Failed to send: \${e.message}\`, true);
-      } finally {
-        sendBtn.disabled = false;
-        input.focus();
-      }
-    };
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (!currentRoomId) return;
-    if (document.visibilityState === 'visible') {
-      loadMessagesOnce();
-      if (!pollTimer) pollTimer = setInterval(loadMessagesOnce, 5000);
-    } else {
-      clearInterval(pollTimer);
-      pollTimer = null;
-    }
-  });
-
-  (async function init() {
+  let roomId = null;
+  let refreshInterval = null;
+  async function loadChatRoom() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-    currentRoomId = id;
     if (!id) {
-      $('#chatRoomTitle').textContent = 'Chat room not found.';
-      showStatus('Missing URL parameter: ?id=ROOM_ID', true);
+      showStatus('Missing chat room ID.', true);
       return;
     }
+    roomId = id;
     try {
+      const data = await api(\`/chatrooms/\${encodeURIComponent(id)}\`);
+      chatTitle.textContent = data.title || 'Chat Room';
       hideStatus();
-      const room = await api(\`/chatroom/\${encodeURIComponent(id)}\`);
-      $('#chatRoomTitle').textContent = room.title || 'Chat Room';
-      try {
-        await loadMessagesOnce();
-        $('#joinBox').style.display = 'none';
-        $('#chatSection').style.display = 'block';
-        if (!pollTimer) pollTimer = setInterval(loadMessagesOnce, 5000);
-      } catch (e) {
-        if (e.status === 401 || e.status === 403) {
-          renderJoinUI(room);
-        } else {
-          throw e;
-        }
-      }
-    } catch (e) {
-      $('#chatRoomTitle').textContent = 'Chat room not found.';
-      showStatus(\`Could not load chat room: \${e.message}. Check API_BASE (\${API_BASE}) and CORS.\`, true);
+      chatSection.style.display = '';
+      loadMessages();
+      refreshInterval = setInterval(loadMessages, 5000);
+    } catch(err) {
+      showStatus(err.message || 'Failed to load chat room.', true);
     }
-  })();
+  }
+  async function loadMessages() {
+    if (!roomId) return;
+    try {
+      const data = await api(\`/chatrooms/\${encodeURIComponent(roomId)}/messages\`);
+      const messages = (data && data.messages) || [];
+      chatMessages.innerHTML = '';
+      messages.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg';
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'meta';
+        const strong = document.createElement('strong');
+        strong.textContent = m.username;
+        const time = document.createElement('small');
+        time.style.marginLeft = '.5rem';
+        time.textContent = new Date(m.createdAt || m.timestamp).toLocaleString();
+        metaDiv.appendChild(strong);
+        metaDiv.appendChild(time);
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'body';
+        bodyDiv.textContent = m.message;
+        div.appendChild(metaDiv);
+        div.appendChild(bodyDiv);
+        chatMessages.appendChild(div);
+      });
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    } catch(err) {
+      showStatus(err.message || 'Error loading messages.', true);
+    }
+  }
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = chatInput.value.trim();
+    if (!msg || !roomId) return;
+    try {
+      await api(\`/chatrooms/\${encodeURIComponent(roomId)}/message\`, {
+        method: 'POST',
+        body: JSON.stringify({ username, message: msg })
+      });
+      chatInput.value = '';
+      loadMessages();
+    } catch(err) {
+      showStatus(err.message || 'Error sending message.', true);
+    }
+  });
+  // Initialize chat room
+  loadChatRoom();
 })();
 </script>
 </body>
