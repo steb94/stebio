@@ -1,362 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Seller Dashboard – Steb</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- The API base is used by the dashboard script to call back‑end endpoints -->
+  <meta name="steb-api-base" content="/api" />
+  <title>Steb.io Seller Dashboard</title>
+  <!-- Google Font (Inter) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- Bootstrap CSS for layout & components -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons for menu/icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #FCF6F5; /* Off‑white background */
+      margin: 0;
+    }
+    /* Sidebar styling */
+    .sidebar {
+      background-color: #141212; /* dark sidebar */
+      color: #fff;
+      width: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+    }
+    .sidebar .logo {
+      font-weight: 600;
+      font-size: 1.4rem;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar .logo span {
+      color: #FA4616; /* highlight part of logo in accent color */
+    }
+    .sidebar nav {
+      flex-grow: 1;
+      padding-top: 1rem;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      color: #ffffffcc;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .sidebar nav a:hover {
+      background-color: rgba(255,255,255,0.1);
+      color: #fff;
+      text-decoration: none;
+    }
+    .sidebar nav a.active {
+      background-color: #FA4616;
+      color: #fff;
+      font-weight: 600;
+    }
+    .sidebar nav i {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+    }
+    .sidebar .logout {
+      padding: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar .logout a {
+      color: #ffffffcc;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .sidebar .logout a:hover {
+      color: #fff;
+    }
+    /* Main content area */
+    .main-content {
+      flex: 1;
+      padding: 1rem 2rem;
+    }
+    /* Header/topbar inside main content */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .main-header .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .main-header .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      color: #333;
+    }
+    .main-header .user-info i {
+      font-size: 1.5rem;
+      color: #888;
+    }
+    /* Stat cards */
+    .stats-card {
+      border: none;
+      border-radius: 8px;
+      padding: 1rem;
+      color: #fff;
+    }
+    .stats-card h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .stats-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+    .stats-card.revenue { background-color: #1754D8; }   /* blue card */
+    .stats-card.orders { background-color: #FA4616; }     /* red-orange card */
+    .stats-card.products { background-color: #343a40; }  /* dark gray card */
+    /* Table styles */
+    .table thead th {
+      background-color: #f0f0f0;
+    }
+    .table tbody tr:hover {
+      background-color: #f9f9f9;
+    }
+    /* Primary button color override (to match theme) */
+    .btn.btn-primary {
+      background-color: #FA4616;
+      border-color: #FA4616;
+    }
+    .btn.btn-primary:hover {
+      background-color: #d53d14;
+      border-color: #d53d14;
+    }
+  </style>
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">STEB</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html" class="active">Dashboard</a>
-        <a href="support.html">Support</a>
-      </nav>
-      <div class="auth-links"></div>
+<div class="d-flex min-vh-100">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">Steb<span>.io</span></div>
+    <nav>
+      <a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="create-product.html"><i class="bi bi-box-seam"></i> Products</a>
+      <a href="chatroom.html"><i class="bi bi-people"></i> Community</a>
+      <a href="analytics.html"><i class="bi bi-bar-chart"></i> Analytics</a>
+      <a href="store.html"><i class="bi bi-shop"></i> Marketplace</a>
+      <a href="settings.html"><i class="bi bi-gear"></i> Settings</a>
+    </nav>
+    <div class="logout">
+      <a href="#" onclick="localStorage.removeItem('loggedIn'); window.location.reload();"><i class="bi bi-box-arrow-right"></i> Logout</a>
     </div>
-  </header>
-
-  <main class="container" style="padding:1.5rem 0 3rem;">
+  </aside>
+  <!-- Main Content -->
+  <main class="main-content w-100">
     <!-- Login Section -->
-    <section id="loginSection" class="card stack" style="max-width:420px;margin:2rem auto;">
-      <h2>Sign In to Your Dashboard</h2>
-      <form id="dashLoginForm" class="stack">
-        <div class="stack">
-          <label for="dashUsername">Username</label>
-          <input id="dashUsername" type="text" placeholder="Your username" required />
-        </div>
-        <div class="stack">
-          <label for="dashPassword">Password</label>
-          <input id="dashPassword" type="password" placeholder="Your password" required />
-        </div>
-        <button type="submit" class="button">Sign In</button>
-      </form>
-    </section>
-
-    <!-- Dashboard Content -->
-    <section id="dashboardContent" style="display:none;">
-      <h2>Seller Dashboard</h2>
-
-      <!-- Summary Cards -->
-      <div class="row summary" style="margin-top:1rem;">
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Sales ($)</div>
-          <div class="value" id="dashTotalSales">0</div>
-        </div>
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Orders</div>
-          <div class="value" id="dashTotalOrders">0</div>
-        </div>
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Products</div>
-          <div class="value" id="dashTotalProducts">0</div>
+    <div id="loginSection" class="d-flex justify-content-center align-items-center w-100" style="min-height:80vh;">
+      <div class="card p-4 shadow-sm" style="max-width: 400px; width:100%;">
+        <h3 class="mb-3 text-center">Sign In to Your Dashboard</h3>
+        <form id="dashLoginForm">
+          <div class="mb-3">
+            <label for="dashUsername" class="form-label">Username</label>
+            <input id="dashUsername" type="text" class="form-control" required />
+          </div>
+          <div class="mb-3">
+            <label for="dashPassword" class="form-label">Password</label>
+            <input id="dashPassword" type="password" class="form-control" required />
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Sign In</button>
+        </form>
+      </div>
+    </div>
+    <!-- Dashboard Section -->
+    <div id="dashboardContent" style="display:none;">
+      <!-- Header -->
+      <div class="main-header">
+        <div class="page-title">Seller Dashboard</div>
+        <div class="user-info">
+          <span id="usernameDisplay"></span>
+          <i class="bi bi-person-circle"></i>
         </div>
       </div>
-
-      <!-- Orders Section -->
-      <section style="margin-top:2rem;">
-        <h3>Your Orders</h3>
-        <div class="card">
-          <table id="ordersTable">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Product</th>
-                <th>Buyer</th>
-                <th>Price ($)</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <!-- Stat Overview Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="stats-card revenue">
+            <div id="dashTotalSales" class="stat-value">0</div>
+            <h3>Total Sales ($)</h3>
+          </div>
         </div>
-      </section>
-
-      <!-- Chat Rooms Section -->
-      <section style="margin-top:2rem;">
-        <h3>Your Chat Rooms</h3>
-        <div id="chatRoomList" class="stack"></div>
-        <div class="card" style="margin-top:1rem;">
-          <h4>Create Chat Room</h4>
-          <form id="chatRoomForm" class="stack">
-            <div class="stack">
-              <label for="chatRoomTitle">Title</label>
-              <input id="chatRoomTitle" type="text" placeholder="Chat room title" required />
-            </div>
-            <div class="stack">
-              <label for="chatRoomPrice">Price</label>
-              <input id="chatRoomPrice" type="number" step="0.01" min="0" placeholder="0.00" />
-            </div>
-            <button type="submit" class="button">Create Chat Room</button>
-          </form>
+        <div class="col-md-4">
+          <div class="stats-card orders">
+            <div id="dashTotalOrders" class="stat-value">0</div>
+            <h3>Total Orders</h3>
+          </div>
         </div>
-      </section>
-
-      <!-- Posts Section -->
-      <section style="margin-top:2rem;">
-        <h3>Your Store Posts</h3>
-        <div id="postList" class="card" style="padding:0;"></div>
-        <div class="card" style="margin-top:1rem;">
-          <h4>Create Post</h4>
-          <form id="postForm" class="stack">
-            <div class="stack">
-              <label for="postText">Post Text</label>
-              <textarea id="postText" placeholder="Write your update…" rows="3"></textarea>
-            </div>
-            <div class="stack">
-              <label for="postMedia">Media URL (optional)</label>
-              <input id="postMedia" type="url" placeholder="https://example.com/image.png" />
-            </div>
-            <button type="submit" class="button">Post</button>
-          </form>
+        <div class="col-md-4">
+          <div class="stats-card products">
+            <div id="dashTotalProducts" class="stat-value">0</div>
+            <h3>Total Products</h3>
+          </div>
         </div>
-      </section>
-    </section>
+      </div>
+      <!-- Orders Table -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Your Orders</h5>
+          <div class="table-responsive">
+            <table class="table align-middle" id="ordersTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product</th>
+                  <th>Buyer</th>
+                  <th>Price ($)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Chat Rooms and Create Chat Room -->
+      <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Your Chat Rooms</h5>
+              <div id="chatRoomList" class="d-flex flex-column gap-2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Create Chat Room</h5>
+              <form id="chatRoomForm">
+                <div class="mb-3">
+                  <label for="chatRoomTitle" class="form-label">Title</label>
+                  <input id="chatRoomTitle" type="text" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                  <label for="chatRoomPrice" class="form-label">Price ($)</label>
+                  <input id="chatRoomPrice" type="number" step="0.01" min="0" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Create Chat Room</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Posts and Create Post -->
+      <div class="row">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Your Store Posts</h5>
+              <div id="postList" class="d-flex flex-column gap-2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title mb-3">Create Post</h5>
+              <form id="postForm">
+                <div class="mb-3">
+                  <label for="postText" class="form-label">Post Text</label>
+                  <textarea id="postText" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="postMedia" class="form-label">Media URL (optional)</label>
+                  <input id="postMedia" type="text" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Post</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
+</div>
+<!-- Bootstrap JS for any interactive components (optional) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Dashboard Script: maintains existing functionality (login, API calls, etc.) -->
+<script>
+(() => {
+  const meta = document.querySelector('meta[name="steb-api-base"]');
+  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
 
-  <script src="auth.js"></script>
-  <script>
-  (() => {
-    const meta = document.querySelector('meta[name=\"steb-api-base\"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  const $ = sel => document.querySelector(sel);
 
-    const $ = sel => document.querySelector(sel);
+  async function api(path, opts = {}) {
+    const token = localStorage.getItem('token');
+    const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
+    if (!(opts.body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
+    const ct = res.headers.get('content-type') || '';
+    let data = null;
+    if (ct.includes('application/json')) {
+      try { data = await res.json(); } catch {}
+    } else {
+      data = await res.text().catch(() => null);
+    }
+    if (!res.ok) {
+      const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
+      const err = new Error(msg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data;
+  }
 
-    async function api(path, opts = {}) {
-      const token = localStorage.getItem('token');
-      const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
-      if (!(opts.body instanceof FormData)) {
-        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-      }
-      if (token) headers['Authorization'] = \`Bearer \${token}\`;
-      const res = await fetch(\`\${API_BASE}\${path}\`, { credentials:'include', ...opts, headers });
-      const ct = res.headers.get('content-type') || '';
-      let data = null;
-      if (ct.includes('application/json')) {
-        try { data = await res.json(); } catch {}
+  function showLogin() {
+    $('#loginSection').style.display = 'flex';
+    $('#dashboardContent').style.display = 'none';
+  }
+  function showDashboard() {
+    $('#loginSection').style.display = 'none';
+    $('#dashboardContent').style.display = 'block';
+  }
+
+  async function loadSummary() {
+    try {
+      const data = await api('/dashboard');
+      $('#dashTotalSales').textContent = Number(data.totalSales || 0).toFixed(2);
+      $('#dashTotalOrders').textContent = data.totalOrders || 0;
+      $('#dashTotalProducts').textContent = data.totalProducts || 0;
+    } catch (e) {
+      console.error('Error loading summary', e);
+    }
+  }
+
+  async function loadOrders() {
+    const tbody = $('#ordersTable tbody');
+    tbody.innerHTML = '';
+    try {
+      const orders = await api('/orders');
+      (orders || []).forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = \`
+          <td>\${o.id}</td>
+          <td>\${o.productName}</td>
+          <td>\${o.buyerName}</td>
+          <td>\${Number(o.price).toFixed(2)}</td>
+          <td>\${o.status}</td>
+        \`;
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      console.error('Error loading orders', e);
+    }
+  }
+
+  async function loadPosts() {
+    const storeId = localStorage.getItem('storeId');
+    const list = $('#postList');
+    list.innerHTML = '';
+    if (!storeId) return;
+    try {
+      const data = await api(\`/posts/\${encodeURIComponent(storeId)}\`);
+      const posts = (data && data.posts) || [];
+      if (posts.length === 0) {
+        list.innerHTML = '<div class="card p-2">No posts yet.</div>';
       } else {
-        data = await res.text().catch(() => null);
-      }
-      if (!res.ok) {
-        const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
-        const err = new Error(msg);
-        err.status = res.status;
-        err.data = data;
-        throw err;
-      }
-      return data;
-    }
-
-    function showLogin() {
-      $('#loginSection').style.display = 'block';
-      $('#dashboardContent').style.display = 'none';
-    }
-    function showDashboard() {
-      $('#loginSection').style.display = 'none';
-      $('#dashboardContent').style.display = 'block';
-    }
-
-    async function loadSummary() {
-      try {
-        const data = await api('/dashboard');
-        $('#dashTotalSales').textContent = Number(data.totalSales || 0).toFixed(2);
-        $('#dashTotalOrders').textContent = data.totalOrders || 0;
-        $('#dashTotalProducts').textContent = data.totalProducts || 0;
-      } catch (e) {
-        console.error('Error loading summary', e);
-      }
-    }
-
-    async function loadOrders() {
-      const tbody = $('#ordersTable tbody');
-      tbody.innerHTML = '';
-      try {
-        const orders = await api('/orders');
-        (orders || []).forEach(o => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = \`
-            <td>\${o.id}</td>
-            <td>\${o.productName}</td>
-            <td>\${o.buyerName}</td>
-            <td>\${Number(o.price).toFixed(2)}</td>
-            <td>\${o.status}</td>
-          \`;
-          tbody.appendChild(tr);
+        posts.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'card p-2';
+          if (p.content) {
+            const para = document.createElement('p');
+            para.textContent = p.content;
+            div.appendChild(para);
+          }
+          if (p.mediaUrl) {
+            const wrapper = document.createElement('div');
+            const link = document.createElement('a');
+            link.href = p.mediaUrl;
+            link.target = '_blank';
+            link.style.color = 'var(--accent)';
+            link.style.textDecoration = 'underline';
+            link.textContent = 'Media';
+            wrapper.appendChild(link);
+            div.appendChild(wrapper);
+          }
+          const date = new Date(p.timestamp || p.createdAt);
+          const small = document.createElement('small');
+          small.textContent = date.toLocaleString();
+          div.appendChild(small);
+          list.appendChild(div);
         });
-      } catch (e) {
-        console.error('Error loading orders', e);
       }
+    } catch (e) {
+      console.error('Error loading posts', e);
     }
+  }
 
-    async function loadPosts() {
-      const storeId = localStorage.getItem('storeId');
-      const list = $('#postList');
-      list.innerHTML = '';
-      if (!storeId) return;
-      try {
-        const data = await api(\`/posts/\${encodeURIComponent(storeId)}\`);
-        const posts = (data && data.posts) || [];
-        if (posts.length === 0) {
-          list.innerHTML = '<div class=\"post\"><p>No posts yet.</p></div>';
-        } else {
-          posts.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'post';
-            if (p.content) {
-              const para = document.createElement('p');
-              para.textContent = p.content;
-              div.appendChild(para);
-            }
-            if (p.mediaUrl) {
-              const wrapper = document.createElement('div');
-              const link = document.createElement('a');
-              link.href = p.mediaUrl;
-              link.target = '_blank';
-              link.style.color = 'var(--accent)';
-              link.style.textDecoration = 'underline';
-              link.textContent = 'Media';
-              wrapper.appendChild(link);
-              div.appendChild(wrapper);
-            }
-            const date = new Date(p.timestamp || p.createdAt);
-            const small = document.createElement('small');
-            small.textContent = date.toLocaleString();
-            div.appendChild(small);
-            list.appendChild(div);
-          });
-        }
-      } catch (e) {
-        console.error('Error loading posts', e);
-      }
+  async function loadChatRooms() {
+    const storeId = localStorage.getItem('storeId');
+    const list = $('#chatRoomList');
+    list.innerHTML = '';
+    if (!storeId) return;
+    try {
+      const data = await api(\`/chatrooms/\${encodeURIComponent(storeId)}\`);
+      (data.rooms || []).forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'card p-2';
+        const title = document.createElement('div');
+        title.innerHTML = \`<strong>\${room.title}</strong> – \${room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free'}\`;
+        const linkWrapper = document.createElement('div');
+        linkWrapper.style.marginTop = '.5rem';
+        const link = document.createElement('a');
+        link.href = \`chatroom.html?id=\${room.id}\`;
+        link.className = 'btn btn-outline-primary btn-sm';
+        link.textContent = 'Open';
+        linkWrapper.appendChild(link);
+        card.appendChild(title);
+        card.appendChild(linkWrapper);
+        list.appendChild(card);
+      });
+    } catch (e) {
+      console.error('Error loading chat rooms', e);
     }
+  }
 
-    async function loadChatRooms() {
-      const storeId = localStorage.getItem('storeId');
-      const list = $('#chatRoomList');
-      list.innerHTML = '';
-      if (!storeId) return;
-      try {
-        const data = await api(\`/chatrooms/\${encodeURIComponent(storeId)}\`);
-        (data.rooms || []).forEach(room => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          const title = document.createElement('div');
-          title.innerHTML = \`<strong>\${room.title}</strong> – \${room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free'}\`;
-          const linkWrapper = document.createElement('div');
-          linkWrapper.style.marginTop = '.5rem';
-          const link = document.createElement('a');
-          link.href = \`chatroom.html?id=\${room.id}\`;
-          link.className = 'button ghost';
-          link.textContent = 'Open';
-          linkWrapper.appendChild(link);
-          card.appendChild(title);
-          card.appendChild(linkWrapper);
-          list.appendChild(card);
-        });
-      } catch (e) {
-        console.error('Error loading chat rooms', e);
-      }
+  function initDashboard() {
+    const loggedIn = localStorage.getItem('loggedIn') === 'true';
+    const role = localStorage.getItem('role');
+    if (!loggedIn) {
+      showLogin();
+      return;
     }
-
-    function initDashboard() {
-      const loggedIn = localStorage.getItem('loggedIn') === 'true';
-      const role = localStorage.getItem('role');
-      if (!loggedIn) {
-        showLogin();
-        return;
-      }
-      if (role !== 'seller') {
-        alert('You are not a seller. Please sign in with a seller account.');
-        showLogin();
-        return;
-      }
-      const storeId = localStorage.getItem('storeId');
-      if (!storeId) {
-        alert('Please create a store first.');
-        window.location.href = 'create-store.html';
-        return;
-      }
-      showDashboard();
-      loadSummary();
-      loadOrders();
-      loadChatRooms();
-      loadPosts();
+    if (role !== 'seller') {
+      alert('You are not a seller. Please sign in with a seller account.');
+      showLogin();
+      return;
     }
+    const storeId = localStorage.getItem('storeId');
+    if (!storeId) {
+      alert('Please create a store first.');
+      window.location.href = 'create-store.html';
+      return;
+    }
+    showDashboard();
+    const username = localStorage.getItem('username') || 'Seller';
+    $('#usernameDisplay').textContent = 'Welcome, ' + username;
+    loadSummary();
+    loadOrders();
+    loadChatRooms();
+    loadPosts();
+  }
 
-    document.getElementById('dashLoginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const user = $('#dashUsername').value.trim();
-      const pass = $('#dashPassword').value.trim();
-      const storedUser = localStorage.getItem('username');
-      const storedPass = localStorage.getItem('password');
-      if (user === storedUser && pass === storedPass) {
-        localStorage.setItem('loggedIn', 'true');
-        initDashboard();
-      } else {
-        alert('Invalid username or password.');
-      }
-    });
-
-    document.getElementById('postForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const content = $('#postText').value.trim();
-      const mediaUrl = $('#postMedia').value.trim();
-      const storeId = localStorage.getItem('storeId');
-      const token = localStorage.getItem('token');
-      if (!content && !mediaUrl) {
-        alert('Post content or media URL is required.');
-        return;
-      }
-      try {
-        await api(\`/posts/\${encodeURIComponent(storeId)}\`, {
-          method:'POST',
-          headers: {
-            'Authorization': token ? \`Bearer \${token}\` : ''
-          },
-          body: JSON.stringify({ content, mediaUrl })
-        });
-        $('#postForm').reset();
-        loadPosts();
-      } catch (err) {
-        console.error('Error creating post', err);
-      }
-    });
-
-    document.getElementById('chatRoomForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = $('#chatRoomTitle').value.trim();
-      const price = parseFloat($('#chatRoomPrice').value) || 0;
-      const storeId = localStorage.getItem('storeId');
-      const token = localStorage.getItem('token');
-      if (!title) {
-        alert('Please enter a chat room title.');
-        return;
-      }
-      try {
-        await api('/chatrooms', {
-          method:'POST',
-          headers: {
-            'Authorization': token ? \`Bearer \${token}\` : ''
-          },
-          body: JSON.stringify({ storeId, title, price })
-        });
-        $('#chatRoomForm').reset();
-        loadChatRooms();
-      } catch (err) {
-        console.error('Error creating chat room', err);
-      }
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('dashLoginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = $('#dashUsername').value.trim();
+    const pass = $('#dashPassword').value.trim();
+    const storedUser = localStorage.getItem('username');
+    const storedPass = localStorage.getItem('password');
+    if (user === storedUser && pass === storedPass) {
+      localStorage.setItem('loggedIn', 'true');
       initDashboard();
-    });
-  })();
-  </script>
+    } else {
+      alert('Invalid username or password.');
+    }
+  });
+
+  document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = $('#postText').value.trim();
+    const mediaUrl = $('#postMedia').value.trim();
+    const storeId = localStorage.getItem('storeId');
+    const token = localStorage.getItem('token');
+    if (!content && !mediaUrl) {
+      alert('Post content or media URL is required.');
+      return;
+    }
+    try {
+      await api(\`/posts/\${encodeURIComponent(storeId)}\`, {
+        method:'POST',
+        headers: {
+          'Authorization': token ? \`Bearer \${token}\` : ''
+        },
+        body: JSON.stringify({ content, mediaUrl })
+      });
+      $('#postForm').reset();
+      loadPosts();
+    } catch (err) {
+      console.error('Error creating post', err);
+    }
+  });
+
+  document.getElementById('chatRoomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = $('#chatRoomTitle').value.trim();
+    const price = parseFloat($('#chatRoomPrice').value) || 0;
+    const storeId = localStorage.getItem('storeId');
+    const token = localStorage.getItem('token');
+    if (!title) {
+      alert('Please enter a chat room title.');
+      return;
+    }
+    try {
+      await api('/chatrooms', {
+        method:'POST',
+        headers: {
+          'Authorization': token ? \`Bearer \${token}\` : ''
+        },
+        body: JSON.stringify({ storeId, title, price })
+      });
+      $('#chatRoomForm').reset();
+      loadChatRooms();
+    } catch (err) {
+      console.error('Error creating chat room', err);
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initDashboard();
+  });
+})();
+</script>
 </body>
 </html>
