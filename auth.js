@@ -1,35 +1,31 @@
-// auth.js – handles nav auth link
-(() => {
-  const navAuth = document.querySelector('.auth-links');
-  if (!navAuth) return;
-  function render() {
-    navAuth.innerHTML = '';
+// Shared authentication script for Steb.io
+// Updates navigation links based on login state and handles logout.
+
+(function () {
+  const authLinks = document.querySelector('.auth-links');
+  if (!authLinks) return;
+
+  function renderAuthLinks() {
     const loggedIn = localStorage.getItem('loggedIn') === 'true';
     if (loggedIn) {
-      const username = localStorage.getItem('username') || 'User';
-      const span = document.createElement('span');
-      span.textContent = `Hi, ${username}`;
-      span.style.marginRight = '1rem';
-      navAuth.appendChild(span);
-      const btn = document.createElement('button');
-      btn.className = 'button ghost';
-      btn.textContent = 'Sign out';
-      btn.onclick = () => {
+      authLinks.innerHTML = '<a href="#" id="logoutBtn">Logout</a>';
+      const btn = document.getElementById('logoutBtn');
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        // Clear all stored auth data
         localStorage.removeItem('loggedIn');
-        localStorage.removeItem('token');
         localStorage.removeItem('username');
+        localStorage.removeItem('password');
+        localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('storeId');
-        location.reload();
-      };
-      navAuth.appendChild(btn);
+        // Return to home page
+        window.location.href = 'index.html';
+      });
     } else {
-      const link = document.createElement('a');
-      link.href = 'login.html';
-      link.className = 'button ghost';
-      link.textContent = 'Sign in';
-      navAuth.appendChild(link);
+      authLinks.innerHTML = '<a href="login.html">Sign in</a>';
     }
   }
-  render();
+
+  renderAuthLinks();
 })();
