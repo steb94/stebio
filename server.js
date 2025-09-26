@@ -408,3 +408,96 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log('Server running on port', PORT);
 });
+const express = require('express');
+const app = express();
+const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+
+// Load users from JSON (simplified)
+let users = [];
+if (fs.existsSync('users.json')) {
+  users = JSON.parse(fs.readFileSync('users.json','utf8'));
+}
+
+// configure mail transport (use your SMTP provider or Mailtrap)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,    // e.g. smtp.mailtrap.io
+  port: Number(process.env.SMTP_PORT || 587),
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// helper to save users
+function saveUsers() {
+  fs.writeFileSync('users.json', JSON.stringify(users, null, 2));
+}
+
+app.use(express.json());
+
+// REGISTER endpoint with email verification
+app.post('/api/users/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ error:'username, email and password are required' });
+  }
+  if (users.find(u => u.username === username)) {
+    return res.status(400).json({ error:'Username already exists' });
+  }
+  // hash password
+  const hashed = await bcrypt.hash(password, 10);
+  // generate verification token (expires in 24h)
+  const token = jwt.sign({ username }, process.env.JWT_SECRET || 'supersecret', { expiresIn:'24h' });
+  // store user with verified:false
+  const user = { username, email, password: hashed, verified:false };
+  users.push(user);
+  saveUsers();
+  // send email
+  const verifyUrl = \`https://stebio.onrender.com/api/users/verify/\${token}\`;
+  try {
+    await transporter.sendMail({
+      from: '"Steb.io" <no-reply@steb.io>',
+      to: email,
+      subject: 'Verify your email',
+      html: \`<p>Hi \${username},</p><p>Click <a href="\${verifyUrl}">here</a> to verify your account. This link is valid for 24 hours.</p>\`,
+    });
+    // do not return token to client; instead tell them to check email
+    res.json({ message:'Registration successful. Please check your email to verify your account.' });
+  } catch(err) {
+    console.error('Email send error:', err);
+    res.status(500).json({ error:'Could not send verification email' });
+  }
+});
+
+// EMAIL VERIFICATION endpoint
+app.get('/api/users/verify/:token', (req,res) => {
+  const { token } = req.params;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret');
+    const user = users.find(u => u.username === decoded.username);
+    if (!user) return res.status(400).send('Invalid token');
+    user.verified = true;
+    saveUsers();
+    res.send('Email verified! You can now log in.');
+  } catch(err) {
+    res.status(400).send('Verification link expired or invalid.');
+  }
+});
+
+// LOGIN endpoint requiring verified=true
+app.post('/api/users/login', async (req,res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username);
+  if (!user) return res.status(401).json({ error:'Invalid username or password' });
+  if (!user.verified) return res.status(403).json({ error:'Please verify your email first' });
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) return res.status(401).json({ error:'Invalid username or password' });
+  // generate session token (or JWT)
+  const sessionToken = jwt.sign({ username }, process.env.JWT_SECRET || 'supersecret', { expiresIn:'6h' });
+  res.json({ token: sessionToken, username, role:'seller', storeId: user.storeId });
+});
+
+// export or start server below...
