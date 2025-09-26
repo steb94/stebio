@@ -8,137 +8,9 @@
   <title>Steb.io Seller Dashboard</title>
   <!-- Google Font (Inter) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <!-- Bootstrap CSS for layout & components -->
+  <!-- Bootstrap CSS (optional, but used for icons) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Bootstrap Icons for menu/icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #FCF6F5; /* Off‑white background */
-      margin: 0;
-    }
-    /* Sidebar styling */
-    .sidebar {
-      background-color: #141212; /* dark sidebar */
-      color: #fff;
-      width: 240px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 100vh;
-    }
-    .sidebar .logo {
-      font-weight: 600;
-      font-size: 1.4rem;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .sidebar .logo span {
-      color: #FA4616; /* highlight part of logo in accent color */
-    }
-    .sidebar nav {
-      flex-grow: 1;
-      padding-top: 1rem;
-    }
-    .sidebar nav a {
-      display: flex;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      color: #ffffffcc;
-      text-decoration: none;
-      font-size: 0.95rem;
-    }
-    .sidebar nav a:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: #fff;
-      text-decoration: none;
-    }
-    .sidebar nav a.active {
-      background-color: #FA4616;
-      color: #fff;
-      font-weight: 600;
-    }
-    .sidebar nav i {
-      margin-right: 0.5rem;
-      font-size: 1.1rem;
-    }
-    .sidebar .logout {
-      padding: 1rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .sidebar .logout a {
-      color: #ffffffcc;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .sidebar .logout a:hover {
-      color: #fff;
-    }
-    /* Main content area */
-    .main-content {
-      flex: 1;
-      padding: 1rem 2rem;
-    }
-    /* Header/topbar inside main content */
-    .main-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .main-header .page-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-    .main-header .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 1rem;
-      color: #333;
-    }
-    .main-header .user-info i {
-      font-size: 1.5rem;
-      color: #888;
-    }
-    /* Stat cards */
-    .stats-card {
-      border: none;
-      border-radius: 8px;
-      padding: 1rem;
-      color: #fff;
-    }
-    .stats-card h3 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .stats-card .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 0.2rem;
-    }
-    .stats-card.revenue { background-color: #1754D8; }   /* blue card */
-    .stats-card.orders { background-color: #FA4616; }     /* red-orange card */
-    .stats-card.products { background-color: #343a40; }  /* dark gray card */
-    /* Table styles */
-    .table thead th {
-      background-color: #f0f0f0;
-    }
-    .table tbody tr:hover {
-      background-color: #f9f9f9;
-    }
-    /* Primary button color override (to match theme) */
-    .btn.btn-primary {
-      background-color: #FA4616;
-      border-color: #FA4616;
-    }
-    .btn.btn-primary:hover {
-      background-color: #d53d14;
-      border-color: #d53d14;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <div class="d-flex min-vh-100">
@@ -149,7 +21,7 @@
       <a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
       <a href="create-product.html"><i class="bi bi-box-seam"></i> Products</a>
       <a href="chatroom.html"><i class="bi bi-people"></i> Community</a>
-      <a href="analytics.html"><i class="bi bi-bar-chart"></i> Analytics</a>
+      <a href="reviews.html"><i class="bi bi-chat-square-text"></i> Reviews</a>
       <a href="store.html"><i class="bi bi-shop"></i> Marketplace</a>
       <a href="settings.html"><i class="bi bi-gear"></i> Settings</a>
     </nav>
@@ -158,7 +30,7 @@
     </div>
   </aside>
   <!-- Main Content -->
-  <main class="main-content w-100">
+  <main class="with-sidebar w-100">
     <!-- Login Section -->
     <div id="loginSection" class="d-flex justify-content-center align-items-center w-100" style="min-height:80vh;">
       <div class="card p-4 shadow-sm" style="max-width: 400px; width:100%;">
@@ -179,8 +51,8 @@
     <!-- Dashboard Section -->
     <div id="dashboardContent" style="display:none;">
       <!-- Header -->
-      <div class="main-header">
-        <div class="page-title">Seller Dashboard</div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Seller Dashboard</h2>
         <div class="user-info">
           <span id="usernameDisplay"></span>
           <i class="bi bi-person-circle"></i>
@@ -189,19 +61,19 @@
       <!-- Stat Overview Cards -->
       <div class="row g-3 mb-4">
         <div class="col-md-4">
-          <div class="stats-card revenue">
+          <div class="stats-card revenue card">
             <div id="dashTotalSales" class="stat-value">0</div>
             <h3>Total Sales ($)</h3>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stats-card orders">
+          <div class="stats-card orders card">
             <div id="dashTotalOrders" class="stat-value">0</div>
             <h3>Total Orders</h3>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stats-card products">
+          <div class="stats-card products card">
             <div id="dashTotalProducts" class="stat-value">0</div>
             <h3>Total Products</h3>
           </div>
@@ -288,13 +160,12 @@
     </div>
   </main>
 </div>
-<!-- Bootstrap JS for any interactive components (optional) -->
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Dashboard Script: maintains existing functionality (login, API calls, etc.) -->
 <script>
 (() => {
   const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
+  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
 
   const $ = sel => document.querySelector(sel);
 
@@ -309,7 +180,7 @@
     const ct = res.headers.get('content-type') || '';
     let data = null;
     if (ct.includes('application/json')) {
-      try { data = await res.json(); } catch {}
+      data = await res.json().catch(() => null);
     } else {
       data = await res.text().catch(() => null);
     }
