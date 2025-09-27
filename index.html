@@ -3,153 +3,142 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>STEB Marketplace</title>
+  <title>Steb.io – Marketplace</title>
   <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">STEB</div>
+      <div class="brand">Steb.io</div>
       <nav>
-        <a href="index.html" class="active">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
+        <a href="index.html">Home</a>
+        <span id="navLinks" style="display:none;">
+          <a href="create-store.html">Create Store</a>
+          <a href="create-product.html">Add Product</a>
+          <a href="dashboard.html">Dashboard</a>
+        </span>
+        <a href="reviews.html">Reviews</a>
         <a href="support.html">Support</a>
       </nav>
-      <div class="auth-links"></div>
+      <div class="auth-links"><a href="login.html">Sign in</a></div>
     </div>
   </header>
 
   <main class="container" style="padding:2rem 0;">
-    <h1>Discover Your Next Digital Product</h1>
-    <p>STEB is a modern marketplace for courses, communities, software, services, templates, and more.  Browse the latest offerings and connect directly with sellers.</p>
-
-    <!-- Stats -->
-    <section style="margin-top:2rem;">
-      <div class="row summary">
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Products</div>
-          <div class="value" id="statProducts">0</div>
-        </div>
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Stores</div>
-          <div class="value" id="statStores">0</div>
-        </div>
-        <div class="card" style="flex:1;min-width:220px;">
-          <div>Total Orders</div>
-          <div class="value" id="statOrders">0</div>
-        </div>
-      </div>
+    <section class="hero">
+      <h1>Discover Your Next Digital Product</h1>
+      <p>A powerful marketplace to buy and sell courses, communities, chat rooms, software, services, and more.</p>
     </section>
-
-    <!-- Search and Filters -->
-    <section style="margin-top:2rem;">
-      <h2>Browse Products</h2>
-      <div class="row" style="flex-wrap:wrap;gap:.75rem;">
-        <select id="typeFilter">
-          <option value="All">All Types</option>
-          <option value="Trading">Trading</option>
-          <option value="Communities">Communities</option>
-          <option value="Courses">Courses</option>
-          <option value="Software">Software</option>
-          <option value="Services">Services</option>
-          <option value="Templates">Templates</option>
-        </select>
-        <select id="sortFilter">
-          <option value="newest">Newest</option>
-          <option value="price_asc">Price: Low→High</option>
-          <option value="price_desc">Price: High→Low</option>
-        </select>
-        <input type="text" id="searchInput" placeholder="Search by keyword…" style="flex:1;">
-        <button id="searchBtn" class="button">Search</button>
-      </div>
-      <div id="productsGrid" class="row" style="margin-top:1rem;"></div>
+    <section class="stats row g-3" id="statsSection">
+      <!-- Stats cards will be injected here via JS -->
+    </section>
+    <section class="search-filter" style="margin:2rem 0;">
+      <form id="searchForm" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label for="searchText" class="form-label">Search Products</label>
+          <input id="searchText" type="text" class="form-control" placeholder="Type keywords...">
+        </div>
+        <div class="col-md-3">
+          <label for="searchType" class="form-label">Filter by Type</label>
+          <select id="searchType" class="form-control">
+            <option value="">All Types</option>
+            <option value="Trading">Trading</option>
+            <option value="Communities">Communities</option>
+            <option value="Courses">Courses</option>
+            <option value="Software">Software</option>
+            <option value="Services">Services</option>
+            <option value="Templates">Templates</option>
+            <option value="ChatRoom">Chat Rooms</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="button w-100">Search</button>
+        </div>
+      </form>
+    </section>
+    <section class="product-grid" id="productGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1rem;">
+      <!-- Product cards will be injected here via JS -->
     </section>
   </main>
 
   <script src="auth.js"></script>
   <script>
-  (() => {
-    const meta = document.querySelector('meta[name="steb-api-base"]');
-    const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-
-    const $ = sel => document.querySelector(sel);
-
-    function renderProducts(list) {
-      const grid = $('#productsGrid');
-      grid.innerHTML = '';
-      if (list.length === 0) {
-        grid.textContent = 'No products found.';
-        return;
+    (function(){
+      const API_BASE='/api';
+      // Load statistics
+      function loadStats() {
+        fetch(\`\${API_BASE}/stats\`)
+          .then(res => res.json())
+          .then(data => {
+            const statsSection = document.getElementById('statsSection');
+            statsSection.innerHTML = '';
+            const createCard = (title,value) => {
+              const div=document.createElement('div');
+              div.className='col-md-4';
+              div.innerHTML=\`<div class="card"><h3>\${value}</h3><p>\${title}</p></div>\`;
+              statsSection.appendChild(div);
+            };
+            createCard('Products',data.totalProducts);
+            createCard('Stores',data.totalStores);
+            createCard('Orders',data.totalOrders||0);
+          });
       }
-      list.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.flex = '1 0 calc(33.333% - 1rem)';
-        card.style.minWidth = '260px';
-        const title = document.createElement('h4');
-        title.textContent = p.title;
-        const desc = document.createElement('p');
-        desc.textContent = p.description.substring(0, 80) + (p.description.length > 80 ? '…' : '');
-        const price = document.createElement('strong');
-        price.textContent = '$' + Number(p.price).toFixed(2);
-        card.appendChild(title);
-        card.appendChild(desc);
-        card.appendChild(price);
-        grid.appendChild(card);
-      });
-    }
 
-    async function loadStats() {
-      try {
-        const data = await fetch(\`\${API_BASE}/stats\`).then(res => res.json());
-        $('#statProducts').textContent = data.totalProducts || 0;
-        $('#statStores').textContent = data.totalStores || 0;
-        $('#statOrders').textContent = data.totalOrders || 0;
-      } catch (e) {
-        console.error('Error loading stats', e);
+      // Load all products
+      let allProducts=[];
+      function loadProducts() {
+        fetch(\`\${API_BASE}/products\`)
+          .then(res => res.json())
+          .then(data => {
+            allProducts = data.products || [];
+            renderProducts(allProducts);
+          });
       }
-    }
 
-    async function fetchProducts() {
-      const type = $('#typeFilter').value;
-      const sort = $('#sortFilter').value;
-      const query = $('#searchInput').value.trim();
-      let url = \`\${API_BASE}/products\`;
-      const params = new URLSearchParams();
-      if (type && type !== 'All') params.append('type', type);
-      if (sort) params.append('sort', sort);
-      if (query) {
-        url = \`\${API_BASE}/products/search\`;
-        params.append('query', query);
-        params.append('sort', sort);
+      // Render product cards
+      function renderProducts(products) {
+        const container=document.getElementById('productGrid');
+        container.innerHTML='';
+        products.forEach(p => {
+          const card=document.createElement('div');
+          card.className='card';
+          const imgSrc = p.image && p.image.trim()? (p.image.match(/^https?:\/\//)? p.image : \`https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/\${p.image}\`) : 'https://via.placeholder.com/400x200?text=Product';
+          card.innerHTML=\`
+            <img src="\${imgSrc}" alt="\${p.title}" style="width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;">
+            <div style="padding:0.5rem;">
+              <h4 style="margin-bottom:0.5rem;">\${p.title}</h4>
+              <p style="margin:0.2rem 0;"><strong>Type:</strong> \${p.type}</p>
+              <p style="margin:0.2rem 0;"><strong>Price:</strong> $\${Number(p.price||0).toFixed(2)}</p>
+              <a href="product.html?id=\${p.id}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
+            </div>
+          \`;
+          container.appendChild(card);
+        });
       }
-      const full = params.toString() ? url + '?' + params.toString() : url;
-      try {
-        const products = await fetch(full).then(r => r.json());
-        renderProducts(products || []);
-      } catch (e) {
-        console.error('Error fetching products', e);
-      }
-    }
 
-    $('#typeFilter').addEventListener('change', fetchProducts);
-    $('#sortFilter').addEventListener('change', fetchProducts);
-    $('#searchBtn').addEventListener('click', fetchProducts);
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+      // Search filter
+      document.getElementById('searchForm').addEventListener('submit', function(e){
         e.preventDefault();
-        fetchProducts();
-      }
-    });
+        const text = document.getElementById('searchText').value.toLowerCase();
+        const type = document.getElementById('searchType').value;
+        const filtered = allProducts.filter(p=>{
+          const matchText = p.title.toLowerCase().includes(text) || (p.description||'').toLowerCase().includes(text);
+          const matchType = !type || p.type === type;
+          return matchText && matchType;
+        });
+        renderProducts(filtered);
+      });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadStats();
-      fetchProducts();
-    });
-  })();
+      // Load everything on DOMContentLoaded
+      document.addEventListener('DOMContentLoaded', function(){
+        loadStats();
+        loadProducts();
+        if(localStorage.getItem('loggedIn')==='true'){
+          document.getElementById('navLinks').style.display='';
+        }
+      });
+    })();
   </script>
 </body>
 </html>
