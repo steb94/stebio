@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steb.io – Marketplace</title>
-  <meta name="steb-api-base" content="/api">
-  <link rel="stylesheet" href="style.css">
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header id="top-nav">
@@ -26,18 +26,23 @@
   </header>
 
   <main class="container" style="padding:2rem 0;">
+    <!-- Hero section -->
     <section class="hero">
       <h1>Discover Your Next Digital Product</h1>
       <p>A powerful marketplace to buy and sell courses, communities, chat rooms, software, services, and more.</p>
     </section>
+
+    <!-- Stats section -->
     <section class="stats row g-3" id="statsSection">
-      <!-- Stats cards will be injected here via JS -->
+      <!-- Cards for total products, stores, orders will be injected here -->
     </section>
+
+    <!-- Search & filter -->
     <section class="search-filter" style="margin:2rem 0;">
       <form id="searchForm" class="row g-2 align-items-end">
         <div class="col-md-4">
           <label for="searchText" class="form-label">Search Products</label>
-          <input id="searchText" type="text" class="form-control" placeholder="Type keywords...">
+          <input id="searchText" type="text" class="form-control" placeholder="Type keywords..." />
         </div>
         <div class="col-md-3">
           <label for="searchType" class="form-label">Filter by Type</label>
@@ -57,36 +62,44 @@
         </div>
       </form>
     </section>
-    <section class="product-grid" id="productGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1rem;">
-      <!-- Product cards will be injected here via JS -->
+
+    <!-- Product grid -->
+    <section class="product-grid" id="productGrid"
+             style="display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:1rem;">
+      <!-- Product cards will be inserted here -->
     </section>
   </main>
 
   <script src="auth.js"></script>
   <script>
-    (function(){
-      const API_BASE='/api';
-      // Load statistics
+    (function() {
+      const API_BASE = '/api';
+      let allProducts = [];
+
+      // Load stats
       function loadStats() {
         fetch(\`\${API_BASE}/stats\`)
           .then(res => res.json())
           .then(data => {
             const statsSection = document.getElementById('statsSection');
             statsSection.innerHTML = '';
-            const createCard = (title,value) => {
-              const div=document.createElement('div');
-              div.className='col-md-4';
-              div.innerHTML=\`<div class="card"><h3>\${value}</h3><p>\${title}</p></div>\`;
-              statsSection.appendChild(div);
+            const makeCard = (title, value) => {
+              const col = document.createElement('div');
+              col.className = 'col-md-4';
+              col.innerHTML = \`
+                <div class="card">
+                  <h3>\${value}</h3>
+                  <p>\${title}</p>
+                </div>\`;
+              statsSection.appendChild(col);
             };
-            createCard('Products',data.totalProducts);
-            createCard('Stores',data.totalStores);
-            createCard('Orders',data.totalOrders||0);
+            makeCard('Products', data.totalProducts || 0);
+            makeCard('Stores', data.totalStores || 0);
+            makeCard('Orders', data.totalOrders || 0);
           });
       }
 
       // Load all products
-      let allProducts=[];
       function loadProducts() {
         fetch(\`\${API_BASE}/products\`)
           .then(res => res.json())
@@ -98,44 +111,51 @@
 
       // Render product cards
       function renderProducts(products) {
-        const container=document.getElementById('productGrid');
-        container.innerHTML='';
-        products.forEach(p => {
-          const card=document.createElement('div');
-          card.className='card';
-          const imgSrc = p.image && p.image.trim()? (p.image.match(/^https?:\/\//)? p.image : \`https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/\${p.image}\`) : 'https://via.placeholder.com/400x200?text=Product';
-          card.innerHTML=\`
-            <img src="\${imgSrc}" alt="\${p.title}" style="width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;">
+        const grid = document.getElementById('productGrid');
+        grid.innerHTML = '';
+        products.forEach(prod => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          const imgSrc = prod.image && prod.image.trim()
+            ? (prod.image.match(/^https?:\/\//) ? prod.image
+               : \`https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/\${prod.image}\`)
+            : 'https://via.placeholder.com/400x200?text=Product';
+          card.innerHTML = \`
+            <img src="\${imgSrc}"
+                 alt="\${prod.title}"
+                 style="width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;">
             <div style="padding:0.5rem;">
-              <h4 style="margin-bottom:0.5rem;">\${p.title}</h4>
-              <p style="margin:0.2rem 0;"><strong>Type:</strong> \${p.type}</p>
-              <p style="margin:0.2rem 0;"><strong>Price:</strong> $\${Number(p.price||0).toFixed(2)}</p>
-              <a href="product.html?id=\${p.id}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
+              <h4 style="margin-bottom:0.5rem;">\${prod.title}</h4>
+              <p style="margin:0.2rem 0;"><strong>Type:</strong> \${prod.type}</p>
+              <p style="margin:0.2rem 0;"><strong>Price:</strong> $\${Number(prod.price || 0).toFixed(2)}</p>
+              <a href="product.html?id=\${prod.id}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
             </div>
           \`;
-          container.appendChild(card);
+          grid.appendChild(card);
         });
       }
 
-      // Search filter
-      document.getElementById('searchForm').addEventListener('submit', function(e){
+      // Filter products
+      document.getElementById('searchForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const text = document.getElementById('searchText').value.toLowerCase();
         const type = document.getElementById('searchType').value;
-        const filtered = allProducts.filter(p=>{
-          const matchText = p.title.toLowerCase().includes(text) || (p.description||'').toLowerCase().includes(text);
+        const filtered = allProducts.filter(p => {
+          const matchText =
+            p.title.toLowerCase().includes(text) ||
+            (p.description || '').toLowerCase().includes(text);
           const matchType = !type || p.type === type;
           return matchText && matchType;
         });
         renderProducts(filtered);
       });
 
-      // Load everything on DOMContentLoaded
-      document.addEventListener('DOMContentLoaded', function(){
+      // Initial load
+      document.addEventListener('DOMContentLoaded', () => {
         loadStats();
         loadProducts();
-        if(localStorage.getItem('loggedIn')==='true'){
-          document.getElementById('navLinks').style.display='';
+        if (localStorage.getItem('loggedIn') === 'true') {
+          document.getElementById('navLinks').style.display = '';
         }
       });
     })();
