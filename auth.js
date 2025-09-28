@@ -2,27 +2,22 @@
 // Updates navigation links based on login state and handles logout.
 
 (function () {
+  const navLinks = document.getElementById('navLinks');
   const authLinks = document.querySelector('.auth-links');
   if (!authLinks) return;
 
   function renderAuthLinks() {
     const loggedIn = localStorage.getItem('loggedIn') === 'true';
     if (loggedIn) {
+      if (navLinks) navLinks.style.display = '';
       authLinks.innerHTML = '<a href="#" id="logoutBtn">Logout</a>';
-      const btn = document.getElementById('logoutBtn');
-      btn.addEventListener('click', function (e) {
+      document.getElementById('logoutBtn').addEventListener('click', function (e) {
         e.preventDefault();
-        // Clear all stored auth data
-        localStorage.removeItem('loggedIn');
-        localStorage.removeItem('username');
-        localStorage.removeItem('password');
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('storeId');
-        // Return to home page
+        localStorage.clear();
         window.location.href = 'index.html';
       });
     } else {
+      if (navLinks) navLinks.style.display = 'none';
       authLinks.innerHTML = '<a href="login.html">Sign in</a>';
     }
   }
