@@ -40,6 +40,9 @@
       <p style="margin-top:0.5rem;font-size:0.9rem;">
         Don't have an account? <a href="signup.html">Sign up here</a>
       </p>
+      <p style="font-size:0.9rem;">
+        <a href="forgot-password.html">Forgot your password?</a>
+      </p>
     </form>
   </main>
 
@@ -51,7 +54,6 @@
         e.preventDefault();
         const identifier = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
-        if (!identifier || !password) return;
         try {
           const res = await fetch(`${API_BASE}/users/login`, {
             method: 'POST',
