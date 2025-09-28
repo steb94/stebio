@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Add Product - Steb.io</title>
-  <!-- API base for calls to the back‑end -->
   <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,10 +13,13 @@
     <div class="brand">STEB</div>
     <nav>
       <a href="index.html">Home</a>
-      <a href="create-store.html">Create Store</a>
-      <a href="create-product.html" class="active">Add Product</a>
-      <a href="dashboard.html">Dashboard</a>
+      <span id="navLinks" style="display:none;">
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html" class="active">Add Product</a>
+        <a href="dashboard.html">Dashboard</a>
+      </span>
       <a href="support.html">Support</a>
+      <a href="reviews.html">Reviews</a>
     </nav>
     <div class="auth-links"></div>
   </div>
@@ -47,6 +49,7 @@
         <option value="Software">Software</option>
         <option value="Services">Services</option>
         <option value="Templates">Templates</option>
+        <option value="ChatRoom">Chat Room</option>
       </select>
     </div>
     <div class="stack">
@@ -64,7 +67,6 @@
 <script src="auth.js"></script>
 <script>
 (() => {
-  // Redirect if not logged in or no store exists
   if (localStorage.getItem('loggedIn') !== 'true') {
     window.location.href = 'login.html';
     return;
@@ -74,14 +76,12 @@
     window.location.href = 'create-store.html';
     return;
   }
-  const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\/+$/, '') : '/api';
-  // Handle product creation
+  const API_BASE = '/api';
   document.getElementById('productForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('productTitle').value.trim();
     const description = document.getElementById('productDescription').value.trim();
-    let image = document.getElementById('productImage').value.trim();
+    const image = document.getElementById('productImage').value.trim();
     const type = document.getElementById('productType').value;
     const price = parseFloat(document.getElementById('productPrice').value) || 0;
     const supplyRaw = document.getElementById('productSupply').value;
@@ -90,13 +90,12 @@
       alert('Title and type are required.');
       return;
     }
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(\`\${API_BASE}/products\`, {
+      const res = await fetch(`${API_BASE}/products`, {
         method:'POST',
         headers: {
           'Content-Type':'application/json',
-          'Authorization': token ? \`Bearer \${token}\` : ''
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({ storeId, title, description, image, type, price, supply })
       });
