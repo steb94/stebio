@@ -3,22 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- The API base is used by the dashboard script to call back‑end endpoints -->
   <meta name="steb-api-base" content="/api" />
   <title>Steb.io Seller Dashboard</title>
-  <!-- Google Font (Inter) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <!-- Bootstrap CSS (optional, but used for icons) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
 </head>
 <body>
 <div class="d-flex min-vh-100">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="logo">Steb<span>.io</span></div>
     <nav>
-      <a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="dashboard.html" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
       <a href="create-product.html"><i class="bi bi-box-seam"></i> Products</a>
       <a href="chatroom.html"><i class="bi bi-people"></i> Community</a>
       <a href="reviews.html"><i class="bi bi-chat-square-text"></i> Reviews</a>
@@ -26,31 +21,13 @@
       <a href="settings.html"><i class="bi bi-gear"></i> Settings</a>
     </nav>
     <div class="logout">
-      <a href="#" onclick="localStorage.removeItem('loggedIn'); window.location.reload();"><i class="bi bi-box-arrow-right"></i> Logout</a>
+      <a href="#" onclick="localStorage.removeItem('loggedIn'); window.location.href='login.html';">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
     </div>
   </aside>
-  <!-- Main Content -->
   <main class="with-sidebar w-100">
-    <!-- Login Section -->
-    <div id="loginSection" class="d-flex justify-content-center align-items-center w-100" style="min-height:80vh;">
-      <div class="card p-4 shadow-sm" style="max-width: 400px; width:100%;">
-        <h3 class="mb-3 text-center">Sign In to Your Dashboard</h3>
-        <form id="dashLoginForm">
-          <div class="mb-3">
-            <label for="dashUsername" class="form-label">Username</label>
-            <input id="dashUsername" type="text" class="form-control" required />
-          </div>
-          <div class="mb-3">
-            <label for="dashPassword" class="form-label">Password</label>
-            <input id="dashPassword" type="password" class="form-control" required />
-          </div>
-          <button type="submit" class="btn btn-primary w-100">Sign In</button>
-        </form>
-      </div>
-    </div>
-    <!-- Dashboard Section -->
-    <div id="dashboardContent" style="display:none;">
-      <!-- Header -->
+    <div id="dashboardContent">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Seller Dashboard</h2>
         <div class="user-info">
@@ -58,28 +35,26 @@
           <i class="bi bi-person-circle"></i>
         </div>
       </div>
-      <!-- Stat Overview Cards -->
       <div class="row g-3 mb-4">
         <div class="col-md-4">
-          <div class="stats-card revenue card">
+          <div class="stats-card card">
             <div id="dashTotalSales" class="stat-value">0</div>
             <h3>Total Sales ($)</h3>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stats-card orders card">
+          <div class="stats-card card">
             <div id="dashTotalOrders" class="stat-value">0</div>
             <h3>Total Orders</h3>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stats-card products card">
+          <div class="stats-card card">
             <div id="dashTotalProducts" class="stat-value">0</div>
             <h3>Total Products</h3>
           </div>
         </div>
       </div>
-      <!-- Orders Table -->
       <div class="card mb-4 shadow-sm">
         <div class="card-body">
           <h5 class="card-title mb-3">Your Orders</h5>
@@ -99,7 +74,6 @@
           </div>
         </div>
       </div>
-      <!-- Chat Rooms and Create Chat Room -->
       <div class="row mb-4">
         <div class="col-md-6 mb-3 mb-md-0">
           <div class="card h-100 shadow-sm">
@@ -128,7 +102,6 @@
           </div>
         </div>
       </div>
-      <!-- Posts and Create Post -->
       <div class="row">
         <div class="col-md-6 mb-3 mb-md-0">
           <div class="card h-100 shadow-sm">
@@ -164,9 +137,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 (() => {
-  const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
-
+  const API_BASE = '/api';
   const $ = sel => document.querySelector(sel);
 
   async function api(path, opts = {}) {
@@ -175,8 +146,8 @@
     if (!(opts.body instanceof FormData)) {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     }
-    if (token) headers['Authorization'] = \`Bearer \${token}\`;
-    const res = await fetch(\`\${API_BASE}\${path}\`, { credentials:'include', ...opts, headers });
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
     const ct = res.headers.get('content-type') || '';
     let data = null;
     if (ct.includes('application/json')) {
@@ -185,22 +156,9 @@
       data = await res.text().catch(() => null);
     }
     if (!res.ok) {
-      const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
-      const err = new Error(msg);
-      err.status = res.status;
-      err.data = data;
-      throw err;
+      throw new Error((data && (data.error || data.message)) || res.statusText || 'Request failed');
     }
     return data;
-  }
-
-  function showLogin() {
-    $('#loginSection').style.display = 'flex';
-    $('#dashboardContent').style.display = 'none';
-  }
-  function showDashboard() {
-    $('#loginSection').style.display = 'none';
-    $('#dashboardContent').style.display = 'block';
   }
 
   async function loadSummary() {
@@ -209,39 +167,33 @@
       $('#dashTotalSales').textContent = Number(data.totalSales || 0).toFixed(2);
       $('#dashTotalOrders').textContent = data.totalOrders || 0;
       $('#dashTotalProducts').textContent = data.totalProducts || 0;
-    } catch (e) {
-      console.error('Error loading summary', e);
-    }
+    } catch (e) { console.error('Error loading summary', e); }
   }
-
   async function loadOrders() {
     const tbody = $('#ordersTable tbody');
     tbody.innerHTML = '';
     try {
-      const orders = await api('/orders');
+      const orders = await api('/orders'); // orders not implemented, returns empty list
       (orders || []).forEach(o => {
         const tr = document.createElement('tr');
-        tr.innerHTML = \`
-          <td>\${o.id}</td>
-          <td>\${o.productName}</td>
-          <td>\${o.buyerName}</td>
-          <td>\${Number(o.price).toFixed(2)}</td>
-          <td>\${o.status}</td>
-        \`;
+        tr.innerHTML = `
+          <td>${o.id}</td>
+          <td>${o.productName}</td>
+          <td>${o.buyerName}</td>
+          <td>${Number(o.price).toFixed(2)}</td>
+          <td>${o.status}</td>
+        `;
         tbody.appendChild(tr);
       });
-    } catch (e) {
-      console.error('Error loading orders', e);
-    }
+    } catch (e) { console.error('Error loading orders', e); }
   }
-
   async function loadPosts() {
     const storeId = localStorage.getItem('storeId');
     const list = $('#postList');
     list.innerHTML = '';
     if (!storeId) return;
     try {
-      const data = await api(\`/posts/\${encodeURIComponent(storeId)}\`);
+      const data = await api(`/posts/${encodeURIComponent(storeId)}`);
       const posts = (data && data.posts) || [];
       if (posts.length === 0) {
         list.innerHTML = '<div class="card p-2">No posts yet.</div>';
@@ -265,34 +217,31 @@
             wrapper.appendChild(link);
             div.appendChild(wrapper);
           }
-          const date = new Date(p.timestamp || p.createdAt);
+          const date = new Date(p.createdAt);
           const small = document.createElement('small');
           small.textContent = date.toLocaleString();
           div.appendChild(small);
           list.appendChild(div);
         });
       }
-    } catch (e) {
-      console.error('Error loading posts', e);
-    }
+    } catch (e) { console.error('Error loading posts', e); }
   }
-
   async function loadChatRooms() {
     const storeId = localStorage.getItem('storeId');
     const list = $('#chatRoomList');
     list.innerHTML = '';
     if (!storeId) return;
     try {
-      const data = await api(\`/chatrooms/\${encodeURIComponent(storeId)}\`);
+      const data = await api(`/chatrooms/${encodeURIComponent(storeId)}`);
       (data.rooms || []).forEach(room => {
         const card = document.createElement('div');
         card.className = 'card p-2';
         const title = document.createElement('div');
-        title.innerHTML = \`<strong>\${room.title}</strong> – \${room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free'}\`;
+        title.innerHTML = `<strong>${room.title}</strong> – ${room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free'}`;
         const linkWrapper = document.createElement('div');
         linkWrapper.style.marginTop = '.5rem';
         const link = document.createElement('a');
-        link.href = \`chatroom.html?id=\${room.id}\`;
+        link.href = `chatroom.html?id=${room.id}`;
         link.className = 'btn btn-outline-primary btn-sm';
         link.textContent = 'Open';
         linkWrapper.appendChild(link);
@@ -300,21 +249,14 @@
         card.appendChild(linkWrapper);
         list.appendChild(card);
       });
-    } catch (e) {
-      console.error('Error loading chat rooms', e);
-    }
+    } catch (e) { console.error('Error loading chat rooms', e); }
   }
-
   function initDashboard() {
     const loggedIn = localStorage.getItem('loggedIn') === 'true';
     const role = localStorage.getItem('role');
-    if (!loggedIn) {
-      showLogin();
-      return;
-    }
-    if (role !== 'seller') {
-      alert('You are not a seller. Please sign in with a seller account.');
-      showLogin();
+    if (!loggedIn || role !== 'seller') {
+      alert('Please log in as a seller');
+      window.location.href = 'login.html';
       return;
     }
     const storeId = localStorage.getItem('storeId');
@@ -323,60 +265,36 @@
       window.location.href = 'create-store.html';
       return;
     }
-    showDashboard();
-    const username = localStorage.getItem('username') || 'Seller';
-    $('#usernameDisplay').textContent = 'Welcome, ' + username;
+    $('#usernameDisplay').textContent = 'Welcome, ' + (localStorage.getItem('username') || 'Seller');
     loadSummary();
     loadOrders();
     loadChatRooms();
     loadPosts();
   }
-
-  document.getElementById('dashLoginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const user = $('#dashUsername').value.trim();
-    const pass = $('#dashPassword').value.trim();
-    const storedUser = localStorage.getItem('username');
-    const storedPass = localStorage.getItem('password');
-    if (user === storedUser && pass === storedPass) {
-      localStorage.setItem('loggedIn', 'true');
-      initDashboard();
-    } else {
-      alert('Invalid username or password.');
-    }
-  });
-
   document.getElementById('postForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const content = $('#postText').value.trim();
     const mediaUrl = $('#postMedia').value.trim();
     const storeId = localStorage.getItem('storeId');
-    const token = localStorage.getItem('token');
     if (!content && !mediaUrl) {
       alert('Post content or media URL is required.');
       return;
     }
     try {
-      await api(\`/posts/\${encodeURIComponent(storeId)}\`, {
+      await api(`/posts/${encodeURIComponent(storeId)}`, {
         method:'POST',
-        headers: {
-          'Authorization': token ? \`Bearer \${token}\` : ''
-        },
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ content, mediaUrl })
       });
       $('#postForm').reset();
       loadPosts();
-    } catch (err) {
-      console.error('Error creating post', err);
-    }
+    } catch (err) { console.error('Error creating post', err); }
   });
-
   document.getElementById('chatRoomForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = $('#chatRoomTitle').value.trim();
     const price = parseFloat($('#chatRoomPrice').value) || 0;
     const storeId = localStorage.getItem('storeId');
-    const token = localStorage.getItem('token');
     if (!title) {
       alert('Please enter a chat room title.');
       return;
@@ -384,21 +302,14 @@
     try {
       await api('/chatrooms', {
         method:'POST',
-        headers: {
-          'Authorization': token ? \`Bearer \${token}\` : ''
-        },
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
         body: JSON.stringify({ storeId, title, price })
       });
       $('#chatRoomForm').reset();
       loadChatRooms();
-    } catch (err) {
-      console.error('Error creating chat room', err);
-    }
+    } catch (err) { console.error('Error creating chat room', err); }
   });
-
-  document.addEventListener('DOMContentLoaded', () => {
-    initDashboard();
-  });
+  document.addEventListener('DOMContentLoaded', initDashboard);
 })();
 </script>
 </body>
