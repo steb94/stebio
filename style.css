@@ -1,15 +1,19 @@
-/* Global variables for the Steb.io theme */
+/* Global variables for the updated Steb.io theme */
 :root {
-  --bg: #FCF6F5;
-  --fg: #141212;
-  --card: #ffffff;
-  --border: #eaeaea;
-  --accent: #FA4616;
-  --accent-dark: #d53d14;
-  --secondary: #f8f9fa;
-  --muted: #6c757d;
+  /* Backgrounds and text */
+  --bg: #F5F7FA;         /* light off‑white for page background */
+  --fg: #102542;         /* deep blue for primary text */
+  --card: #FFFFFF;       /* white cards for content panels */
+  --border: #DDE6ED;     /* soft grey borders and dividers */
+  --secondary: #EAF4FC;  /* pale blue for secondary panels or highlights */
+  --muted: #65758E;      /* muted blue-grey for placeholder text and metadata */
+
+  /* Accents */
+  --accent: #0073E6;     /* vibrant blue for buttons, links, and highlights */
+  --accent-dark: #005BB5;/* darker shade for hover states and active elements */
 }
 
+/* Reset and base styles */
 body, html {
   margin: 0;
   padding: 0;
@@ -27,7 +31,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Utility container for consistent width */
+/* Container layout */
 .container {
   max-width: 960px;
   margin: 0 auto;
@@ -48,11 +52,11 @@ a:hover {
 #top-nav .brand {
   font-size: 1.5rem;
   font-weight: 600;
+  color: var(--accent-dark);
 }
 #top-nav nav a {
   margin-right: 1rem;
   color: var(--fg);
-  text-decoration: none;
 }
 #top-nav nav a:last-child {
   margin-right: 0;
@@ -131,7 +135,7 @@ form .stack select {
 
 /* Dashboard sidebar (dark) */
 aside.sidebar {
-  background-color: #141212;
+  background-color: #102542; /* dark blue for sidebar */
   color: #fff;
   width: 240px;
   min-height: 100vh;
@@ -154,8 +158,6 @@ aside.sidebar nav a {
   align-items: center;
   padding: 0.75rem 1rem;
   color: #ffffffcc;
-  text-decoration: none;
-  font-size: 0.95rem;
 }
 aside.sidebar nav a:hover {
   background-color: rgba(255,255,255,0.1);
@@ -210,7 +212,7 @@ table tr:hover {
 /* Notifications */
 .notice {
   border: 1px dashed var(--accent);
-  background-color: #fff4f4;
+  background-color: #eaf4fc;
   color: var(--accent);
   padding: 0.75rem 1rem;
   border-radius: 8px;
