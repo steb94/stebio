@@ -13,12 +13,17 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
+        <span id="navLinks" style="display:none;">
+          <a href="create-store.html">Create Store</a>
+          <a href="create-product.html">Add Product</a>
+          <a href="dashboard.html">Dashboard</a>
+        </span>
         <a href="support.html">Support</a>
+        <a href="reviews.html">Reviews</a>
       </nav>
-      <div class="auth-links"></div>
+      <div class="auth-links">
+        <a href="login.html">Sign in</a>
+      </div>
     </div>
   </header>
 
@@ -26,12 +31,12 @@
     <h2>Create an Account</h2>
     <form id="signupForm" style="max-width:400px;margin-top:1rem;">
       <div class="stack">
-        <label for="signupUsername">Username</label>
-        <input id="signupUsername" type="text" placeholder="Choose a username" required />
+        <label for="signupEmail">Email</label>
+        <input id="signupEmail" type="email" placeholder="Your email" required />
       </div>
       <div class="stack">
-        <label for="signupEmail">Email</label>
-        <input id="signupEmail" type="email" placeholder="Your email address" required />
+        <label for="signupUsername">Username</label>
+        <input id="signupUsername" type="text" placeholder="Choose a username" required />
       </div>
       <div class="stack">
         <label for="signupPassword">Password</label>
@@ -46,52 +51,37 @@
         Already have an account? <a href="login.html">Sign in here</a>
       </p>
     </form>
-    <p id="signupMessage" style="margin-top:1rem;color:var(--accent);"></p>
   </main>
 
   <script src="auth.js"></script>
   <script>
     (function () {
-      const meta = document.querySelector('meta[name="steb-api-base"]');
-      const API_BASE = meta && meta.content ? meta.content.replace(/\\/+/g, '') : '/api';
+      const API_BASE = '/api';
+      if (localStorage.getItem('loggedIn') === 'true') {
+        document.getElementById('navLinks').style.display = '';
+      }
       document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const email = document.getElementById('signupEmail').value.trim();
         const username = document.getElementById('signupUsername').value.trim();
-        const email    = document.getElementById('signupEmail').value.trim();
         const password = document.getElementById('signupPassword').value;
-        const confirm  = document.getElementById('signupConfirm').value;
-        const msgEl    = document.getElementById('signupMessage');
-        msgEl.textContent = '';
-        if (!username || !email || !password) return;
+        const confirm = document.getElementById('signupConfirm').value;
         if (password !== confirm) {
-          msgEl.textContent = 'Passwords do not match.';
+          alert('Passwords do not match');
           return;
         }
         try {
-          const res = await fetch(\`\${API_BASE}/users/register\`, {
-            method:'POST',
-            headers:{ 'Content-Type':'application/json' },
-            body: JSON.stringify({ username, email, password })
+          const res = await fetch(`${API_BASE}/users/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, username, password })
           });
           const data = await res.json();
           if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
-          // If the API sends back a message to check email, show it
-          if (data.message) {
-            msgEl.textContent = data.message;
-            msgEl.style.color = 'green';
-          }
-          // Store token (optional) and redirect if desired
-          if (data.token) {
-            localStorage.setItem('loggedIn', 'true');
-            localStorage.setItem('username', username);
-            localStorage.setItem('token', data.token);
-            if (data.role) localStorage.setItem('role', data.role);
-            if (data.storeId) localStorage.setItem('storeId', data.storeId);
-            // redirect new sellers to create-store.html
-            window.location.href = 'create-store.html';
-          }
+          alert('Registration successful! Please check your email for a verification link.');
+          window.location.href = 'login.html';
         } catch (err) {
-          msgEl.textContent = err.message || 'Error registering account';
+          alert(err.message || 'Error registering account');
         }
       });
     })();
