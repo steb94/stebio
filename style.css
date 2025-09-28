@@ -120,7 +120,7 @@ form .stack select {
   color: #fff;
 }
 
-/* Card styling for summary or content boxes */
+/* Card styling */
 .card {
   background-color: var(--card);
   border: 1px solid var(--border);
