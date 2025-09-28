@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat Room - Steb.io</title>
-  <!-- API base for back-end calls -->
   <meta name="steb-api-base" content="/api">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -14,10 +13,13 @@
     <div class="brand">STEB</div>
     <nav>
       <a href="index.html">Home</a>
-      <a href="create-store.html">Create Store</a>
-      <a href="create-product.html">Add Product</a>
-      <a href="dashboard.html">Dashboard</a>
+      <span id="navLinks" style="display:none;">
+        <a href="create-store.html">Create Store</a>
+        <a href="create-product.html">Add Product</a>
+        <a href="dashboard.html">Dashboard</a>
+      </span>
       <a href="support.html">Support</a>
+      <a href="reviews.html">Reviews</a>
     </nav>
     <div class="auth-links"></div>
   </div>
@@ -25,29 +27,25 @@
 
 <main class="container" style="padding:1.25rem 0 2rem;">
   <h2 id="chatRoomTitle">Loading chat room…</h2>
-  <!-- Status and notice messages -->
   <div id="status" class="notice" style="display:none;"></div>
-  <!-- Prompt to sign in for guests -->
   <div id="joinBox" class="stack" style="margin-top:1rem;display:none;">
     <p>You must sign in to participate in this chat room.</p>
     <a class="button" href="login.html">Sign In</a>
   </div>
-  <!-- Chat section for authenticated users -->
   <section id="chatSection" class="stack" style="display:none;margin-top:1rem;">
     <div id="chatMessages" class="messages" aria-live="polite"></div>
     <form id="chatForm" class="stack" autocomplete="off">
       <input id="chatInput" type="text" placeholder="Type your message..." maxlength="2000" />
       <button id="sendBtn" type="submit" class="button">Send</button>
     </form>
-    <footer id="chatHint">Press Enter to send &bull; Messages refresh every 5s</footer>
+    <footer id="chatHint">Press Enter to send • Messages refresh every 5s</footer>
   </section>
 </main>
 
 <script src="auth.js"></script>
 <script>
 (() => {
-  const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
+  const API_BASE = '/api';
   const $ = (sel) => document.querySelector(sel);
   const chatTitle = $('#chatRoomTitle');
   const statusBox = $('#status');
@@ -58,13 +56,18 @@
   const chatInput = $('#chatInput');
   const username = localStorage.getItem('username');
   const token = localStorage.getItem('token');
-  // If not logged in, prompt to sign in
+
+  if (localStorage.getItem('loggedIn') === 'true') {
+    document.getElementById('navLinks').style.display = '';
+  }
+
   if (!username || !token || localStorage.getItem('loggedIn') !== 'true') {
     joinBox.style.display = 'block';
     chatSection.style.display = 'none';
     chatTitle.textContent = 'Chat Room';
     return;
   }
+
   function showStatus(msg, isError = false) {
     statusBox.classList.toggle('error', !!isError);
     statusBox.style.display = 'block';
@@ -74,21 +77,22 @@
     statusBox.style.display = 'none';
     statusBox.textContent = '';
   }
+
   async function api(path, opts = {}) {
     const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
     if (!(opts.body instanceof FormData)) {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     }
-    if (token) headers['Authorization'] = \`Bearer \${token}\`;
-    const res = await fetch(\`\${API_BASE}\${path}\`, Object.assign({}, opts, { headers }));
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${path}`, Object.assign({}, opts, { headers }));
     const ct = res.headers.get('content-type') || '';
     const data = ct.includes('application/json') ? await res.json() : await res.text();
     if (!res.ok) {
-      const msg = (data && (data.error || data.message)) || res.statusText || 'Request failed';
-      throw new Error(msg);
+      throw new Error((data && (data.error || data.message)) || res.statusText || 'Request failed');
     }
     return data;
   }
+
   let roomId = null;
   let refreshInterval = null;
   async function loadChatRoom() {
@@ -100,7 +104,7 @@
     }
     roomId = id;
     try {
-      const data = await api(\`/chatrooms/\${encodeURIComponent(id)}\`);
+      const data = await api(`/chatrooms/${encodeURIComponent(id)}`);
       chatTitle.textContent = data.title || 'Chat Room';
       hideStatus();
       chatSection.style.display = '';
@@ -113,7 +117,7 @@
   async function loadMessages() {
     if (!roomId) return;
     try {
-      const data = await api(\`/chatrooms/\${encodeURIComponent(roomId)}/messages\`);
+      const data = await api(`/chatrooms/${encodeURIComponent(roomId)}/messages`);
       const messages = (data && data.messages) || [];
       chatMessages.innerHTML = '';
       messages.forEach(m => {
@@ -125,7 +129,7 @@
         strong.textContent = m.username;
         const time = document.createElement('small');
         time.style.marginLeft = '.5rem';
-        time.textContent = new Date(m.createdAt || m.timestamp).toLocaleString();
+        time.textContent = new Date(m.createdAt).toLocaleString();
         metaDiv.appendChild(strong);
         metaDiv.appendChild(time);
         const bodyDiv = document.createElement('div');
@@ -145,7 +149,7 @@
     const msg = chatInput.value.trim();
     if (!msg || !roomId) return;
     try {
-      await api(\`/chatrooms/\${encodeURIComponent(roomId)}/message\`, {
+      await api(`/chatrooms/${encodeURIComponent(roomId)}/message`, {
         method: 'POST',
         body: JSON.stringify({ username, message: msg })
       });
@@ -155,7 +159,7 @@
       showStatus(err.message || 'Error sending message.', true);
     }
   });
-  // Initialize chat room
+
   loadChatRoom();
 })();
 </script>
