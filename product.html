@@ -4,29 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Product Details - Steb.io</title>
-  <!-- Link to your shared stylesheet -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Top navigation -->
   <header id="top-nav">
     <div class="container nav">
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
+        <span id="navLinks" style="display:none;">
+          <a href="create-store.html">Create Store</a>
+          <a href="create-product.html">Add Product</a>
+          <a href="dashboard.html">Dashboard</a>
+        </span>
         <a href="support.html">Support</a>
+        <a href="reviews.html">Reviews</a>
       </nav>
       <div class="auth-links"></div>
     </div>
   </header>
 
-  <!-- Product details will be injected here -->
   <main id="productContainer" class="container" style="padding:2rem 0;"></main>
 
-  <!-- Chat UI for logged‑in users -->
   <section id="productChat" class="container" style="display:none; margin-top:1rem;">
     <h3>Product Chat</h3>
     <div id="chatMessages" class="messages"></div>
@@ -36,16 +35,13 @@
     </form>
   </section>
 
-  <!-- List of store chat rooms -->
   <section id="storeChatRooms" class="container" style="margin-top:1rem;">
     <h3>Store Chat Rooms</h3>
     <div id="storeChatRoomsList"></div>
   </section>
 
-  <!-- Shared auth utilities -->
   <script src="auth.js"></script>
   <script>
-    // Determine API base based on environment
     const API_BASE = window.location.hostname.includes('onrender.com')
       ? 'https://stebio.onrender.com/api'
       : '/api';
@@ -58,22 +54,19 @@
         container.innerHTML = '<p>Missing product ID.</p>';
         return;
       }
-      fetch(\`\${API_BASE}/products/\${id}\`)
+      fetch(`${API_BASE}/products/${id}`)
         .then(res => {
           if (!res.ok) throw new Error('Product not found');
           return res.json();
         })
         .then(p => {
-          // Build product card
           const wrapper = document.createElement('div');
           wrapper.style.display = 'flex';
           wrapper.style.flexWrap = 'wrap';
           wrapper.style.gap = '2rem';
-
-          // Image (fallback to placeholder)
           const img = document.createElement('img');
           let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-          if (imgSrc && !/^https?:\\/\\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
+          if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
             imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
           }
           img.src = imgSrc || 'https://via.placeholder.com/500x280?text=Product';
@@ -81,22 +74,21 @@
           img.style.width = '100%';
           img.style.maxWidth = '500px';
           img.style.borderRadius = '8px';
-
-          // Product info
           const info = document.createElement('div');
           info.style.flex = '1';
-          const priceLine = p.type === 'ChatRoom' ? \`Chat Room Fee: $\${p.price.toFixed(2)}\` : \`Price: $\${p.price.toFixed(2)}\`;
-          info.innerHTML = \`
-            <h2>\${p.title}</h2>
-            <p><strong>Type:</strong> \${p.type}</p>
-            <p style="font-size:1.5rem; margin:1rem 0;">\${priceLine}</p>
-            <p>\${p.description}</p>
-            <p><a href="store.html?id=\${p.storeId}" style="color:\${getComputedStyle(document.documentElement).getPropertyValue('--accent')}">View Seller Store</a></p>
-          \`;
-
+          const priceLine = p.type === 'ChatRoom'
+            ? `Chat Room Fee: $${p.price.toFixed(2)}`
+            : `Price: $${p.price.toFixed(2)}`;
+          info.innerHTML = `
+            <h2>${p.title}</h2>
+            <p><strong>Type:</strong> ${p.type}</p>
+            <p style="font-size:1.5rem; margin:1rem 0;">${priceLine}</p>
+            <p>${p.description}</p>
+            <p><a href="store.html?id=${p.storeId}" style="color:${getComputedStyle(document.documentElement).getPropertyValue('--accent')}">View Seller Store</a></p>
+          `;
           if (p.type === 'ChatRoom') {
             const joinLink = document.createElement('a');
-            joinLink.href = \`chatroom.html?id=\${p.chatRoomId}\`;
+            joinLink.href = `chatroom.html?id=${p.chatRoomId}`;
             joinLink.className = 'button';
             joinLink.textContent = p.price > 0 ? 'Purchase and Join Chat' : 'Enter Chat Room';
             info.appendChild(joinLink);
@@ -107,12 +99,9 @@
             buyBtn.addEventListener('click', () => alert('Order functionality not implemented yet.'));
             info.appendChild(buyBtn);
           }
-
           wrapper.appendChild(img);
           wrapper.appendChild(info);
           container.appendChild(wrapper);
-
-          // After rendering the product, load chat and chat rooms
           loadChat(id);
           loadStoreChatRooms(p.storeId);
         })
@@ -124,7 +113,7 @@
     function loadChat(productId) {
       const username = localStorage.getItem('username');
       if (!username) return;
-      fetch(\`\${API_BASE}/chat/\${productId}/messages?username=\${encodeURIComponent(username)}\`)
+      fetch(`${API_BASE}/chat/${productId}/messages?username=${encodeURIComponent(username)}`)
         .then(res => {
           if (res.status === 403 || res.status === 401) {
             document.getElementById('productChat').style.display = 'none';
@@ -141,7 +130,7 @@
           messages.forEach(m => {
             const div = document.createElement('div');
             div.className = 'msg';
-            div.innerHTML = \`<div class="meta"><strong>\${m.username}</strong><small>\${new Date(m.createdAt || m.timestamp).toLocaleString()}</small></div><div class="body">\${m.message}</div>\`;
+            div.innerHTML = `<div class="meta"><strong>${m.username}</strong><small>${new Date(m.createdAt || m.timestamp).toLocaleString()}</small></div><div class="body">${m.message}</div>`;
             chatMessages.appendChild(div);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -150,7 +139,7 @@
     }
 
     function loadStoreChatRooms(storeId) {
-      fetch(\`\${API_BASE}/chatrooms/\${storeId}\`)
+      fetch(`${API_BASE}/chatrooms/${storeId}`)
         .then(res => res.json())
         .then(data => {
           const list = document.getElementById('storeChatRoomsList');
@@ -158,9 +147,9 @@
           (data.rooms || []).forEach(room => {
             const div = document.createElement('div');
             div.className = 'card p-2';
-            div.innerHTML = \`
-              <strong>\${room.title}</strong> – \${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
-              <a href="chatroom.html?id=\${room.id}" class="button ghost" style="margin-left:1rem;">\${room.price > 0 ? 'Join' : 'Enter'}</a>\`;
+            div.innerHTML = `
+              <strong>${room.title}</strong> – ${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
+              <a href="chatroom.html?id=${room.id}" class="button ghost" style="margin-left:1rem;">${room.price > 0 ? 'Join' : 'Enter'}</a>`;
             list.appendChild(div);
           });
         })
@@ -174,7 +163,7 @@
       const username = localStorage.getItem('username');
       const message = document.getElementById('chatInput').value.trim();
       if (!message) return;
-      fetch(\`\${API_BASE}/chat/\${productId}/message\`, {
+      fetch(`${API_BASE}/chat/${productId}/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, message })
@@ -190,7 +179,12 @@
         .catch(err => console.error('Error sending message', err));
     });
 
-    document.addEventListener('DOMContentLoaded', loadProduct);
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('loggedIn') === 'true') {
+        document.getElementById('navLinks').style.display = '';
+      }
+      loadProduct();
+    });
   </script>
 </body>
 </html>
