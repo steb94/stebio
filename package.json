@@ -1,16 +1,17 @@
 {
   "name": "stebio",
   "version": "1.0.0",
-  "description": "Steb.io modern marketplace built with Node/Express and static frontend.",
+  "description": "Steb.io - digital product marketplace",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": "dependencies": {
-  "bcryptjs": "^2.4.3",
-  "body-parser": "^1.20.2",
-  "cors": "^2.8.5",
-  "express": "^4.18.2",
-  "jsonwebtoken": "^9.0.0",
-  "nodemailer": "^6.9.3"
+  "dependencies": {
+    "express": "^4.18.2",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^6.9.3"
+  }
 }
