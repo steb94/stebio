@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Create Store - Steb.io</title>
-  <!-- API base for calls to the back‑end -->
   <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,10 +13,13 @@
     <div class="brand">STEB</div>
     <nav>
       <a href="index.html">Home</a>
-      <a href="create-store.html" class="active">Create Store</a>
-      <a href="create-product.html">Add Product</a>
-      <a href="dashboard.html">Dashboard</a>
+      <span id="navLinks" style="display:none;">
+        <a href="create-store.html" class="active">Create Store</a>
+        <a href="create-product.html">Add Product</a>
+        <a href="dashboard.html">Dashboard</a>
+      </span>
       <a href="support.html">Support</a>
+      <a href="reviews.html">Reviews</a>
     </nav>
     <div class="auth-links"></div>
   </div>
@@ -37,14 +39,11 @@
 <script src="auth.js"></script>
 <script>
 (() => {
-  // Redirect users who are not signed in to the login page
   if (localStorage.getItem('loggedIn') !== 'true') {
     window.location.href = 'login.html';
     return;
   }
-  const meta = document.querySelector('meta[name="steb-api-base"]');
-  const API_BASE = meta && meta.content ? meta.content.replace(/\\/+$/, '') : '/api';
-  // Handle store creation
+  const API_BASE = '/api';
   document.getElementById('storeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('storeName').value.trim();
@@ -52,19 +51,17 @@
       alert('Please enter a store name.');
       return;
     }
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(\`\${API_BASE}/stores\`, {
+      const res = await fetch(`${API_BASE}/stores`, {
         method:'POST',
         headers: {
           'Content-Type':'application/json',
-          'Authorization': token ? \`Bearer \${token}\` : ''
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
         body: JSON.stringify({ name })
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to create store');
-      // Save storeId and redirect to product creation page
       localStorage.setItem('storeId', data.id);
       window.location.href = 'create-product.html';
     } catch(err) {
