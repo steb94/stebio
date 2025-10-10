@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In - Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
+  <title>Sign In – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
+  <meta name="steb-api-base" content="/api" />
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">Steb.io</div>
+      <div class="brand">STEB.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <span id="navLinks" style="display:none;">
-          <a href="create-store.html">Create Store</a>
-          <a href="create-product.html">Add Product</a>
-          <a href="dashboard.html">Dashboard</a>
-        </span>
-        <a href="support.html">Support</a>
-        <a href="reviews.html">Reviews</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="login.html" id="navLogin" class="active">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
+        <a href="#" id="navLogout">Logout</a>
       </nav>
-      <div class="auth-links"></div>
     </div>
   </header>
 
@@ -37,23 +36,19 @@
         <input id="loginPassword" type="password" placeholder="Your password" required />
       </div>
       <button type="submit" class="button" style="width:100%;">Sign In</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">
-        Don't have an account? <a href="signup.html">Sign up here</a>
-      </p>
-      <p style="font-size:0.9rem;">
-        <a href="forgot-password.html">Forgot your password?</a>
-      </p>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">Don't have an account? <a href="signup.html">Sign up here</a></p>
+      <p style="font-size:0.9rem;"><a href="forgot-password.html">Forgot your password?</a></p>
     </form>
   </main>
 
   <script src="auth.js"></script>
   <script>
-    (function () {
-      const API_BASE = '/api';
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const identifier = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
+        const password   = document.getElementById('loginPassword').value.trim();
         try {
           const res = await fetch(`${API_BASE}/users/login`, {
             method: 'POST',
@@ -61,15 +56,16 @@
             body: JSON.stringify({ identifier, password })
           });
           const data = await res.json();
-          if (!res.ok || data.error) throw new Error(data.error || 'Login failed');
+          if (!res.ok) throw new Error(data.error || 'Login failed');
           localStorage.setItem('loggedIn', 'true');
           localStorage.setItem('username', data.username);
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.role);
           if (data.storeId) localStorage.setItem('storeId', data.storeId);
-          window.location.href = 'dashboard.html';
+          alert('Login successful');
+          window.location.href = 'index.html';
         } catch (err) {
-          alert(err.message || 'Invalid credentials');
+          alert(err.message);
         }
       });
     })();
