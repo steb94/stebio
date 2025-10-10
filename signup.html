@@ -3,27 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign Up - Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
+  <title>Sign Up – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
+  <meta name="steb-api-base" content="/api" />
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">Steb.io</div>
+      <div class="brand">STEB.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <span id="navLinks" style="display:none;">
-          <a href="create-store.html">Create Store</a>
-          <a href="create-product.html">Add Product</a>
-          <a href="dashboard.html">Dashboard</a>
-        </span>
-        <a href="support.html">Support</a>
-        <a href="reviews.html">Reviews</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup" class="active">Sign up</a>
+        <a href="#" id="navLogout">Logout</a>
       </nav>
-      <div class="auth-links">
-        <a href="login.html">Sign in</a>
-      </div>
     </div>
   </header>
 
@@ -39,49 +36,52 @@
         <input id="signupUsername" type="text" placeholder="Choose a username" required />
       </div>
       <div class="stack">
-        <label for="signupPassword">Password</label>
-        <input id="signupPassword" type="password" placeholder="Create a password" required />
+        <label for="signupPass">Password</label>
+        <input id="signupPass" type="password" placeholder="Create a password" required />
       </div>
       <div class="stack">
         <label for="signupConfirm">Confirm Password</label>
         <input id="signupConfirm" type="password" placeholder="Confirm your password" required />
       </div>
+      <div class="stack">
+        <label for="signupRole">Account Type</label>
+        <select id="signupRole">
+          <option value="buyer">Buyer</option>
+          <option value="seller">Seller</option>
+        </select>
+      </div>
       <button type="submit" class="button" style="width:100%;">Sign Up</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">
-        Already have an account? <a href="login.html">Sign in here</a>
-      </p>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">Already have an account? <a href="login.html">Sign in here</a></p>
     </form>
   </main>
 
   <script src="auth.js"></script>
   <script>
-    (function () {
-      const API_BASE = '/api';
-      if (localStorage.getItem('loggedIn') === 'true') {
-        document.getElementById('navLinks').style.display = '';
-      }
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('signupEmail').value.trim();
+        const email  = document.getElementById('signupEmail').value.trim();
         const username = document.getElementById('signupUsername').value.trim();
-        const password = document.getElementById('signupPassword').value;
+        const pass   = document.getElementById('signupPass').value;
         const confirm = document.getElementById('signupConfirm').value;
-        if (password !== confirm) {
+        const role   = document.getElementById('signupRole').value;
+        if (pass !== confirm) {
           alert('Passwords do not match');
           return;
         }
         try {
-          const res = await fetch(`${API_BASE}/users/register`, {
+          const res = await fetch(`${API_BASE}/users/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, username, password })
+            body: JSON.stringify({ email, username, password: pass, role })
           });
           const data = await res.json();
-          if (!res.ok || data.error) throw new Error(data.error || 'Registration failed');
-          alert('Registration successful! Please check your email for a verification link.');
+          if (!res.ok) throw new Error(data.error || 'Signup failed');
+          alert(data.message || 'Signup successful! Please verify your email and then log in.');
           window.location.href = 'login.html';
         } catch (err) {
-          alert(err.message || 'Error registering account');
+          alert(err.message);
         }
       });
     })();
