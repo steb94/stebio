@@ -2,112 +2,323 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Add Product - Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Product – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Pass API base to script via data attribute -->
+  <meta name="steb-api-base" content="/api" />
 </head>
 <body>
-<header id="top-nav">
-  <div class="container nav">
-    <div class="brand">STEB</div>
-    <nav>
-      <a href="index.html">Home</a>
-      <span id="navLinks" style="display:none;">
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">STEB.io</div>
+      <nav>
+        <a href="index.html">Home</a>
         <a href="create-store.html">Create Store</a>
+        <!-- mark this link as active for styling -->
         <a href="create-product.html" class="active">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
-      </span>
-      <a href="support.html">Support</a>
-      <a href="reviews.html">Reviews</a>
-    </nav>
-    <div class="auth-links"></div>
-  </div>
-</header>
+        <a href="dashboard.html">Seller Dashboard</a>
+        <a href="my-products.html">My Products</a>
+      </nav>
+      <div class="auth-links"></div>
+    </div>
+  </header>
 
-<main class="container" style="padding:2rem 0;">
-  <h2>Add a New Product</h2>
-  <form id="productForm" style="max-width:600px;margin-top:1rem;">
-    <div class="stack">
-      <label for="productTitle">Title</label>
-      <input id="productTitle" type="text" placeholder="Product title" required />
-    </div>
-    <div class="stack">
-      <label for="productDescription">Description</label>
-      <textarea id="productDescription" rows="4" placeholder="Product description"></textarea>
-    </div>
-    <div class="stack">
-      <label for="productImage">Image URL</label>
-      <input id="productImage" type="url" placeholder="Image URL (optional)" />
-    </div>
-    <div class="stack">
-      <label for="productType">Type</label>
-      <select id="productType">
-        <option value="Trading">Trading</option>
-        <option value="Communities">Communities</option>
-        <option value="Courses">Courses</option>
-        <option value="Software">Software</option>
-        <option value="Services">Services</option>
-        <option value="Templates">Templates</option>
-        <option value="ChatRoom">Chat Room</option>
-      </select>
-    </div>
-    <div class="stack">
-      <label for="productPrice">Price ($)</label>
-      <input id="productPrice" type="number" step="0.01" min="0" placeholder="Price" required />
-    </div>
-    <div class="stack">
-      <label for="productSupply">Max Supply</label>
-      <input id="productSupply" type="number" min="0" placeholder="Max supply (optional)" />
-    </div>
-    <button type="submit" class="button">Create Product</button>
-  </form>
-</main>
+  <main class="container" style="padding:2rem 0; max-width:900px;">
+    <h2>Add a New Product</h2>
+    <form id="productForm">
+      <!-- Basic details -->
+      <div class="stack">
+        <label for="productTitle">Product Name (max 30)</label>
+        <input id="productTitle" type="text" maxlength="30" required />
+      </div>
+      <div class="stack">
+        <label for="productHeadline">Headline (max 80)</label>
+        <input id="productHeadline" type="text" maxlength="80" />
+      </div>
+      <div class="stack">
+        <label for="productDescription">Description (max 1500)</label>
+        <textarea id="productDescription" rows="4" maxlength="1500"></textarea>
+      </div>
+      <div class="stack">
+        <label for="productImage">Image URL (optional)</label>
+        <input id="productImage" type="url" />
+      </div>
 
-<script src="auth.js"></script>
-<script>
-(() => {
-  if (localStorage.getItem('loggedIn') !== 'true') {
-    window.location.href = 'login.html';
-    return;
-  }
-  const storeId = localStorage.getItem('storeId');
-  if (!storeId) {
-    window.location.href = 'create-store.html';
-    return;
-  }
-  const API_BASE = '/api';
-  document.getElementById('productForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('productTitle').value.trim();
-    const description = document.getElementById('productDescription').value.trim();
-    const image = document.getElementById('productImage').value.trim();
-    const type = document.getElementById('productType').value;
-    const price = parseFloat(document.getElementById('productPrice').value) || 0;
-    const supplyRaw = document.getElementById('productSupply').value;
-    const supply = supplyRaw ? parseInt(supplyRaw) : null;
-    if (!title || !type) {
-      alert('Title and type are required.');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/products`, {
-        method:'POST',
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify({ storeId, title, description, image, type, price, supply })
+      <!-- Type & category -->
+      <div class="stack">
+        <label for="productType">Product Type</label>
+        <select id="productType">
+          <option value="coaching">Coaching and courses</option>
+          <option value="events">Events</option>
+          <option value="newsletter">Newsletter</option>
+          <option value="paid_group" selected>Paid group</option>
+          <option value="physical">Physical products</option>
+          <option value="software">Software</option>
+        </select>
+      </div>
+      <div class="stack">
+        <label for="productCategory">Category</label>
+        <select id="productCategory">
+          <option value="reselling">Reselling</option>
+          <option value="sales">Sales</option>
+          <option value="social_media">Social media</option>
+          <option value="software">Software</option>
+          <option value="spirituality">Spirituality</option>
+          <option value="sports_betting" selected>Sports betting</option>
+          <option value="trading">Trading</option>
+          <option value="travel">Travel</option>
+          <option value="vas">VAs</option>
+          <option value="video_games">Video games</option>
+        </select>
+      </div>
+
+      <!-- Pricing tiers -->
+      <fieldset class="stack">
+        <legend>Pricing</legend>
+        <div id="pricingContainer"></div>
+        <button type="button" id="addPricingBtn">Add pricing tier</button>
+      </fieldset>
+
+      <!-- Payment methods -->
+      <fieldset class="stack">
+        <legend>Payment Methods</legend>
+        <label><input type="checkbox" id="payCard" checked /> Card</label>
+        <label><input type="checkbox" id="payAch" checked /> ACH</label>
+        <label><input type="checkbox" id="payBalance" checked /> Platform balance</label>
+        <label><input type="checkbox" id="payPaypal" /> PayPal</label>
+        <label><input type="checkbox" id="payFinancing" /> Financing</label>
+        <label><input type="checkbox" id="payCrypto" /> Crypto</label>
+      </fieldset>
+
+      <!-- Features -->
+      <fieldset class="stack">
+        <legend>Features</legend>
+        <ul id="featureList"></ul>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="featureInput" maxlength="140" placeholder="Describe a benefit (max 140 chars)" />
+          <button type="button" id="addFeatureBtn">Add feature</button>
+        </div>
+      </fieldset>
+
+      <!-- FAQs -->
+      <fieldset class="stack">
+        <legend>FAQs</legend>
+        <div id="faqList"></div>
+        <div class="stack">
+          <input type="text" id="faqQuestion" maxlength="255" placeholder="Question" />
+          <textarea id="faqAnswer" rows="2" maxlength="255" placeholder="Answer"></textarea>
+          <button type="button" id="addFaqBtn">Add FAQ</button>
+        </div>
+      </fieldset>
+
+      <!-- Advanced settings -->
+      <fieldset class="stack">
+        <legend>Advanced Options</legend>
+        <label><input type="checkbox" id="enableAffiliate" /> Enable affiliate rate</label>
+        <div id="affiliateRateContainer" style="display:none; margin-left:1rem;">
+          <label>Rate (%): <input type="number" id="affiliateRate" min="0" max="100" value="0" /></label>
+        </div>
+        <label><input type="checkbox" id="redirectAfter" /> Redirect after checkout</label>
+        <label><input type="checkbox" id="redirectBefore" /> Redirect before checkout</label>
+        <label><input type="checkbox" id="popupPromotion" /> Enable popup promotion</label>
+        <label><input type="checkbox" id="memberCount" /> Show member count</label>
+      </fieldset>
+
+      <button type="submit" class="button">Create Product</button>
+    </form>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    // Build a pricing tier row
+    function createPricingRow(data = { mode: 'one_time', price: 0, interval: 'month' }) {
+      const div = document.createElement('div');
+      div.className = 'pricing-row';
+      div.style.marginBottom = '1rem';
+      div.innerHTML = `
+        <label>Mode:
+          <select class="pricing-mode">
+            <option value="free" \${data.mode === 'free' ? 'selected' : ''}>Free</option>
+            <option value="one_time" \${data.mode === 'one_time' ? 'selected' : ''}>One-time</option>
+            <option value="recurring" \${data.mode === 'recurring' ? 'selected' : ''}>Recurring</option>
+          </select>
+        </label>
+        <label>Price (USD):
+          <input type="number" class="pricing-price" min="0" value="\${data.price}" \${data.mode === 'free' ? 'disabled' : ''}/>
+        </label>
+        <label class="interval-container" style="\${data.mode === 'recurring' ? '' : 'display:none;'}">Interval:
+          <select class="pricing-interval">
+            <option value="month" \${data.interval === 'month' ? 'selected' : ''}>Monthly</option>
+            <option value="quarter" \${data.interval === 'quarter' ? 'selected' : ''}>Quarterly</option>
+            <option value="year" \${data.interval === 'year' ? 'selected' : ''}>Yearly</option>
+          </select>
+        </label>
+        <button type="button" class="removePricingBtn">Remove</button>
+      `;
+      const modeSelect = div.querySelector('.pricing-mode');
+      const priceInput = div.querySelector('.pricing-price');
+      const intervalContainer = div.querySelector('.interval-container');
+
+      modeSelect.addEventListener('change', () => {
+        const mode = modeSelect.value;
+        if (mode === 'free') {
+          priceInput.disabled = true;
+          intervalContainer.style.display = 'none';
+        } else if (mode === 'one_time') {
+          priceInput.disabled = false;
+          intervalContainer.style.display = 'none';
+        } else {
+          priceInput.disabled = false;
+          intervalContainer.style.display = '';
+        }
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to create product');
-      alert('Product created successfully!');
-      document.getElementById('productForm').reset();
-    } catch(err) {
-      alert(err.message || 'Error creating product');
+      // Remove row
+      div.querySelector('.removePricingBtn').addEventListener('click', () => {
+        div.remove();
+      });
+      return div;
     }
-  });
-})();
-</script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const pricingContainer = document.getElementById('pricingContainer');
+      const addPricingBtn = document.getElementById('addPricingBtn');
+      // start with a single tier
+      pricingContainer.appendChild(createPricingRow());
+      addPricingBtn.addEventListener('click', () => {
+        pricingContainer.appendChild(createPricingRow());
+      });
+
+      // features
+      const featureList = document.getElementById('featureList');
+      document.getElementById('addFeatureBtn').addEventListener('click', () => {
+        const input = document.getElementById('featureInput');
+        const value = input.value.trim();
+        if (value) {
+          const li = document.createElement('li');
+          li.textContent = value;
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'x';
+          removeBtn.style.marginLeft = '0.5rem';
+          removeBtn.addEventListener('click', () => li.remove());
+          li.appendChild(removeBtn);
+          featureList.appendChild(li);
+          input.value = '';
+        }
+      });
+
+      // FAQs
+      const faqList = document.getElementById('faqList');
+      document.getElementById('addFaqBtn').addEventListener('click', () => {
+        const q = document.getElementById('faqQuestion').value.trim();
+        const a = document.getElementById('faqAnswer').value.trim();
+        if (q && a) {
+          const div = document.createElement('div');
+          div.className = 'faq-item';
+          div.innerHTML = \`<strong>\${q}</strong><p>\${a}</p>\`;
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove';
+          removeBtn.addEventListener('click', () => div.remove());
+          div.appendChild(removeBtn);
+          faqList.appendChild(div);
+          document.getElementById('faqQuestion').value = '';
+          document.getElementById('faqAnswer').value = '';
+        }
+      });
+
+      // affiliate rate toggle
+      const enableAffiliate = document.getElementById('enableAffiliate');
+      const affiliateRateContainer = document.getElementById('affiliateRateContainer');
+      enableAffiliate.addEventListener('change', () => {
+        affiliateRateContainer.style.display = enableAffiliate.checked ? '' : 'none';
+      });
+
+      // submit form
+      document.getElementById('productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // gather data
+        const title = document.getElementById('productTitle').value.trim();
+        const headline = document.getElementById('productHeadline').value.trim();
+        const description = document.getElementById('productDescription').value.trim();
+        const imageUrl = document.getElementById('productImage').value.trim();
+        const type = document.getElementById('productType').value;
+        const category = document.getElementById('productCategory').value;
+        // pricing
+        const tiers = [];
+        pricingContainer.querySelectorAll('.pricing-row').forEach(row => {
+          const mode = row.querySelector('.pricing-mode').value;
+          const price = parseFloat(row.querySelector('.pricing-price').value || 0);
+          const intervalEl = row.querySelector('.pricing-interval');
+          tiers.push({
+            mode,
+            price: mode === 'free' ? 0 : price,
+            interval: intervalEl ? intervalEl.value : null
+          });
+        });
+        // payment methods
+        const payments = {
+          card: document.getElementById('payCard').checked,
+          ach: document.getElementById('payAch').checked,
+          balance: document.getElementById('payBalance').checked,
+          paypal: document.getElementById('payPaypal').checked,
+          financing: document.getElementById('payFinancing').checked,
+          crypto: document.getElementById('payCrypto').checked
+        };
+        // features
+        const features = [];
+        featureList.querySelectorAll('li').forEach(li => {
+          // firstChild is the text node before the remove button
+          features.push(li.childNodes[0].textContent.trim());
+        });
+        // FAQs
+        const faqs = [];
+        faqList.querySelectorAll('.faq-item').forEach(div => {
+          const q = div.querySelector('strong').textContent;
+          const a = div.querySelector('p').textContent;
+          faqs.push({ question: q, answer: a });
+        });
+        // advanced
+        const advanced = {
+          affiliateEnabled: enableAffiliate.checked,
+          affiliateRate: enableAffiliate.checked ? parseFloat(document.getElementById('affiliateRate').value || 0) : null,
+          redirectAfter: document.getElementById('redirectAfter').checked,
+          redirectBefore: document.getElementById('redirectBefore').checked,
+          popupPromotion: document.getElementById('popupPromotion').checked,
+          memberCount: document.getElementById('memberCount').checked
+        };
+        const payload = {
+          title,
+          headline,
+          description,
+          imageUrl,
+          type,
+          category,
+          pricing: tiers,
+          payments,
+          features,
+          faqs,
+          advanced
+        };
+        // send to API
+        const apiBase = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+        try {
+          const res = await fetch(\`\${apiBase}/products\`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('Error creating product');
+          alert('Product created successfully');
+          // redirect to seller dashboard after creation
+          window.location.href = 'dashboard.html';
+        } catch (err) {
+          console.error(err);
+          alert('Failed to create product');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
