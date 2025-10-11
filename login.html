@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign In – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
+  <!--
+    The API base is relative by default.  If you deploy your back‑end
+    separately (e.g., on a different Render service), update this value
+    to the full API base URL (e.g. https://my‑api.onrender.com/api).
+  -->
   <meta name="steb-api-base" content="/api" />
 </head>
 <body>
@@ -44,6 +49,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
+      // Determine the API base from the meta tag, falling back to '/api'
       const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -55,17 +61,33 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier, password })
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Login failed');
+          // Inspect Content‑Type to safely parse JSON
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try {
+              data = await res.json();
+            } catch {
+              data = null;
+            }
+          } else {
+            // Consume non‑JSON body to avoid JSON.parse errors
+            await res.text();
+          }
+          // Handle errors
+          if (!res.ok || (data && data.error)) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Login failed');
+          }
+          // Persist auth details in localStorage
           localStorage.setItem('loggedIn', 'true');
-          localStorage.setItem('username', data.username);
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('role', data.role);
-          if (data.storeId) localStorage.setItem('storeId', data.storeId);
+          if (data && data.username) localStorage.setItem('username', data.username);
+          if (data && data.token)    localStorage.setItem('token', data.token);
+          if (data && data.role)     localStorage.setItem('role', data.role);
+          if (data && data.storeId)  localStorage.setItem('storeId', data.storeId);
           alert('Login successful');
           window.location.href = 'index.html';
         } catch (err) {
-          alert(err.message);
+          alert(err.message || 'Login failed');
         }
       });
     })();
