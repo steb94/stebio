@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
+  <!--
+    The API base is relative by default.  If you deploy your back‑end
+    separately (e.g., on a different Render service), update this value
+    to the full API base URL (e.g. https://my‑api.onrender.com/api).
+  -->
   <meta name="steb-api-base" content="/api" />
 </head>
 <body>
@@ -58,30 +63,50 @@
   <script src="auth.js"></script>
   <script>
     (function() {
+      // Determine the API base from the meta tag, falling back to '/api'
       const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      // Handle form submission
       document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email  = document.getElementById('signupEmail').value.trim();
+        const email    = document.getElementById('signupEmail').value.trim();
         const username = document.getElementById('signupUsername').value.trim();
-        const pass   = document.getElementById('signupPass').value;
-        const confirm = document.getElementById('signupConfirm').value;
-        const role   = document.getElementById('signupRole').value;
+        const pass     = document.getElementById('signupPass').value;
+        const confirm  = document.getElementById('signupConfirm').value;
+        const role     = document.getElementById('signupRole').value;
+        // Validate matching passwords
         if (pass !== confirm) {
           alert('Passwords do not match');
           return;
         }
         try {
+          // Send the request to the back‑end
           const res = await fetch(`${API_BASE}/users/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, username, password: pass, role })
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Signup failed');
-          alert(data.message || 'Signup successful! Please verify your email and then log in.');
+          // Inspect Content‑Type to safely parse JSON
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try {
+              data = await res.json();
+            } catch {
+              data = null;
+            }
+          } else {
+            // Consume non‑JSON body to avoid JSON.parse errors
+            await res.text();
+          }
+          // Handle non‑OK responses gracefully
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Signup failed');
+          }
+          // Success message and redirect
+          alert((data && data.message) || 'Signup successful! Please verify your email and then log in.');
           window.location.href = 'login.html';
         } catch (err) {
-          alert(err.message);
+          alert(err.message || 'Error signing up.');
         }
       });
     })();
