@@ -1,242 +1,191 @@
-/* Global variables for the updated Steb.io theme */
-:root {
-  /* Backgrounds and text */
-  --bg: #F5F7FA;         /* light off‑white for page background */
-  --fg: #102542;         /* deep blue for primary text */
-  --card: #FFFFFF;       /* white cards for content panels */
-  --border: #DDE6ED;     /* soft grey borders and dividers */
-  --secondary: #EAF4FC;  /* pale blue for secondary panels or highlights */
-  --muted: #65758E;      /* muted blue-grey for placeholder text and metadata */
-
-  /* Accents */
-  --accent: #0073E6;     /* vibrant blue for buttons, links, and highlights */
-  --accent-dark: #005BB5;/* darker shade for hover states and active elements */
-}
-
-/* Reset and base styles */
-body, html {
+/* Global styles for Steb.io marketplace */
+body {
   margin: 0;
-  padding: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg);
-  color: var(--fg);
-  line-height: 1.5;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-
-/* Container layout */
+/* Container to center content and control width */
 .container {
-  max-width: 960px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
 /* Navigation bar */
 #top-nav {
-  background-color: var(--card);
-  border-bottom: 1px solid var(--border);
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
 #top-nav .nav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 0.75rem 0;
 }
+
 #top-nav .brand {
   font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--accent-dark);
+  font-weight: bold;
+  color: #007bff;
 }
+
+#top-nav nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 #top-nav nav a {
-  margin-right: 1rem;
-  color: var(--fg);
+  text-decoration: none;
+  color: #333;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  font-weight: 500;
 }
-#top-nav nav a:last-child {
-  margin-right: 0;
-}
+
 #top-nav nav a:hover,
 #top-nav nav a.active {
-  color: var(--accent);
+  background-color: #e7f1ff;
+  color: #0062cc;
 }
 
-/* Auth links (Sign in / Logout) */
-.auth-links a {
-  margin-left: 0.5rem;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  background-color: transparent;
+/* Hero section */
+.hero {
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
-.auth-links a:hover {
-  background-color: var(--accent);
-  color: #fff;
+.hero h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
-
-/* Form layout */
-form .stack {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-form .stack label {
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-}
-form .stack input,
-form .stack textarea,
-form .stack select {
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background-color: #fff;
-  color: var(--fg);
+.hero p {
+  font-size: 1.1rem;
+  color: #555;
 }
 
 /* Buttons */
 .button {
-  background-color: var(--accent);
+  display: inline-block;
+  background-color: #007bff;
   color: #fff;
+  padding: 0.5rem 1rem;
   border: none;
-  padding: 0.6rem 1.2rem;
   border-radius: 4px;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.2s;
 }
+
 .button:hover {
-  background-color: var(--accent-dark);
-}
-.button.ghost {
-  background-color: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-}
-.button.ghost:hover {
-  background-color: var(--accent);
-  color: #fff;
+  background-color: #0056b3;
 }
 
-/* Card styling */
+/* Forms */
+form {
+  display: block;
+}
+
+form .stack {
+  margin-bottom: 1rem;
+}
+
+form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+form input,
+form select,
+form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Cards for stats and products */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.col-md-4 {
+  flex: 1 1 calc(33.333% - 1rem);
+  min-width: 250px;
+}
+
 .card {
-  background-color: var(--card);
-  border: 1px solid var(--border);
+  background-color: #fff;
+  border: 1px solid #e2e2e2;
   border-radius: 8px;
-  padding: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Dashboard sidebar (dark) */
-aside.sidebar {
-  background-color: #102542; /* dark blue for sidebar */
-  color: #fff;
-  width: 240px;
-  min-height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  position: fixed;
-  left: 0;
-  top: 0;
-  padding-top: 1rem;
-}
-aside.sidebar .logo {
-  font-size: 1.5rem;
-  font-weight: 600;
-  padding: 0 1rem 1rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-aside.sidebar nav a {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  color: #ffffffcc;
-}
-aside.sidebar nav a:hover {
-  background-color: rgba(255,255,255,0.1);
-  color: #fff;
-}
-aside.sidebar nav a.active {
-  background-color: var(--accent);
-  color: #fff;
-  font-weight: 600;
-}
-aside.sidebar nav i {
-  margin-right: 0.5rem;
-}
-aside.sidebar .logout {
-  border-top: 1px solid rgba(255,255,255,0.1);
-  padding: 1rem;
-}
-aside.sidebar .logout a {
-  color: #ffffffcc;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-aside.sidebar .logout a:hover {
-  color: #fff;
 }
 
-/* Main content when sidebar present */
-main.with-sidebar {
-  margin-left: 240px;
-  padding: 1rem 2rem;
-}
-
-/* Tables */
-table {
+.card img {
   width: 100%;
-  border-collapse: collapse;
-}
-table th,
-table td {
-  padding: 0.6rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-}
-table th {
-  background-color: var(--secondary);
-  font-weight: 600;
-}
-table tr:hover {
-  background-color: var(--secondary);
+  height: 150px;
+  object-fit: cover;
 }
 
-/* Notifications */
-.notice {
-  border: 1px dashed var(--accent);
-  background-color: #eaf4fc;
-  color: var(--accent);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+.card h3,
+.card h4 {
+  margin: 0.5rem;
 }
 
-/* Messages in chat rooms */
-.messages {
-  max-height: 420px;
-  overflow-y: auto;
-  background-color: var(--secondary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.75rem;
-}
-.msg {
-  margin-bottom: 0.5rem;
-}
-.msg .meta {
+.card p {
+  margin: 0.5rem;
+  color: #555;
   font-size: 0.9rem;
-  color: var(--muted);
-  display: flex;
-  gap: 0.5rem;
 }
-.msg .body {
-  margin-top: 0.2rem;
-  white-space: pre-wrap;
+
+.card .button {
+  margin: 0.5rem;
+}
+
+/* Utility classes */
+.w-100 {
+  width: 100% !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Dynamic form rows for create product */
+.pricing-row select,
+.pricing-row input,
+.feature-row input,
+.faq-row input,
+.faq-row textarea {
+  flex: 1;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 1.2rem;
 }
