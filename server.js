@@ -1,394 +1,325 @@
-// server.js – updated backend with persistent storage and role-based user management
-
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
+const { v4: uuidv4 } = require('uuid');
+
+/**
+ * Simple REST API and WebSocket server for the Steb.io marketplace.
+ *
+ * This server implements user authentication, store and product management,
+ * chatroom creation, and a Socket.IO real‑time chat system.  Data is persisted
+ * in JSON files in the same directory (`users.json`, `stores.json`,
+ * `products.json`, `chatrooms.json`).  Authentication is token‑based: when a
+ * user logs in successfully, a random token is generated and returned to the
+ * client.  The client must include this token in the `Authorization` header
+ * when creating stores, products, or chatrooms.  Note: this is a demonstration
+ * implementation and does not use secure password hashing or JWT.  Do not
+ * deploy as‑is in production without adding proper security.
+ */
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
 
-// Utility functions for reading/writing JSON files
-const dataDir = __dirname;
-function loadData(filename) {
-  try {
-    const filePath = path.join(dataDir, filename);
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, '[]', 'utf8');
-    }
-    const content = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(content);
-  } catch (err) {
-    console.warn(`Failed to load ${filename}:`, err.message);
-    return [];
-  }
-}
-function saveData(filename, data) {
-  try {
-    const filePath = path.join(dataDir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (err) {
-    console.error(`Failed to save ${filename}:`, err.message);
-  }
-}
-
-// In-memory collections backed by JSON files on disk
-let users    = loadData('users.json');
-let stores   = loadData('stores.json');
-let products = loadData('products.json');
-let orders   = loadData('orders.json');
-
-// In-memory collections not yet persisted
-const chatRooms    = [];
-const posts        = [];
-const reviewsPages = [];
-
-// Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static(__dirname));
+app.use(express.json());
 
-// JWT helpers
-function generateToken(payload, expiresIn = '30m') {
-  const secret = process.env.JWT_SECRET || 'changeme';
-  return jwt.sign(payload, secret, { expiresIn });
-}
+// Paths for data files
+const USERS_FILE = path.join(__dirname, 'users.json');
+const STORES_FILE = path.join(__dirname, 'stores.json');
+const PRODUCTS_FILE = path.join(__dirname, 'products.json');
+const CHATROOMS_FILE = path.join(__dirname, 'chatrooms.json');
 
-// Basic email sender
-async function sendEmail(to, subject, html) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER || '',
-      pass: process.env.SMTP_PASS || ''
-    }
-  });
+// Utility functions to load/save JSON data
+function loadJson(file, fallback) {
+  if (!fs.existsSync(file)) return fallback;
   try {
-    await transporter.sendMail({
-      from: process.env.MAIL_FROM || 'Steb.io <no-reply@steb.io>',
-      to,
-      subject,
-      html
-    });
-    console.log('Sent email to', to);
+    const data = fs.readFileSync(file, 'utf-8');
+    return JSON.parse(data);
   } catch (err) {
-    console.warn('Failed to send email:', err.message);
+    console.error('Error loading', file, err);
+    return fallback;
   }
 }
 
-// Helpers
-function findUser(identifier) {
-  return users.find(u => u.email === identifier || u.username === identifier);
+function saveJson(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
+
+// In‑memory map of tokens to user IDs.  Populated on login.
+const tokens = {};
+
+// Helper: find user by token.  Returns user object or null.
 function authMiddleware(req, res, next) {
-  const token = (req.headers.authorization || '').replace(/Bearer\s+/i, '');
-  if (!token) return res.status(401).json({ error: 'Missing token' });
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'changeme');
-    req.userId = payload.userId;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid token' });
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const userId = tokens[token];
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
+  const users = loadJson(USERS_FILE, []);
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid user' });
+  }
+  req.user = user;
+  req.token = token;
+  next();
 }
 
-/* ========================= User routes ========================= */
+// Generate a simple random token
+function generateToken() {
+  return uuidv4();
+}
 
-// Sign up new user (buyer or seller)
-app.post('/api/users/signup', async (req, res) => {
+// POST /api/users/signup
+// body: { email, username, password, role }
+app.post('/api/users/signup', (req, res) => {
   const { email, username, password, role } = req.body;
-  if (!email || !username || !password) {
-    return res.status(400).json({ error: 'Missing fields' });
+  if (!email || !username || !password || !role) {
+    return res.status(400).json({ error: 'Missing required fields' });
   }
+  const users = loadJson(USERS_FILE, []);
+  // check duplicates
   if (users.some(u => u.email === email || u.username === username)) {
     return res.status(400).json({ error: 'User already exists' });
   }
-  const id = users.length + 1;
-  const passwordHash = await bcrypt.hash(password, 10);
   const user = {
-    id,
+    id: uuidv4(),
     email,
     username,
-    passwordHash,
-    role: role === 'buyer' ? 'buyer' : 'seller',
-    storeId: null,
-    verified: false,
-    resetToken: null,
-    resetExpires: null
+    password, // In production, hash passwords!
+    role,
+    createdAt: new Date().toISOString(),
   };
   users.push(user);
-  saveData('users.json', users);
-  const token = generateToken({ userId: user.id }, '30m');
-  const verifyUrl = `${process.env.BASE_URL || 'https://stebio.onrender.com'}/verify-email.html?token=${token}`;
-  const html = `<h2>Welcome to Steb.io!</h2><p>Please verify your email:</p><p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-  await sendEmail(email, 'Verify your Steb.io account', html);
-  res.json({ message: 'Registration successful. Please check your email to verify your account.' });
+  saveJson(USERS_FILE, users);
+  res.json({ message: 'Registration successful! Please verify your email and then log in.' });
 });
 
-// Email verification
-app.get('/api/users/verify/:token', (req, res) => {
-  const { token } = req.params;
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'changeme');
-    const user = users.find(u => u.id === payload.userId);
-    if (!user) throw new Error('User not found');
-    user.verified = true;
-    saveData('users.json', users);
-    res.send('Email verified successfully. You may now log in.');
-  } catch {
-    res.status(400).send('Verification link invalid or expired.');
-  }
-});
-
-// Login
-app.post('/api/users/login', async (req, res) => {
+// POST /api/users/login
+// body: { identifier, password }
+app.post('/api/users/login', (req, res) => {
   const { identifier, password } = req.body;
-  const user = findUser(identifier);
-  if (!user || !user.verified) {
-    return res.status(400).json({ error: 'User not found or not verified' });
+  if (!identifier || !password) {
+    return res.status(400).json({ error: 'Missing identifier or password' });
   }
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
-  const token = generateToken({ userId: user.id }, '7d');
-  res.json({ token, username: user.username, role: user.role, storeId: user.storeId });
+  const users = loadJson(USERS_FILE, []);
+  const user = users.find(u => (u.email === identifier || u.username === identifier) && u.password === password);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+  const token = generateToken();
+  tokens[token] = user.id;
+  const response = {
+    message: 'Login successful',
+    username: user.username,
+    role: user.role,
+    token,
+    storeId: null,
+  };
+  // If seller, include their store ID if exists
+  if (user.role === 'seller') {
+    const stores = loadJson(STORES_FILE, []);
+    const store = stores.find(s => s.ownerId === user.id);
+    if (store) response.storeId = store.id;
+  }
+  res.json(response);
 });
 
-// Forgot password
-app.post('/api/users/forgot', async (req, res) => {
-  const { email } = req.body;
-  const user = users.find(u => u.email === email);
-  // Always respond with success to avoid disclosing accounts
-  if (!user) return res.json({ message: 'If this email is registered, a reset link has been sent.' });
-  const token = generateToken({ userId: user.id }, '1h');
-  user.resetToken = token;
-  user.resetExpires = Date.now() + 3600000;
-  saveData('users.json', users);
-  const resetUrl = `${process.env.BASE_URL || 'https://stebio.onrender.com'}/reset-password.html?token=${token}`;
-  const html = `<p>You requested a password reset.</p><p>Click to reset: <a href="${resetUrl}">${resetUrl}</a></p>`;
-  await sendEmail(email, 'Reset your Steb.io password', html);
-  res.json({ message: 'If this email is registered, a reset link has been sent.' });
-});
-
-// Reset password
-app.post('/api/users/reset', async (req, res) => {
-  const { token, password } = req.body;
-  if (!password) return res.status(400).json({ error: 'Password required' });
-  let user = null;
-  users.forEach(u => {
-    if (u.resetToken === token && u.resetExpires > Date.now()) user = u;
-  });
-  if (!user) return res.status(400).json({ error: 'Invalid or expired reset token' });
-  user.passwordHash = await bcrypt.hash(password, 10);
-  user.resetToken = null;
-  user.resetExpires = null;
-  saveData('users.json', users);
-  res.json({ message: 'Password reset successful. You may now log in.' });
-});
-
-/* ========================= Store routes ========================= */
-
-// Create store (sellers only)
+// POST /api/stores
+// Create a new store for a seller
 app.post('/api/stores', authMiddleware, (req, res) => {
-  const { name } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name required' });
-  const user = users.find(u => u.id === req.userId);
-  if (!user || user.role !== 'seller') {
-    return res.status(400).json({ error: 'Only sellers can create stores' });
+  const user = req.user;
+  if (user.role !== 'seller') {
+    return res.status(403).json({ error: 'Only sellers can create stores' });
   }
-  if (user.storeId) return res.status(400).json({ error: 'Store already exists' });
-  const id    = stores.length + 1;
-  const store = { id, ownerId: user.id, name };
+  const { name, description, imageUrl } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Store name is required' });
+  }
+  const stores = loadJson(STORES_FILE, []);
+  // Ensure user doesn't already have a store
+  if (stores.some(s => s.ownerId === user.id)) {
+    return res.status(400).json({ error: 'Store already exists' });
+  }
+  const store = {
+    id: uuidv4(),
+    ownerId: user.id,
+    name,
+    description: description || '',
+    imageUrl: imageUrl || '',
+    createdAt: new Date().toISOString(),
+  };
   stores.push(store);
-  user.storeId = id;
-  saveData('stores.json', stores);
-  saveData('users.json', users);
+  saveJson(STORES_FILE, stores);
+  res.json({ message: 'Store created successfully', id: store.id });
+});
+
+// GET /api/stores/:id
+app.get('/api/stores/:id', (req, res) => {
+  const { id } = req.params;
+  const stores = loadJson(STORES_FILE, []);
+  const store = stores.find(s => s.id === id);
+  if (!store) {
+    return res.status(404).json({ error: 'Store not found' });
+  }
   res.json(store);
 });
 
-// Get store by ID
-app.get('/api/stores/:id', (req, res) => {
-  const storeId = Number(req.params.id);
-  const store   = stores.find(s => s.id === storeId);
-  if (!store) return res.status(404).json({ error: 'Store not found' });
-  const storeProducts = products.filter(p => p.storeId === storeId);
-  const storePosts    = posts.filter(p => p.storeId === storeId);
-  const storeRooms    = chatRooms.filter(r => r.storeId === storeId);
-  res.json({ store, products: storeProducts, posts: storePosts, chatRooms: storeRooms });
-});
-
-/* ========================= Product routes ========================= */
-
-// Get all products or by storeId
-app.get('/api/products', (req, res) => {
-  const { storeId } = req.query;
-  if (storeId) {
-    return res.json(products.filter(p => p.storeId === Number(storeId)));
-  }
-  res.json(products);
-});
-
-// Get single product
-app.get('/api/products/:id', (req, res) => {
-  const prod = products.find(p => p.id === Number(req.params.id));
-  if (!prod) return res.status(404).json({ error: 'Not found' });
-  res.json(prod);
-});
-
-// Create product (sellers only, must have store)
+// POST /api/products
+// Create a product for seller's store
 app.post('/api/products', authMiddleware, (req, res) => {
-  const user = users.find(u => u.id === req.userId);
-  if (!user || user.role !== 'seller' || !user.storeId) {
-    return res.status(400).json({ error: 'Must be a seller with a store' });
+  const user = req.user;
+  if (user.role !== 'seller') {
+    return res.status(403).json({ error: 'Only sellers can create products' });
+  }
+  const stores = loadJson(STORES_FILE, []);
+  const store = stores.find(s => s.ownerId === user.id);
+  if (!store) {
+    return res.status(400).json({ error: 'Store does not exist' });
   }
   const {
-    title, headline, description, imageUrl,
-    type, category, pricing, payments,
-    features, faqs, advanced
+    title,
+    headline,
+    description,
+    imageUrl,
+    videoUrl,
+    type,
+    pricing,
+    paymentMethods,
+    features,
+    faqs,
+    affiliateRate,
+    redirectUrl,
+    chatRoomId,
   } = req.body;
-  if (!title || !type) {
-    return res.status(400).json({ error: 'Title and type required' });
+  if (!title || !description || !type) {
+    return res.status(400).json({ error: 'Missing required product fields' });
   }
-  const id = products.length + 1;
+  const products = loadJson(PRODUCTS_FILE, []);
   const product = {
-    id,
-    storeId: user.storeId,
+    id: uuidv4(),
+    storeId: store.id,
     title,
     headline: headline || '',
-    description: description || '',
+    description,
     imageUrl: imageUrl || '',
+    videoUrl: videoUrl || '',
     type,
-    category: category || '',
     pricing: Array.isArray(pricing) ? pricing : [],
-    payments: payments || {},
+    paymentMethods: Array.isArray(paymentMethods) ? paymentMethods : [],
     features: Array.isArray(features) ? features : [],
     faqs: Array.isArray(faqs) ? faqs : [],
-    advanced: advanced || {}
+    affiliateRate: affiliateRate || null,
+    redirectUrl: redirectUrl || null,
+    chatRoomId: chatRoomId || null,
+    createdAt: new Date().toISOString(),
   };
   products.push(product);
-  saveData('products.json', products);
+  saveJson(PRODUCTS_FILE, products);
+  res.json({ message: 'Product created successfully', id: product.id });
+});
+
+// GET /api/products
+// Return list of products; optional storeId filter
+app.get('/api/products', (req, res) => {
+  const { storeId } = req.query;
+  const products = loadJson(PRODUCTS_FILE, []);
+  const filtered = storeId ? products.filter(p => String(p.storeId) === String(storeId)) : products;
+  res.json(filtered);
+});
+
+// GET /api/products/:id
+app.get('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const products = loadJson(PRODUCTS_FILE, []);
+  const product = products.find(p => p.id === id);
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
   res.json(product);
 });
 
-/* ========================= Order routes ========================= */
-
-// Create order (e.g. after payment)
-app.post('/api/orders', authMiddleware, (req, res) => {
-  const { productId } = req.body;
-  const product = products.find(p => p.id === Number(productId));
-  if (!product) return res.status(404).json({ error: 'Product not found' });
-  const id = orders.length + 1;
-  const order = { id, userId: req.userId, productId: product.id, purchasedAt: new Date() };
-  orders.push(order);
-  saveData('orders.json', orders);
-  res.json(order);
+// POST /api/products/:id/checkout
+// Simulate purchase
+app.post('/api/products/:id/checkout', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  const products = loadJson(PRODUCTS_FILE, []);
+  const product = products.find(p => p.id === id);
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  // In real implementation, process payment here
+  res.json({ message: 'Purchase successful', productId: id });
 });
 
-// Get products purchased by logged‑in user
-app.get('/api/my-products', authMiddleware, (req, res) => {
-  const myOrders = orders.filter(o => o.userId === req.userId);
-  const myProducts = myOrders.map(o => {
-    const prod = products.find(p => p.id === o.productId);
-    if (!prod) return null;
-    const firstTier = Array.isArray(prod.pricing) && prod.pricing.length > 0 ? prod.pricing[0] : null;
-    const price     = firstTier ? firstTier.price : prod.price || 0;
-    return {
-      title:    prod.title,
-      headline: prod.headline,
-      imageUrl: prod.imageUrl,
-      price
-    };
-  }).filter(Boolean);
-  res.json(myProducts);
-});
-
-/* ========================= Chat, posts and reviews (unchanged) ========================= */
-
+// POST /api/chatrooms
+// Create a chat room for a product
 app.post('/api/chatrooms', authMiddleware, (req, res) => {
-  const { storeId, title, price } = req.body;
-  const user = users.find(u => u.id === req.userId);
-  if (!user || user.role !== 'seller' || user.storeId !== Number(storeId)) {
-    return res.status(403).json({ error: 'Not authorized' });
+  const user = req.user;
+  if (user.role !== 'seller') {
+    return res.status(403).json({ error: 'Only sellers can create chat rooms' });
   }
-  const id = chatRooms.length + 1;
-  chatRooms.push({ id, storeId: Number(storeId), title: title || '', price: Number(price) || 0, messages: [] });
-  res.json(chatRooms[chatRooms.length - 1]);
-});
-app.get('/api/chatrooms/:storeId', (req, res) => {
-  const storeId = Number(req.params.storeId);
-  const rooms = chatRooms.filter(r => r.storeId === storeId);
-  res.json({ rooms });
-});
-app.post('/api/chatrooms/:id/messages', authMiddleware, (req, res) => {
-  const room = chatRooms.find(r => r.id === Number(req.params.id));
-  if (!room) return res.status(404).json({ error: 'Not found' });
-  const { message } = req.body;
-  if (!message) return res.status(400).json({ error: 'Message required' });
-  room.messages.push({ id: room.messages.length + 1, userId: req.userId, message, timestamp: new Date() });
-  res.json({ message });
-});
-app.post('/api/posts', authMiddleware, (req, res) => {
-  const { storeId, title, content } = req.body;
-  const user = users.find(u => u.id === req.userId);
-  if (!user || user.role !== 'seller' || user.storeId !== Number(storeId)) {
-    return res.status(403).json({ error: 'Not authorized' });
-  }
-  const id = posts.length + 1;
-  posts.push({ id, storeId: Number(storeId), title: title || '', content: content || '', mediaUrl: '', timestamp: new Date() });
-  res.json(posts[posts.length - 1]);
-});
-app.get('/api/posts/:storeId', (req, res) => {
-  const storeId = Number(req.params.storeId);
-  const storePosts = posts.filter(p => p.storeId === storeId);
-  res.json({ posts: storePosts });
-});
-app.post('/api/reviews/pages', (req, res) => {
-  const { name, description } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name required' });
-  const id = reviewsPages.length + 1;
-  reviewsPages.push({ id, name, description: description || '', claimed: false, reviews: [] });
-  res.json(reviewsPages[reviewsPages.length - 1]);
-});
-app.get('/api/reviews/pages/:id', (req, res) => {
-  const page = reviewsPages.find(r => r.id === Number(req.params.id));
-  if (!page) return res.status(404).json({ error: 'Not found' });
-  res.json(page);
-});
-app.post('/api/reviews/pages/:id', (req, res) => {
-  const page = reviewsPages.find(r => r.id === Number(req.params.id));
-  if (!page) return res.status(404).json({ error: 'Page not found' });
-  const { author, text } = req.body;
-  if (!author || !text) return res.status(400).json({ error: 'Author and text required' });
-  page.reviews.push({ author, text, createdAt: new Date() });
-  res.json({ author, text });
+  const chatrooms = loadJson(CHATROOMS_FILE, []);
+  const room = {
+    id: uuidv4(),
+    ownerId: user.id,
+    createdAt: new Date().toISOString(),
+  };
+  chatrooms.push(room);
+  saveJson(CHATROOMS_FILE, chatrooms);
+  res.json(room);
 });
 
-/* ========================= Stats and health ========================= */
-
-// Seller dashboard
-app.get('/api/dashboard', authMiddleware, (req, res) => {
-  const user = users.find(u => u.id === req.userId);
-  if (!user || user.role !== 'seller' || !user.storeId) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  const storeProducts = products.filter(p => p.storeId === user.storeId);
-  const totalSales = orders.reduce((sum, o) => sum + (Number(o.price) || 0), 0);
-  res.json({ totalSales: totalSales.toFixed(2), totalOrders: orders.length, totalProducts: storeProducts.length });
-});
-
-// Overall stats
+// GET /api/stats
+// Return marketplace stats; optional storeId filter
 app.get('/api/stats', (req, res) => {
-  res.json({ totalProducts: products.length, totalStores: stores.length, totalOrders: orders.length });
+  const { storeId } = req.query;
+  const products = loadJson(PRODUCTS_FILE, []);
+  const stores = loadJson(STORES_FILE, []);
+  let targetProducts = products;
+  if (storeId) {
+    targetProducts = products.filter(p => String(p.storeId) === String(storeId));
+  }
+  const totalProducts = targetProducts.length;
+  const totalStores = storeId ? 1 : stores.length;
+  // Simple counts; no orders or revenue tracking implemented
+  res.json({ totalProducts, totalStores, totalOrders: 0, totalRevenue: 0 });
 });
 
-// Health check
-app.get('/api/ping', (req, res) => res.send('pong'));
+// Socket.IO chat server
+io.on('connection', (socket) => {
+  // When client joins a room
+  socket.on('join', ({ room }) => {
+    if (room) {
+      socket.join(room);
+    }
+  });
+  // When client sends a message
+  socket.on('message', ({ room, text, username }) => {
+    if (room && text) {
+      io.to(room).emit('message', {
+        username: username || 'User',
+        text,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+});
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Serve the static files (front‑end) from the 'public' directory if needed.
+// For this example, the front‑end files are assumed to be served separately.
+
+// Start the server
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
