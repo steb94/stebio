@@ -42,6 +42,11 @@
         <label for="storeDesc">Description</label>
         <textarea id="storeDesc" placeholder="Describe what you sell..." required></textarea>
       </div>
+      <!-- Store image URL field -->
+      <div class="stack">
+        <label for="storeImage">Store Image URL</label>
+        <input id="storeImage" type="url" placeholder="https://example.com/store.jpg" />
+      </div>
       <button type="submit" class="button w-100">Create Store</button>
     </form>
   </main>
@@ -49,7 +54,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       // Require login and seller role
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
@@ -74,6 +79,10 @@
         e.preventDefault();
         const name = document.getElementById('storeName').value.trim();
         const description = document.getElementById('storeDesc').value.trim();
+        const imageUrl = document.getElementById('storeImage').value.trim();
+        // Build payload with optional image URL
+        const payload = { name, description };
+        if (imageUrl) payload.imageUrl = imageUrl;
         try {
           const res = await fetch(`${API_BASE}/stores`, {
             method: 'POST',
@@ -81,7 +90,7 @@
               'Content-Type': 'application/json',
               'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
             },
-            body: JSON.stringify({ name, description })
+            body: JSON.stringify(payload)
           });
           const contentType = res.headers.get('content-type') || '';
           let data = null;
