@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Store - Steb.io</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store – Steb.io</title>
+  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header id="top-nav">
@@ -12,67 +13,127 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Start Selling</a>
-        <a href="dashboard.html">Dashboard</a>
+        <a href="store.html" id="navMyStore" class="active">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="reviews.html">Reviews</a>
         <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
       </nav>
-      <div class="auth-links"></div>
     </div>
   </header>
-
   <main class="container" style="padding:2rem 0;">
-    <h2 id="storeTitle">Store</h2>
-    <div id="storeProducts" class="product-grid"></div>
+    <div id="storeHeader" style="margin-bottom:2rem;">
+      <!-- Store details will be rendered here -->
+    </div>
+    <div id="storeProducts" class="row g-3">
+      <!-- Product cards will appear here -->
+    </div>
   </main>
-
   <script src="auth.js"></script>
   <script>
-    const API_BASE = window.location.hostname.includes('onrender.com')
-      ? 'https://stebio.onrender.com/api'
-      : '/api';
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      if (!id) {
-        document.getElementById('storeTitle').textContent = 'Store not found.';
-        return;
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let storeId = urlParams.get('id');
+        // If no id in query, use the seller's storeId from localStorage
+        if (!storeId) {
+          storeId = localStorage.getItem('storeId');
+        }
+        if (!storeId) {
+          document.getElementById('storeHeader').innerHTML = '<p>Store not found.</p>';
+          return;
+        }
+        loadStore(storeId);
+        loadProducts(storeId);
+      });
+      async function loadStore(id) {
+        try {
+          const res = await fetch(`${API_BASE}/stores/${encodeURIComponent(id)}`);
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
+          }
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load store');
+          }
+          const header = document.getElementById('storeHeader');
+          header.innerHTML = `
+            <h2>${data.name}</h2>
+            <p>${data.description || ''}</p>
+          `;
+        } catch (err) {
+          document.getElementById('storeHeader').innerHTML = '<p>' + (err.message || 'Error loading store') + '</p>';
+        }
       }
-      fetch(\`\${API_BASE}/stores/\${id}\`)
-        .then(res => {
-          if (!res.ok) throw new Error('Store not found');
-          return res.json();
-        })
-        .then(store => {
-          document.getElementById('storeTitle').textContent = store.name;
-          return fetch(\`\${API_BASE}/products?storeId=\${id}\`);
-        })
-        .then(res => res.json())
-        .then(products => {
+      async function loadProducts(id) {
+        try {
+          // Attempt to query products by storeId; fallback to filtering after fetch
+          const res = await fetch(`${API_BASE}/products?storeId=${encodeURIComponent(id)}`);
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
+          }
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load products');
+          }
+          const products = Array.isArray(data) ? data : (data.products || []);
+          // If API didn't support query by storeId, filter manually
+          const filtered = products.filter(p => String(p.storeId) === String(id));
           const container = document.getElementById('storeProducts');
           container.innerHTML = '';
-          (products || []).forEach(p => {
-            const card = document.createElement('div');
-            card.classList.add('product-card');
-            let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-            if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-              imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
+          filtered.forEach(prod => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            const imgSrc = prod.imageUrl && prod.imageUrl.trim()
+              ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl : prod.imageUrl)
+              : 'https://via.placeholder.com/400x200?text=Product';
+            // Determine lowest price
+            let displayPrice = '';
+            if (Array.isArray(prod.pricing) && prod.pricing.length > 0) {
+              const tier = prod.pricing[0];
+              if (tier.type === 'free') {
+                displayPrice = 'Free';
+              } else if (tier.type === 'one-time') {
+                displayPrice = '$' + Number(tier.price || 0).toFixed(2);
+              } else {
+                displayPrice = '$' + Number(tier.price || 0).toFixed(2) + ' / ' + tier.interval;
+              }
+            } else {
+              displayPrice = '$' + Number(prod.price || 0).toFixed(2);
             }
-            card.innerHTML = \`
-              <img src="\${imgSrc || 'https://via.placeholder.com/300x150?text=Product'}" alt="\${p.title}">
-              <h4>\${p.title}</h4>
-              <p>\${p.description.length > 80 ? p.description.slice(0,77) + '...' : p.description}</p>
-              <div class="price">$\${p.price.toFixed(2)}</div>
-              <div class="type">\${p.type}</div>
-              <a href="product.html?id=\${p.id}" class="button">View</a>
-            \`;
-            container.appendChild(card);
+            col.innerHTML = `
+              <div class="card">
+                <img src="${imgSrc}" alt="${prod.title}" />
+                <div style="padding:0.5rem;">
+                  <h4>${prod.title}</h4>
+                  <p><strong>Type:</strong> ${prod.type}</p>
+                  <p><strong>Price:</strong> ${displayPrice}</p>
+                  <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100">View Product</a>
+                </div>
+              </div>
+            `;
+            container.appendChild(col);
           });
-        })
-        .catch(() => {
-          document.getElementById('storeTitle').textContent = 'Store not found.';
-        });
-    });
+          if (filtered.length === 0) {
+            container.innerHTML = '<p>No products found in this store.</p>';
+          }
+        } catch (err) {
+          document.getElementById('storeProducts').innerHTML = '<p>' + (err.message || 'Error loading products') + '</p>';
+        }
+      }
+    })();
   </script>
 </body>
 </html>
