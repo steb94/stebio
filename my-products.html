@@ -35,7 +35,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
         const role = localStorage.getItem('role');
@@ -81,18 +81,18 @@
             const col = document.createElement('div');
             col.className = 'col-md-4';
             const imgSrc = prod.imageUrl && prod.imageUrl.trim()
-              ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl
+              ? (prod.imageUrl.match(/^https?:\\/\\//) ? prod.imageUrl
                  : prod.imageUrl)
               : 'https://via.placeholder.com/400x200?text=Product';
             const price = Number(prod.price || (prod.pricing && prod.pricing[0] && prod.pricing[0].price) || 0).toFixed(2);
             col.innerHTML = `
-              <div class="card">
-                <img src="${imgSrc}" alt="${prod.title}" />
-                <div style="padding:0.5rem;">
+              <div class=\"card\">
+                <img src=\"${imgSrc}\" alt=\"${prod.title}\" />
+                <div style=\"padding:0.5rem;\">
                   <h4>${prod.title}</h4>
                   <p><strong>Type:</strong> ${prod.type}</p>
                   <p><strong>Price:</strong> $${price}</p>
-                  <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100">View Product</a>
+                  <a href=\"product.html?id=${encodeURIComponent(prod.id)}\" class=\"button w-100\">View Product</a>
                 </div>
               </div>`;
             listEl.appendChild(col);
