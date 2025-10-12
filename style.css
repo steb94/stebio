@@ -160,6 +160,14 @@ form textarea {
   font-size: 0.9rem;
 }
 
+/* Chat room styles */
+#chatContainer {
+  background-color: #fff;
+}
+#messages li:nth-child(odd) {
+  background-color: #f5f5f5;
+}
+
 .card .button {
   margin: 0.5rem;
 }
