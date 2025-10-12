@@ -3,315 +3,130 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – Steb.io</title>
   <meta name="steb-api-base" content="/api" />
-  <title>Steb.io Seller Dashboard</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
 </head>
 <body>
-<div class="d-flex min-vh-100">
-  <aside class="sidebar">
-    <div class="logo">Steb<span>.io</span></div>
-    <nav>
-      <a href="dashboard.html" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="create-product.html"><i class="bi bi-box-seam"></i> Products</a>
-      <a href="chatroom.html"><i class="bi bi-people"></i> Community</a>
-      <a href="reviews.html"><i class="bi bi-chat-square-text"></i> Reviews</a>
-      <a href="store.html"><i class="bi bi-shop"></i> Marketplace</a>
-      <a href="settings.html"><i class="bi bi-gear"></i> Settings</a>
-    </nav>
-    <div class="logout">
-      <a href="#" onclick="localStorage.removeItem('loggedIn'); window.location.href='login.html';">
-        <i class="bi bi-box-arrow-right"></i> Logout
-      </a>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard" class="active">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="reviews.html">Reviews</a>
+        <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
+      </nav>
     </div>
-  </aside>
-  <main class="with-sidebar w-100">
-    <div id="dashboardContent">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Seller Dashboard</h2>
-        <div class="user-info">
-          <span id="usernameDisplay"></span>
-          <i class="bi bi-person-circle"></i>
-        </div>
-      </div>
-      <div class="row g-3 mb-4">
-        <div class="col-md-4">
-          <div class="stats-card card">
-            <div id="dashTotalSales" class="stat-value">0</div>
-            <h3>Total Sales ($)</h3>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="stats-card card">
-            <div id="dashTotalOrders" class="stat-value">0</div>
-            <h3>Total Orders</h3>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="stats-card card">
-            <div id="dashTotalProducts" class="stat-value">0</div>
-            <h3>Total Products</h3>
-          </div>
-        </div>
-      </div>
-      <div class="card mb-4 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Your Orders</h5>
-          <div class="table-responsive">
-            <table class="table align-middle" id="ordersTable">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Product</th>
-                  <th>Buyer</th>
-                  <th>Price ($)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="row mb-4">
-        <div class="col-md-6 mb-3 mb-md-0">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">Your Chat Rooms</h5>
-              <div id="chatRoomList" class="d-flex flex-column gap-2"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title mb-3">Create Chat Room</h5>
-              <form id="chatRoomForm">
-                <div class="mb-3">
-                  <label for="chatRoomTitle" class="form-label">Title</label>
-                  <input id="chatRoomTitle" type="text" class="form-control" required />
-                </div>
-                <div class="mb-3">
-                  <label for="chatRoomPrice" class="form-label">Price ($)</label>
-                  <input id="chatRoomPrice" type="number" step="0.01" min="0" class="form-control" />
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Create Chat Room</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6 mb-3 mb-md-0">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title mb-3">Your Store Posts</h5>
-              <div id="postList" class="d-flex flex-column gap-2"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title mb-3">Create Post</h5>
-              <form id="postForm">
-                <div class="mb-3">
-                  <label for="postText" class="form-label">Post Text</label>
-                  <textarea id="postText" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                  <label for="postMedia" class="form-label">Media URL (optional)</label>
-                  <input id="postMedia" type="text" class="form-control" />
-                </div>
-                <button type="submit" class="btn btn-primary w-100">Post</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+  </header>
+  <main class="container" style="padding:2rem 0;">
+    <h2>Store Dashboard</h2>
+    <div id="storeInfo" style="margin-bottom:2rem;"></div>
+    <div id="stats" class="row g-3" style="margin-bottom:2rem;"></div>
+    <div id="actions" style="margin-bottom:2rem;">
+      <a href="create-product.html" class="button">Add New Product</a>
+      <a href="my-products.html" class="button" style="margin-left:1rem;">View My Products</a>
     </div>
   </main>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-(() => {
-  const API_BASE = '/api';
-  const $ = sel => document.querySelector(sel);
-
-  async function api(path, opts = {}) {
-    const token = localStorage.getItem('token');
-    const headers = Object.assign({ 'Accept': 'application/json' }, opts.headers || {});
-    if (!(opts.body instanceof FormData)) {
-      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-    }
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}${path}`, { credentials:'include', ...opts, headers });
-    const ct = res.headers.get('content-type') || '';
-    let data = null;
-    if (ct.includes('application/json')) {
-      data = await res.json().catch(() => null);
-    } else {
-      data = await res.text().catch(() => null);
-    }
-    if (!res.ok) {
-      throw new Error((data && (data.error || data.message)) || res.statusText || 'Request failed');
-    }
-    return data;
-  }
-
-  async function loadSummary() {
-    try {
-      const data = await api('/dashboard');
-      $('#dashTotalSales').textContent = Number(data.totalSales || 0).toFixed(2);
-      $('#dashTotalOrders').textContent = data.totalOrders || 0;
-      $('#dashTotalProducts').textContent = data.totalProducts || 0;
-    } catch (e) { console.error('Error loading summary', e); }
-  }
-  async function loadOrders() {
-    const tbody = $('#ordersTable tbody');
-    tbody.innerHTML = '';
-    try {
-      const orders = await api('/orders'); // orders not implemented, returns empty list
-      (orders || []).forEach(o => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${o.id}</td>
-          <td>${o.productName}</td>
-          <td>${o.buyerName}</td>
-          <td>${Number(o.price).toFixed(2)}</td>
-          <td>${o.status}</td>
-        `;
-        tbody.appendChild(tr);
+  <script src="auth.js"></script>
+  <script>
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      document.addEventListener('DOMContentLoaded', () => {
+        const loggedIn = localStorage.getItem('loggedIn') === 'true';
+        const role = localStorage.getItem('role');
+        const storeId = localStorage.getItem('storeId');
+        if (!loggedIn) {
+          window.location.href = 'login.html';
+          return;
+        }
+        if (role !== 'seller') {
+          alert('Only sellers can view the dashboard.');
+          window.location.href = 'index.html';
+          return;
+        }
+        if (!storeId) {
+          alert('You need to create a store first.');
+          window.location.href = 'create-store.html';
+          return;
+        }
+        loadStore();
+        loadStats();
       });
-    } catch (e) { console.error('Error loading orders', e); }
-  }
-  async function loadPosts() {
-    const storeId = localStorage.getItem('storeId');
-    const list = $('#postList');
-    list.innerHTML = '';
-    if (!storeId) return;
-    try {
-      const data = await api(`/posts/${encodeURIComponent(storeId)}`);
-      const posts = (data && data.posts) || [];
-      if (posts.length === 0) {
-        list.innerHTML = '<div class="card p-2">No posts yet.</div>';
-      } else {
-        posts.forEach(p => {
-          const div = document.createElement('div');
-          div.className = 'card p-2';
-          if (p.content) {
-            const para = document.createElement('p');
-            para.textContent = p.content;
-            div.appendChild(para);
+      async function loadStore() {
+        const storeId = localStorage.getItem('storeId');
+        try {
+          const res = await fetch(`${API_BASE}/stores/${storeId}`, {
+            headers: {
+              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+            }
+          });
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
           }
-          if (p.mediaUrl) {
-            const wrapper = document.createElement('div');
-            const link = document.createElement('a');
-            link.href = p.mediaUrl;
-            link.target = '_blank';
-            link.style.color = 'var(--accent)';
-            link.style.textDecoration = 'underline';
-            link.textContent = 'Media';
-            wrapper.appendChild(link);
-            div.appendChild(wrapper);
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load store details');
           }
-          const date = new Date(p.createdAt);
-          const small = document.createElement('small');
-          small.textContent = date.toLocaleString();
-          div.appendChild(small);
-          list.appendChild(div);
-        });
+          const info = document.getElementById('storeInfo');
+          info.innerHTML = `
+            <h3>${data.name}</h3>
+            <p>${data.description || ''}</p>
+          `;
+        } catch (err) {
+          document.getElementById('storeInfo').innerHTML = '';
+          alert(err.message || 'Error loading store');
+        }
       }
-    } catch (e) { console.error('Error loading posts', e); }
-  }
-  async function loadChatRooms() {
-    const storeId = localStorage.getItem('storeId');
-    const list = $('#chatRoomList');
-    list.innerHTML = '';
-    if (!storeId) return;
-    try {
-      const data = await api(`/chatrooms/${encodeURIComponent(storeId)}`);
-      (data.rooms || []).forEach(room => {
-        const card = document.createElement('div');
-        card.className = 'card p-2';
-        const title = document.createElement('div');
-        title.innerHTML = `<strong>${room.title}</strong> – ${room.price > 0 ? '$' + Number(room.price).toFixed(2) : 'Free'}`;
-        const linkWrapper = document.createElement('div');
-        linkWrapper.style.marginTop = '.5rem';
-        const link = document.createElement('a');
-        link.href = `chatroom.html?id=${room.id}`;
-        link.className = 'btn btn-outline-primary btn-sm';
-        link.textContent = 'Open';
-        linkWrapper.appendChild(link);
-        card.appendChild(title);
-        card.appendChild(linkWrapper);
-        list.appendChild(card);
-      });
-    } catch (e) { console.error('Error loading chat rooms', e); }
-  }
-  function initDashboard() {
-    const loggedIn = localStorage.getItem('loggedIn') === 'true';
-    const role = localStorage.getItem('role');
-    if (!loggedIn || role !== 'seller') {
-      alert('Please log in as a seller');
-      window.location.href = 'login.html';
-      return;
-    }
-    const storeId = localStorage.getItem('storeId');
-    if (!storeId) {
-      alert('Please create a store first.');
-      window.location.href = 'create-store.html';
-      return;
-    }
-    $('#usernameDisplay').textContent = 'Welcome, ' + (localStorage.getItem('username') || 'Seller');
-    loadSummary();
-    loadOrders();
-    loadChatRooms();
-    loadPosts();
-  }
-  document.getElementById('postForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const content = $('#postText').value.trim();
-    const mediaUrl = $('#postMedia').value.trim();
-    const storeId = localStorage.getItem('storeId');
-    if (!content && !mediaUrl) {
-      alert('Post content or media URL is required.');
-      return;
-    }
-    try {
-      await api(`/posts/${encodeURIComponent(storeId)}`, {
-        method:'POST',
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
-        body: JSON.stringify({ content, mediaUrl })
-      });
-      $('#postForm').reset();
-      loadPosts();
-    } catch (err) { console.error('Error creating post', err); }
-  });
-  document.getElementById('chatRoomForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = $('#chatRoomTitle').value.trim();
-    const price = parseFloat($('#chatRoomPrice').value) || 0;
-    const storeId = localStorage.getItem('storeId');
-    if (!title) {
-      alert('Please enter a chat room title.');
-      return;
-    }
-    try {
-      await api('/chatrooms', {
-        method:'POST',
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') },
-        body: JSON.stringify({ storeId, title, price })
-      });
-      $('#chatRoomForm').reset();
-      loadChatRooms();
-    } catch (err) { console.error('Error creating chat room', err); }
-  });
-  document.addEventListener('DOMContentLoaded', initDashboard);
-})();
-</script>
+      async function loadStats() {
+        const storeId = localStorage.getItem('storeId');
+        try {
+          const res = await fetch(`${API_BASE}/stats?storeId=${encodeURIComponent(storeId)}`, {
+            headers: {
+              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+            }
+          });
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
+          }
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load stats');
+          }
+          const statsEl = document.getElementById('stats');
+          statsEl.innerHTML = '';
+          const makeCard = (title, value) => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            col.innerHTML = `
+              <div class="card">
+                <h3>${value}</h3>
+                <p>${title}</p>
+              </div>
+            `;
+            statsEl.appendChild(col);
+          };
+          makeCard('Products', data.totalProducts || 0);
+          makeCard('Orders', data.totalOrders || 0);
+          makeCard('Revenue', data.totalRevenue ? '$' + Number(data.totalRevenue).toFixed(2) : '$0.00');
+        } catch (err) {
+          alert(err.message || 'Error loading stats');
+        }
+      }
+    })();
+  </script>
 </body>
 </html>
-<a href="my-products.html" id="navMyProducts">My Products</a>
