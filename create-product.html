@@ -61,6 +61,14 @@
           <option value="ChatRoom">Chat Room</option>
         </select>
       </div>
+      <!-- Chat link container; hidden by default. Shown when product type is Chat Room -->
+      <div class="stack">
+        <label for="prodVideo">Video URL</label>
+        <input id="prodVideo" type="url" placeholder="https://example.com/video.mp4 or https://youtu.be/…" />
+      </div>
+      <div class="stack">
+        <label><input type="checkbox" id="includeChat" /> Include Chat Room</label>
+      </div>
       <div style="margin-top:1.5rem;">
         <h3>Pricing Plans</h3>
         <div id="pricingRows"></div>
@@ -101,7 +109,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       // Require that the user is logged in as a seller and has a store
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
@@ -136,29 +144,29 @@
         const row = document.createElement('div');
         row.className = 'pricing-row row g-2';
         row.innerHTML = `
-          <div class="col-md-3">
-            <input type="text" class="form-control labelInput" placeholder="Label (e.g. Basic)" />
+          <div class=\"col-md-3\">
+            <input type=\"text\" class=\"form-control labelInput\" placeholder=\"Label (e.g. Basic)\" />
           </div>
-          <div class="col-md-3">
-            <select class="form-control typeSelect">
-              <option value="free">Free</option>
-              <option value="one-time">One-time</option>
-              <option value="recurring">Recurring</option>
+          <div class=\"col-md-3\">
+            <select class=\"form-control typeSelect\">
+              <option value=\"free\">Free</option>
+              <option value=\"one-time\">One-time</option>
+              <option value=\"recurring\">Recurring</option>
             </select>
           </div>
-          <div class="col-md-3">
-            <input type="number" class="form-control priceInput" min="0" step="0.01" placeholder="Price" />
+          <div class=\"col-md-3\">
+            <input type=\"number\" class=\"form-control priceInput\" min=\"0\" step=\"0.01\" placeholder=\"Price\" />
           </div>
-          <div class="col-md-2">
-            <select class="form-control intervalSelect">
-              <option value="Daily">Daily</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Yearly">Yearly</option>
+          <div class=\"col-md-2\">
+            <select class=\"form-control intervalSelect\">
+              <option value=\"Daily\">Daily</option>
+              <option value=\"Weekly\">Weekly</option>
+              <option value=\"Monthly\">Monthly</option>
+              <option value=\"Yearly\">Yearly</option>
             </select>
           </div>
-          <div class="col-md-1" style="display:flex;align-items:center;">
-            <button type="button" class="remove-btn" style="font-size:1.2rem;">&times;</button>
+          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
+            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
           </div>
         `;
         container.appendChild(row);
@@ -193,11 +201,11 @@
         const row = document.createElement('div');
         row.className = 'feature-row row g-2';
         row.innerHTML = `
-          <div class="col-md-11">
-            <input type="text" class="form-control featureInput" placeholder="Feature description" />
+          <div class=\"col-md-11\">
+            <input type=\"text\" class=\"form-control featureInput\" placeholder=\"Feature description\" />
           </div>
-          <div class="col-md-1" style="display:flex;align-items:center;">
-            <button type="button" class="remove-btn" style="font-size:1.2rem;">&times;</button>
+          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
+            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
           </div>
         `;
         container.appendChild(row);
@@ -212,14 +220,14 @@
         const row = document.createElement('div');
         row.className = 'faq-row row g-2';
         row.innerHTML = `
-          <div class="col-md-5">
-            <input type="text" class="form-control faqQuestionInput" placeholder="Question" />
+          <div class=\"col-md-5\">
+            <input type=\"text\" class=\"form-control faqQuestionInput\" placeholder=\"Question\" />
           </div>
-          <div class="col-md-6">
-            <input type="text" class="form-control faqAnswerInput" placeholder="Answer" />
+          <div class=\"col-md-6\">
+            <input type=\"text\" class=\"form-control faqAnswerInput\" placeholder=\"Answer\" />
           </div>
-          <div class="col-md-1" style="display:flex;align-items:center;">
-            <button type="button" class="remove-btn" style="font-size:1.2rem;">&times;</button>
+          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
+            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
           </div>
         `;
         container.appendChild(row);
@@ -236,6 +244,7 @@
         const headline  = document.getElementById('prodHeadline').value.trim();
         const description = document.getElementById('prodDesc').value.trim();
         const imageUrl  = document.getElementById('prodImage').value.trim();
+        const videoUrl  = document.getElementById('prodVideo').value.trim();
         const type      = document.getElementById('prodType').value;
         // Pricing
         const pricing = [];
@@ -282,12 +291,43 @@
           headline,
           description,
           imageUrl,
+          videoUrl,
           type,
           pricing,
           paymentMethods,
           features,
           faqs
         };
+        // If the seller wants to include a chat room, create one on the server
+        const includeChat = document.getElementById('includeChat').checked;
+        if (includeChat) {
+          try {
+            const chatRes = await fetch(`${API_BASE}/chatrooms`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+              },
+              body: JSON.stringify({})
+            });
+            const chatContentType = chatRes.headers.get('content-type') || '';
+            let chatData = null;
+            if (chatContentType.includes('application/json')) {
+              try { chatData = await chatRes.json(); } catch { chatData = null; }
+            } else {
+              await chatRes.text();
+            }
+            if (!chatRes.ok) {
+              throw new Error((chatData && (chatData.error || chatData.message)) || chatRes.statusText || 'Failed to create chat room');
+            }
+            if (chatData && chatData.id) {
+              payload.chatRoomId = chatData.id;
+            }
+          } catch (err) {
+            alert(err.message || 'Error creating chat room');
+            return;
+          }
+        }
         if (affiliateRate) payload.affiliateRate = parseFloat(affiliateRate);
         if (redirectUrl) payload.redirectUrl = redirectUrl;
         try {
