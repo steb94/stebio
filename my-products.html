@@ -4,58 +4,104 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Products – Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
   <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header id="top-nav">
     <div class="container nav">
-      <div class="brand">STEB.io</div>
+      <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Seller Dashboard</a>
-        <!-- mark this link as active for buyers -->
-        <a href="my-products.html" class="active">My Products</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts" class="active">My Products</a>
+        <a href="reviews.html">Reviews</a>
+        <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
       </nav>
-      <div class="auth-links"></div>
     </div>
   </header>
-
   <main class="container" style="padding:2rem 0;">
-    <h2>My Purchased Products</h2>
-    <div id="myProductsContainer" class="product-grid"></div>
+    <h2>Your Products</h2>
+    <div id="productList" class="row g-3">
+      <!-- Products will be injected here -->
+    </div>
   </main>
-
   <script src="auth.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const container = document.getElementById('myProductsContainer');
-      const apiBase = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
-      try {
-        // fetch products associated with the logged-in user
-        const res = await fetch(\`\${apiBase}/my-products\`);
-        if (!res.ok) throw new Error('Failed to load your products');
-        const products = await res.json();
-        container.innerHTML = '';
-        (products || []).forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          const imgSrc = p.imageUrl || 'https://via.placeholder.com/300x150?text=Product';
-          card.innerHTML = \`
-            <img src="\${imgSrc}" alt="\${p.title}" />
-            <h3>\${p.title}</h3>
-            <p>\${p.headline || ''}</p>
-            <p>\${p.price ? '$' + p.price.toFixed(2) : 'Free'}</p>
-          \`;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
-        container.textContent = 'Unable to load your products.';
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      document.addEventListener('DOMContentLoaded', () => {
+        const loggedIn = localStorage.getItem('loggedIn') === 'true';
+        const role = localStorage.getItem('role');
+        const storeId = localStorage.getItem('storeId');
+        if (!loggedIn) {
+          window.location.href = 'login.html';
+          return;
+        }
+        if (role !== 'seller') {
+          alert('Only sellers can view their products.');
+          window.location.href = 'index.html';
+          return;
+        }
+        if (!storeId) {
+          alert('You need to create a store first.');
+          window.location.href = 'create-store.html';
+          return;
+        }
+        loadProducts();
+      });
+      async function loadProducts() {
+        try {
+          const res = await fetch(`${API_BASE}/products`, {
+            headers: {
+              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+            }
+          });
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
+          }
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load products');
+          }
+          const listEl = document.getElementById('productList');
+          listEl.innerHTML = '';
+          const products = Array.isArray(data) ? data : (data.products || []);
+          const storeId = localStorage.getItem('storeId');
+          products.filter(p => String(p.storeId) === String(storeId)).forEach(prod => {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            const imgSrc = prod.imageUrl && prod.imageUrl.trim()
+              ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl
+                 : prod.imageUrl)
+              : 'https://via.placeholder.com/400x200?text=Product';
+            const price = Number(prod.price || (prod.pricing && prod.pricing[0] && prod.pricing[0].price) || 0).toFixed(2);
+            col.innerHTML = `
+              <div class="card">
+                <img src="${imgSrc}" alt="${prod.title}" />
+                <div style="padding:0.5rem;">
+                  <h4>${prod.title}</h4>
+                  <p><strong>Type:</strong> ${prod.type}</p>
+                  <p><strong>Price:</strong> $${price}</p>
+                  <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100">View Product</a>
+                </div>
+              </div>`;
+            listEl.appendChild(col);
+          });
+        } catch (err) {
+          alert(err.message || 'Error loading products');
+        }
       }
-    });
+    })();
   </script>
 </body>
 </html>
