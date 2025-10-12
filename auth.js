@@ -1,53 +1,78 @@
-// auth.js – Client-side navigation logic for Steb.io.
-
 (function() {
-  function renderAuth() {
+  /**
+   * Update the top navigation based on login state and user role.
+   * Shows or hides links by ID. Expects that nav elements exist on the page.
+   */
+  function updateNav() {
     const loggedIn = localStorage.getItem('loggedIn') === 'true';
-    const role     = localStorage.getItem('role');
-    // Grab nav elements by ID
-    const navSignup       = document.getElementById('navSignup');
-    const navLogin        = document.getElementById('navLogin');
-    const navLogout       = document.getElementById('navLogout');
-    const navCreateStore  = document.getElementById('navCreateStore');
-    const navCreateProduct= document.getElementById('navCreateProduct');
-    const navDashboard    = document.getElementById('navDashboard');
-    const navMyProducts   = document.getElementById('navMyProducts');
-    if (!navSignup || !navLogin || !navLogout) return;
+    const role = localStorage.getItem('role');
+
+    // Helper to show/hide an element by ID
+    function show(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    }
+    function hide(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
     if (loggedIn) {
-      navSignup.style.display = 'none';
-      navLogin.style.display  = 'none';
-      navLogout.style.display = 'inline-block';
+      // When logged in, hide login/signup and show logout
+      hide('navLogin');
+      hide('navSignup');
+      show('navLogout');
       if (role === 'seller') {
-        if (navCreateStore)   navCreateStore.style.display   = 'inline-block';
-        if (navCreateProduct) navCreateProduct.style.display = 'inline-block';
-        if (navDashboard)     navDashboard.style.display     = 'inline-block';
-        if (navMyProducts)    navMyProducts.style.display    = 'none';
+        // Determine if seller already has a store
+        const storeId = localStorage.getItem('storeId');
+        // Only show create store link if no store exists
+        if (storeId) {
+          hide('navCreateStore');
+        } else {
+          show('navCreateStore');
+        }
+        show('navCreateProduct');
+        show('navDashboard');
+        show('navMyProducts');
+        show('navMyStore');
       } else {
-        if (navCreateStore)   navCreateStore.style.display   = 'none';
-        if (navCreateProduct) navCreateProduct.style.display = 'none';
-        if (navDashboard)     navDashboard.style.display     = 'none';
-        if (navMyProducts)    navMyProducts.style.display    = 'inline-block';
+        // Buyers: hide seller options
+        hide('navCreateStore');
+        hide('navCreateProduct');
+        hide('navDashboard');
+        hide('navMyProducts');
+        hide('navMyStore');
       }
     } else {
-      navSignup.style.display      = 'inline-block';
-      navLogin.style.display       = 'inline-block';
-      navLogout.style.display      = 'none';
-      if (navCreateStore)   navCreateStore.style.display   = 'none';
-      if (navCreateProduct) navCreateProduct.style.display = 'none';
-      if (navDashboard)     navDashboard.style.display     = 'none';
-      if (navMyProducts)    navMyProducts.style.display    = 'none';
+      // Not logged in: show login/signup; hide seller/buyer specific links
+      show('navLogin');
+      show('navSignup');
+      hide('navLogout');
+      hide('navCreateStore');
+      hide('navCreateProduct');
+      hide('navDashboard');
+      hide('navMyProducts');
+      hide('navMyStore');
+    }
+
+    // Attach logout behaviour once
+    const logoutLink = document.getElementById('navLogout');
+    if (logoutLink && !logoutLink.dataset.bound) {
+      logoutLink.dataset.bound = 'true';
+      logoutLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Clear auth-related localStorage keys
+        localStorage.removeItem('loggedIn');
+        localStorage.removeItem('username');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('storeId');
+        // Redirect to login page
+        window.location.href = 'login.html';
+      });
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const logoutEl = document.getElementById('navLogout');
-    if (logoutEl) {
-      logoutEl.addEventListener('click', (e) => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.href = 'index.html';
-      });
-    }
-    renderAuth();
-  });
+  // Run updateNav on page load
+  document.addEventListener('DOMContentLoaded', updateNav);
 })();
