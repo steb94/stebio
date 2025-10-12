@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support – Steb.io</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="reviews.html">Reviews</a>
+        <a href="support.html" class="active">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="padding:2rem 0; max-width:700px;">
+    <h2>Contact Support</h2>
+    <p>If you have any questions or need assistance, fill out the form below and we'll get back to you soon.</p>
+    <form id="supportForm">
+      <div class="stack">
+        <label for="supportName">Name</label>
+        <input id="supportName" type="text" placeholder="Your name" required />
+      </div>
+      <div class="stack">
+        <label for "supportEmail">Email</label>
+        <input id="supportEmail" type="email" placeholder="you@example.com" required />
+      </div>
+      <div class="stack">
+        <label for="supportMessage">Message</label>
+        <textarea id="supportMessage" placeholder="Tell us how we can help..." required></textarea>
+      </div>
+      <button type="submit" class="button w-100">Submit</button>
+    </form>
+  </main>
+  <script src="auth.js"></script>
+  <script>
+    (function() {
+      document.getElementById('supportForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Thank you for reaching out. Our support team will respond soon.');
+        // Ideally, this would send the message to support via an API or email service.
+        this.reset();
+      });
+    })();
+  </script>
+</body>
+</html>
