@@ -34,7 +34,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
@@ -67,7 +67,7 @@
         // Build pricing list
         let pricingHtml = '';
         if (Array.isArray(prod.pricing) && prod.pricing.length > 0) {
-          pricingHtml += '<ul style="list-style:none; padding-left:0; margin:0;">';
+          pricingHtml += '<ul style=\"list-style:none; padding-left:0; margin:0;\">';
           prod.pricing.forEach(tier => {
             const p = Number(tier.price || 0).toFixed(2);
             let desc = '';
@@ -87,12 +87,12 @@
           pricingHtml = `<p><strong>Price:</strong> $${price}</p>`;
         }
         const imgSrc = prod.imageUrl && prod.imageUrl.trim()
-          ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl : prod.imageUrl)
+          ? (prod.imageUrl.match(/^https?:\\/\\//) ? prod.imageUrl : prod.imageUrl)
           : 'https://via.placeholder.com/600x300?text=Product';
         // Build features list
         let featuresHtml = '';
         if (Array.isArray(prod.features) && prod.features.length > 0) {
-          featuresHtml += '<h4>Features</h4><ul style="padding-left:1rem;">';
+          featuresHtml += '<h4>Features</h4><ul style=\"padding-left:1rem;\">';
           prod.features.forEach(f => {
             featuresHtml += `<li>${f}</li>`;
           });
@@ -108,16 +108,18 @@
           faqsHtml += '</div>';
         }
         container.innerHTML = `
-          <div class="card" style="overflow:hidden;">
-            <img src="${imgSrc}" alt="${prod.title}" style="height:250px; object-fit:cover; width:100%;" />
-            <div style="padding:1rem;">
+          <div class=\"card\" style=\"overflow:hidden;\">
+            <img src=\"${imgSrc}\" alt=\"${prod.title}\" style=\"height:250px; object-fit:cover; width:100%;\" />
+            <div style=\"padding:1rem;\">
               <h2>${prod.title}</h2>
               <p><strong>Type:</strong> ${prod.type}</p>
               <div>${pricingHtml}</div>
               <p>${prod.description || ''}</p>
+              ${prod.videoUrl ? `<video controls src=\"${prod.videoUrl}\" style=\"width:100%; max-height:300px; margin:1rem 0;\"></video>` : ''}
               ${featuresHtml}
               ${faqsHtml}
-              <button id="buyButton" class="button">Buy Now</button>
+              <button id=\"buyButton\" class=\"button\">Buy Now</button>
+              ${prod.chatRoomId ? `<a href=\"chatroom.html?room=${encodeURIComponent(prod.chatRoomId)}\" class=\"button\" style=\"margin-left:0.5rem;\">Join Chat</a>` : ''}
             </div>
           </div>
         `;
