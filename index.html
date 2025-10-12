@@ -86,7 +86,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       let allProducts = [];
 
       // Load stats
@@ -100,7 +100,7 @@
               const col = document.createElement('div');
               col.className = 'col-md-4';
               col.innerHTML = `
-                <div class="card">
+                <div class=\"card\">
                   <h3>${value}</h3>
                   <p>${title}</p>
                 </div>`;
@@ -140,21 +140,21 @@
           const card = document.createElement('div');
           card.className = 'card';
           const imgSrc = prod.imageUrl && prod.imageUrl.trim()
-            ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl
+            ? (prod.imageUrl.match(/^https?:\\/\\//) ? prod.imageUrl
                : `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${prod.imageUrl}`)
             : 'https://via.placeholder.com/400x200?text=Product';
           const price = Array.isArray(prod.pricing) && prod.pricing.length > 0
             ? Number(prod.pricing[0].price).toFixed(2)
             : Number(prod.price || 0).toFixed(2);
           card.innerHTML = `
-            <img src="${imgSrc}"
-                 alt="${prod.title}"
-                 style="width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;">
-            <div style="padding:0.5rem;">
-              <h4 style="margin-bottom:0.5rem;">${prod.title}</h4>
-              <p style="margin:0.2rem 0;"><strong>Type:</strong> ${prod.type}</p>
-              <p style="margin:0.2rem 0;"><strong>Price:</strong> $${price}</p>
-              <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
+            <img src=\"${imgSrc}\"
+                 alt=\"${prod.title}\"
+                 style=\"width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;\">
+            <div style=\"padding:0.5rem;\">
+              <h4 style=\"margin-bottom:0.5rem;\">${prod.title}</h4>
+              <p style=\"margin:0.2rem 0;\"><strong>Type:</strong> ${prod.type}</p>
+              <p style=\"margin:0.2rem 0;\"><strong>Price:</strong> $${price}</p>
+              <a href=\"product.html?id=${encodeURIComponent(prod.id)}\" class=\"button w-100\" style=\"margin-top:0.5rem;\">View Product</a>
             </div>
           `;
           grid.appendChild(card);
