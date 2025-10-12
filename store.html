@@ -37,7 +37,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         let storeId = urlParams.get('id');
@@ -68,6 +68,7 @@
           const header = document.getElementById('storeHeader');
           header.innerHTML = `
             <h2>${data.name}</h2>
+            ${data.imageUrl ? `<img src=\"${data.imageUrl}\" alt=\"${data.name}\" style=\"width:100%;max-height:200px;object-fit:cover;border-radius:8px; margin-bottom:1rem;\" />` : ''}
             <p>${data.description || ''}</p>
           `;
         } catch (err) {
@@ -97,7 +98,7 @@
             const col = document.createElement('div');
             col.className = 'col-md-4';
             const imgSrc = prod.imageUrl && prod.imageUrl.trim()
-              ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl : prod.imageUrl)
+              ? (prod.imageUrl.match(/^https?:\\/\\//) ? prod.imageUrl : prod.imageUrl)
               : 'https://via.placeholder.com/400x200?text=Product';
             // Determine lowest price
             let displayPrice = '';
@@ -114,13 +115,13 @@
               displayPrice = '$' + Number(prod.price || 0).toFixed(2);
             }
             col.innerHTML = `
-              <div class="card">
-                <img src="${imgSrc}" alt="${prod.title}" />
-                <div style="padding:0.5rem;">
+              <div class=\"card\">
+                <img src=\"${imgSrc}\" alt=\"${prod.title}\" />
+                <div style=\"padding:0.5rem;\">
                   <h4>${prod.title}</h4>
                   <p><strong>Type:</strong> ${prod.type}</p>
                   <p><strong>Price:</strong> ${displayPrice}</p>
-                  <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100">View Product</a>
+                  <a href=\"product.html?id=${encodeURIComponent(prod.id)}\" class=\"button w-100\">View Product</a>
                 </div>
               </div>
             `;
