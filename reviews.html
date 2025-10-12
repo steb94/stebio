@@ -3,152 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reviews - Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
+  <title>Reviews – Steb.io</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header id="top-nav">
-  <div class="container nav">
-    <div class="brand">Steb.io</div>
-    <nav>
-      <a href="index.html">Home</a>
-      <span id="navLinks" style="display:none;">
-        <a href="create-store.html">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
-      </span>
-      <a href="support.html">Support</a>
-    </nav>
-    <div class="auth-links"></div>
-  </div>
-</header>
-
-<main class="container" style="padding:2rem 0;">
-  <h2>Seller Review Page</h2>
-  <div id="reviewPage" class="card" style="margin-bottom:1.5rem;"></div>
-
-  <section id="reviewsSection" style="display:none;">
-    <h3>Reviews</h3>
-    <div id="reviewsList" class="stack"></div>
-    <h4 style="margin-top:1rem;">Write a Review</h4>
-    <form id="reviewForm" class="stack" style="max-width:600px;">
-      <div class="stack">
-        <label for="reviewAuthor">Your Name</label>
-        <input id="reviewAuthor" type="text" required />
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="reviews.html" class="active">Reviews</a>
+        <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container" style="padding:2rem 0; max-width:800px;">
+    <h2>Customer Reviews</h2>
+    <p>See what our customers are saying about Steb.io and our sellers.</p>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card" style="padding:1rem;">
+          <h4>Great marketplace!</h4>
+          <p>“Steb.io made it super easy for me to find a chat room community and join. The seller was responsive and the content is top-notch.”</p>
+          <p><strong>– Alex K.</strong></p>
+        </div>
       </div>
-      <div class="stack">
-        <label for="reviewText">Review</label>
-        <textarea id="reviewText" rows="3" required></textarea>
+      <div class="col-md-4">
+        <div class="card" style="padding:1rem;">
+          <h4>Perfect for digital products</h4>
+          <p>“I set up my course on Steb.io and had my first sales within hours. The platform handles payments and delivery seamlessly.”</p>
+          <p><strong>– Jamie L.</strong></p>
+        </div>
       </div>
-      <button type="submit" class="button">Submit Review</button>
-    </form>
-  </section>
-
-  <section id="createPageSection" style="display:none;">
-    <h3>Create a Seller Page</h3>
-    <p>This seller does not have a page yet. You can create one so others can leave reviews. The seller can claim this page later.</p>
-    <form id="createPageForm" class="stack" style="max-width:600px;">
-      <div class="stack">
-        <label for="sellerName">Seller Name</label>
-        <input id="sellerName" type="text" required />
+      <div class="col-md-4">
+        <div class="card" style="padding:1rem;">
+          <h4>Awesome support</h4>
+          <p>“Whenever I had a question about setting up my store, the Steb.io support team was there to help me out. Highly recommend!”</p>
+          <p><strong>– Priya M.</strong></p>
+        </div>
       </div>
-      <div class="stack">
-        <label for="sellerDescription">Description</label>
-        <textarea id="sellerDescription" rows="3"></textarea>
-      </div>
-      <button type="submit" class="button">Create Page</button>
-    </form>
-  </section>
-</main>
-
-<script src="auth.js"></script>
-<script>
-(() => {
-  const API_BASE = '/api';
-  const params = new URLSearchParams(window.location.search);
-  const storeId = params.get('id');
-  const pageEl = document.getElementById('reviewPage');
-  const reviewsSection = document.getElementById('reviewsSection');
-  const reviewsList = document.getElementById('reviewsList');
-  const reviewForm = document.getElementById('reviewForm');
-  const createPageSection = document.getElementById('createPageSection');
-  const createPageForm = document.getElementById('createPageForm');
-
-  if (localStorage.getItem('loggedIn') === 'true') {
-    document.getElementById('navLinks').style.display = '';
-  }
-
-  if (!storeId) {
-    createPageSection.style.display = 'block';
-  } else {
-    loadPage();
-  }
-
-  function loadPage() {
-    fetch(`${API_BASE}/reviews/page/${storeId}`)
-      .then(res => {
-        if (res.status === 404) return null;
-        return res.json();
-      })
-      .then(data => {
-        if (!data) {
-          createPageSection.style.display = 'block';
-          return;
-        }
-        pageEl.innerHTML = `
-          <h3>${data.name}</h3>
-          <p>${data.description || 'No description provided.'}</p>
-          ${data.claimed ? '' : '<em>This page has not been claimed by the seller.</em>'}
-        `;
-        reviewsSection.style.display = '';
-        (data.reviews || []).forEach(r => {
-          const div = document.createElement('div');
-          div.className = 'card';
-          div.innerHTML = `<strong>${r.author}</strong> – ${new Date(r.createdAt).toLocaleDateString()}<p>${r.text}</p>`;
-          reviewsList.appendChild(div);
-        });
-      })
-      .catch(err => {
-        console.error(err);
-        createPageSection.style.display = 'block';
-      });
-  }
-
-  createPageForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const name = document.getElementById('sellerName').value.trim();
-    const description = document.getElementById('sellerDescription').value.trim();
-    fetch(`${API_BASE}/reviews/page`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, description })
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert('Seller page created successfully!');
-        window.location.href = `reviews.html?id=${data.id}`;
-      })
-      .catch(err => alert(err.message || 'Error creating page'));
-  });
-
-  reviewForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const author = document.getElementById('reviewAuthor').value.trim();
-    const text = document.getElementById('reviewText').value.trim();
-    fetch(`${API_BASE}/reviews/${storeId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author, text })
-    })
-      .then(res => res.json())
-      .then(() => {
-        alert('Review submitted!');
-        window.location.reload();
-      })
-      .catch(err => alert(err.message || 'Error submitting review'));
-  });
-})();
-</script>
+    </div>
+  </main>
+  <script src="auth.js"></script>
 </body>
 </html>
