@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steb.io – Marketplace</title>
+  <!-- Set the API base to your back‑end's base URL if deployed separately -->
   <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,15 +14,17 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <span id="navLinks" style="display:none;">
-          <a href="create-store.html">Create Store</a>
-          <a href="create-product.html">Add Product</a>
-          <a href="dashboard.html">Dashboard</a>
-        </span>
+        <a href="store.html" id="navMyStore" style="display:none;">My Store</a>
+        <a href="create-store.html" id="navCreateStore" style="display:none;">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct" style="display:none;">Add Product</a>
+        <a href="dashboard.html" id="navDashboard" style="display:none;">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts" style="display:none;">My Products</a>
         <a href="reviews.html">Reviews</a>
         <a href="support.html">Support</a>
+        <a href="#" id="navLogout" style="display:none;">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
       </nav>
-      <div class="auth-links"><a href="login.html">Sign in</a></div>
     </div>
   </header>
 
@@ -45,16 +48,26 @@
           <input id="searchText" type="text" class="form-control" placeholder="Type keywords..." />
         </div>
         <div class="col-md-3">
-          <label for="searchType" class="form-label">Filter by Type</label>
+          <label for="searchType" class="form-label">Category</label>
           <select id="searchType" class="form-control">
-            <option value="">All Types</option>
+            <option value="">All Categories</option>
             <option value="Trading">Trading</option>
             <option value="Communities">Communities</option>
             <option value="Courses">Courses</option>
             <option value="Software">Software</option>
             <option value="Services">Services</option>
             <option value="Templates">Templates</option>
-            <option value="ChatRoom">Chat Rooms</option>
+            <option value="ChatRoom">Chat Room</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="searchSort" class="form-label">Sort by</label>
+          <select id="searchSort" class="form-control">
+            <option value="">Newest</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A–Z</option>
+            <option value="name-desc">Name: Z–A</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -73,12 +86,12 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = '/api';
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       let allProducts = [];
 
       // Load stats
       function loadStats() {
-        fetch(\`\${API_BASE}/stats\`)
+        fetch(`${API_BASE}/stats`)
           .then(res => res.json())
           .then(data => {
             const statsSection = document.getElementById('statsSection');
@@ -86,11 +99,11 @@
             const makeCard = (title, value) => {
               const col = document.createElement('div');
               col.className = 'col-md-4';
-              col.innerHTML = \`
+              col.innerHTML = `
                 <div class="card">
-                  <h3>\${value}</h3>
-                  <p>\${title}</p>
-                </div>\`;
+                  <h3>${value}</h3>
+                  <p>${title}</p>
+                </div>`;
               statsSection.appendChild(col);
             };
             makeCard('Products', data.totalProducts || 0);
@@ -101,36 +114,49 @@
 
       // Load all products
       function loadProducts() {
-        fetch(\`\${API_BASE}/products\`)
+        fetch(`${API_BASE}/products`)
           .then(res => res.json())
           .then(data => {
-            allProducts = data.products || [];
+            allProducts = Array.isArray(data) ? data : (data.products || []);
             renderProducts(allProducts);
           });
       }
 
       // Render product cards
+      function getPrice(prod) {
+        // Determine a numeric price for sorting (uses first pricing tier if present)
+        if (Array.isArray(prod.pricing) && prod.pricing.length > 0) {
+          const p = parseFloat(prod.pricing[0].price);
+          return isNaN(p) ? 0 : p;
+        }
+        const base = parseFloat(prod.price);
+        return isNaN(base) ? 0 : base;
+      }
+
       function renderProducts(products) {
         const grid = document.getElementById('productGrid');
         grid.innerHTML = '';
         products.forEach(prod => {
           const card = document.createElement('div');
           card.className = 'card';
-          const imgSrc = prod.image && prod.image.trim()
-            ? (prod.image.match(/^https?:\/\//) ? prod.image
-               : \`https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/\${prod.image}\`)
+          const imgSrc = prod.imageUrl && prod.imageUrl.trim()
+            ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl
+               : `https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/${prod.imageUrl}`)
             : 'https://via.placeholder.com/400x200?text=Product';
-          card.innerHTML = \`
-            <img src="\${imgSrc}"
-                 alt="\${prod.title}"
+          const price = Array.isArray(prod.pricing) && prod.pricing.length > 0
+            ? Number(prod.pricing[0].price).toFixed(2)
+            : Number(prod.price || 0).toFixed(2);
+          card.innerHTML = `
+            <img src="${imgSrc}"
+                 alt="${prod.title}"
                  style="width:100%; height:140px; object-fit:cover; border-radius:8px 8px 0 0;">
             <div style="padding:0.5rem;">
-              <h4 style="margin-bottom:0.5rem;">\${prod.title}</h4>
-              <p style="margin:0.2rem 0;"><strong>Type:</strong> \${prod.type}</p>
-              <p style="margin:0.2rem 0;"><strong>Price:</strong> $\${Number(prod.price || 0).toFixed(2)}</p>
-              <a href="product.html?id=\${prod.id}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
+              <h4 style="margin-bottom:0.5rem;">${prod.title}</h4>
+              <p style="margin:0.2rem 0;"><strong>Type:</strong> ${prod.type}</p>
+              <p style="margin:0.2rem 0;"><strong>Price:</strong> $${price}</p>
+              <a href="product.html?id=${encodeURIComponent(prod.id)}" class="button w-100" style="margin-top:0.5rem;">View Product</a>
             </div>
-          \`;
+          `;
           grid.appendChild(card);
         });
       }
@@ -140,13 +166,30 @@
         e.preventDefault();
         const text = document.getElementById('searchText').value.toLowerCase();
         const type = document.getElementById('searchType').value;
-        const filtered = allProducts.filter(p => {
+        const sort = document.getElementById('searchSort').value;
+        let filtered = allProducts.filter(p => {
           const matchText =
             p.title.toLowerCase().includes(text) ||
             (p.description || '').toLowerCase().includes(text);
           const matchType = !type || p.type === type;
           return matchText && matchType;
         });
+        // Apply sorting
+        if (sort) {
+          filtered = filtered.slice(); // copy array before sorting
+          filtered.sort((a, b) => {
+            if (sort === 'price-asc') {
+              return getPrice(a) - getPrice(b);
+            } else if (sort === 'price-desc') {
+              return getPrice(b) - getPrice(a);
+            } else if (sort === 'name-asc') {
+              return a.title.localeCompare(b.title);
+            } else if (sort === 'name-desc') {
+              return b.title.localeCompare(a.title);
+            }
+            return 0;
+          });
+        }
         renderProducts(filtered);
       });
 
@@ -154,12 +197,8 @@
       document.addEventListener('DOMContentLoaded', () => {
         loadStats();
         loadProducts();
-        if (localStorage.getItem('loggedIn') === 'true') {
-          document.getElementById('navLinks').style.display = '';
-        }
       });
     })();
   </script>
 </body>
 </html>
-<a href="my-products.html" id="navMyProducts">My Products</a>
