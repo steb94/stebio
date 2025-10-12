@@ -38,7 +38,7 @@
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
         const role = localStorage.getItem('role');
@@ -112,7 +112,7 @@
             const col = document.createElement('div');
             col.className = 'col-md-4';
             col.innerHTML = `
-              <div class="card">
+              <div class=\"card\">
                 <h3>${value}</h3>
                 <p>${title}</p>
               </div>
