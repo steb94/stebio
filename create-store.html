@@ -2,78 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Create Store - Steb.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Store – Steb.io</title>
+  <!-- API base: update this if your back‑end is deployed separately -->
   <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header id="top-nav">
-  <div class="container nav">
-    <div class="brand">STEB</div>
-    <nav>
-      <a href="index.html">Home</a>
-      <span id="navLinks" style="display:none;">
-        <a href="create-store.html" class="active">Create Store</a>
-        <a href="create-product.html">Add Product</a>
-        <a href="dashboard.html">Dashboard</a>
-      </span>
-      <a href="support.html">Support</a>
-      <a href="reviews.html">Reviews</a>
-    </nav>
-    <div class="auth-links"></div>
-  </div>
-</header>
-
-<main class="container" style="padding:2rem 0;">
-  <h2>Create Your Store</h2>
-  <form id="storeForm" class="stack" style="max-width:400px;margin-top:1rem;">
-    <div class="stack">
-      <label for="storeName">Store Name</label>
-      <input id="storeName" type="text" placeholder="Enter store name" required />
+  <!-- Top navigation -->
+  <header id="top-nav">
+    <div class="container nav">
+      <div class="brand">Steb.io</div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
+        <a href="reviews.html">Reviews</a>
+        <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
+      </nav>
     </div>
-    <button type="submit" class="button">Create Store</button>
-  </form>
-</main>
+  </header>
 
-<script src="auth.js"></script>
-<script>
-(() => {
-  if (localStorage.getItem('loggedIn') !== 'true') {
-    window.location.href = 'login.html';
-    return;
-  }
-  const API_BASE = '/api';
-  document.getElementById('storeForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('storeName').value.trim();
-    if (!name) {
-      alert('Please enter a store name.');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/stores`, {
-        method:'POST',
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization': 'Bearer ' + localStorage.getItem('token')
-        },
-        body: JSON.stringify({ name })
+  <!-- Main content -->
+  <main class="container" style="padding:2rem 0; max-width:600px;">
+    <h2>Create Your Store</h2>
+    <p>Start selling by setting up your store. Fill out the form below.</p>
+    <form id="storeForm">
+      <div class="stack">
+        <label for="storeName">Store Name</label>
+        <input id="storeName" type="text" placeholder="e.g. My Awesome Store" required />
+      </div>
+      <div class="stack">
+        <label for="storeDesc">Description</label>
+        <textarea id="storeDesc" placeholder="Describe what you sell..." required></textarea>
+      </div>
+      <button type="submit" class="button w-100">Create Store</button>
+    </form>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      // Require login and seller role
+      document.addEventListener('DOMContentLoaded', () => {
+        const loggedIn = localStorage.getItem('loggedIn') === 'true';
+        const role = localStorage.getItem('role');
+        if (!loggedIn) {
+          window.location.href = 'login.html';
+          return;
+        }
+        if (role !== 'seller') {
+          alert('Only seller accounts can create a store.');
+          window.location.href = 'index.html';
+          return;
+        }
+        // If store already exists, redirect to dashboard
+        if (localStorage.getItem('storeId')) {
+          window.location.href = 'dashboard.html';
+          return;
+        }
       });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Failed to create store');
-      localStorage.setItem('storeId', data.id);
-      window.location.href = 'create-product.html';
-    } catch(err) {
-      alert(err.message || 'Error creating store.');
-    }
-  });
-})();
-</script>
+      // Submit handler
+      document.getElementById('storeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('storeName').value.trim();
+        const description = document.getElementById('storeDesc').value.trim();
+        try {
+          const res = await fetch(`${API_BASE}/stores`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+            },
+            body: JSON.stringify({ name, description })
+          });
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
+          } else {
+            await res.text();
+          }
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to create store');
+          }
+          if (data && data.id) {
+            localStorage.setItem('storeId', data.id);
+          }
+          alert((data && data.message) || 'Store created successfully!');
+          window.location.href = 'dashboard.html';
+        } catch (err) {
+          alert(err.message || 'Error creating store');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
-// after receiving a successful response from the server
-alert('Store created successfully!');
-window.location.href = 'create-product.html';
-// or, if you want to let the user decide:
-// document.getElementById('postStoreMessage').innerHTML = '<a href="create-product.html">Add your first product</a>';
