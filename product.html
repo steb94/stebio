@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Product Details - Steb.io</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Details – Steb.io</title>
+  <meta name="steb-api-base" content="/api" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,179 +13,149 @@
       <div class="brand">Steb.io</div>
       <nav>
         <a href="index.html">Home</a>
-        <span id="navLinks" style="display:none;">
-          <a href="create-store.html">Create Store</a>
-          <a href="create-product.html">Add Product</a>
-          <a href="dashboard.html">Dashboard</a>
-        </span>
-        <a href="support.html">Support</a>
+        <a href="store.html" id="navMyStore">My Store</a>
+        <a href="create-store.html" id="navCreateStore">Create Store</a>
+        <a href="create-product.html" id="navCreateProduct">Add Product</a>
+        <a href="dashboard.html" id="navDashboard">Dashboard</a>
+        <a href="my-products.html" id="navMyProducts">My Products</a>
         <a href="reviews.html">Reviews</a>
+        <a href="support.html">Support</a>
+        <a href="#" id="navLogout">Logout</a>
+        <a href="login.html" id="navLogin">Sign in</a>
+        <a href="signup.html" id="navSignup">Sign up</a>
       </nav>
-      <div class="auth-links"></div>
     </div>
   </header>
-
-  <main id="productContainer" class="container" style="padding:2rem 0;"></main>
-
-  <section id="productChat" class="container" style="display:none; margin-top:1rem;">
-    <h3>Product Chat</h3>
-    <div id="chatMessages" class="messages"></div>
-    <form id="chatForm" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-      <input id="chatInput" type="text" placeholder="Type your message..." style="flex:1;" />
-      <button type="submit" class="button">Send</button>
-    </form>
-  </section>
-
-  <section id="storeChatRooms" class="container" style="margin-top:1rem;">
-    <h3>Store Chat Rooms</h3>
-    <div id="storeChatRoomsList"></div>
-  </section>
-
+  <main class="container" style="padding:2rem 0; max-width:800px;">
+    <div id="productContainer">
+      <!-- Product details will be injected here -->
+    </div>
+  </main>
   <script src="auth.js"></script>
   <script>
-    const API_BASE = window.location.hostname.includes('onrender.com')
-      ? 'https://stebio.onrender.com/api'
-      : '/api';
-
-    function loadProduct() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
-      const container = document.getElementById('productContainer');
-      if (!id) {
-        container.innerHTML = '<p>Missing product ID.</p>';
-        return;
-      }
-      fetch(`${API_BASE}/products/${id}`)
-        .then(res => {
-          if (!res.ok) throw new Error('Product not found');
-          return res.json();
-        })
-        .then(p => {
-          const wrapper = document.createElement('div');
-          wrapper.style.display = 'flex';
-          wrapper.style.flexWrap = 'wrap';
-          wrapper.style.gap = '2rem';
-          const img = document.createElement('img');
-          let imgSrc = p.image && p.image.trim() !== '' ? p.image : null;
-          if (imgSrc && !/^https?:\/\//.test(imgSrc) && !/^data:/.test(imgSrc)) {
-            imgSrc = 'https://raw.githubusercontent.com/steb94/stebio/backend/server-.-js/' + imgSrc;
-          }
-          img.src = imgSrc || 'https://via.placeholder.com/500x280?text=Product';
-          img.alt = p.title;
-          img.style.width = '100%';
-          img.style.maxWidth = '500px';
-          img.style.borderRadius = '8px';
-          const info = document.createElement('div');
-          info.style.flex = '1';
-          const priceLine = p.type === 'ChatRoom'
-            ? `Chat Room Fee: $${p.price.toFixed(2)}`
-            : `Price: $${p.price.toFixed(2)}`;
-          info.innerHTML = `
-            <h2>${p.title}</h2>
-            <p><strong>Type:</strong> ${p.type}</p>
-            <p style="font-size:1.5rem; margin:1rem 0;">${priceLine}</p>
-            <p>${p.description}</p>
-            <p><a href="store.html?id=${p.storeId}" style="color:${getComputedStyle(document.documentElement).getPropertyValue('--accent')}">View Seller Store</a></p>
-          `;
-          if (p.type === 'ChatRoom') {
-            const joinLink = document.createElement('a');
-            joinLink.href = `chatroom.html?id=${p.chatRoomId}`;
-            joinLink.className = 'button';
-            joinLink.textContent = p.price > 0 ? 'Purchase and Join Chat' : 'Enter Chat Room';
-            info.appendChild(joinLink);
+    (function() {
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
+      document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (!id) {
+          document.getElementById('productContainer').innerHTML = '<p>Product not found.</p>';
+          return;
+        }
+        loadProduct(id);
+      });
+      async function loadProduct(id) {
+        try {
+          const res = await fetch(`${API_BASE}/products/${encodeURIComponent(id)}`);
+          const contentType = res.headers.get('content-type') || '';
+          let data = null;
+          if (contentType.includes('application/json')) {
+            try { data = await res.json(); } catch { data = null; }
           } else {
-            const buyBtn = document.createElement('button');
-            buyBtn.className = 'button';
-            buyBtn.textContent = 'Buy Now';
-            buyBtn.addEventListener('click', () => alert('Order functionality not implemented yet.'));
-            info.appendChild(buyBtn);
+            await res.text();
           }
-          wrapper.appendChild(img);
-          wrapper.appendChild(info);
-          container.appendChild(wrapper);
-          loadChat(id);
-          loadStoreChatRooms(p.storeId);
-        })
-        .catch(() => {
-          container.innerHTML = '<p>Product not found.</p>';
-        });
-    }
-
-    function loadChat(productId) {
-      const username = localStorage.getItem('username');
-      if (!username) return;
-      fetch(`${API_BASE}/chat/${productId}/messages?username=${encodeURIComponent(username)}`)
-        .then(res => {
-          if (res.status === 403 || res.status === 401) {
-            document.getElementById('productChat').style.display = 'none';
-            return null;
+          if (!res.ok) {
+            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load product');
           }
-          return res.json();
-        })
-        .then(data => {
-          if (!data) return;
-          document.getElementById('productChat').style.display = '';
-          const messages = data.messages || [];
-          const chatMessages = document.getElementById('chatMessages');
-          chatMessages.innerHTML = '';
-          messages.forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'msg';
-            div.innerHTML = `<div class="meta"><strong>${m.username}</strong><small>${new Date(m.createdAt || m.timestamp).toLocaleString()}</small></div><div class="body">${m.message}</div>`;
-            chatMessages.appendChild(div);
-          });
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-        })
-        .catch(err => console.error('Error loading chat messages', err));
-    }
-
-    function loadStoreChatRooms(storeId) {
-      fetch(`${API_BASE}/chatrooms/${storeId}`)
-        .then(res => res.json())
-        .then(data => {
-          const list = document.getElementById('storeChatRoomsList');
-          list.innerHTML = '';
-          (data.rooms || []).forEach(room => {
-            const div = document.createElement('div');
-            div.className = 'card p-2';
-            div.innerHTML = `
-              <strong>${room.title}</strong> – ${room.price > 0 ? '$' + room.price.toFixed(2) : 'Free'}
-              <a href="chatroom.html?id=${room.id}" class="button ghost" style="margin-left:1rem;">${room.price > 0 ? 'Join' : 'Enter'}</a>`;
-            list.appendChild(div);
-          });
-        })
-        .catch(err => console.error('Error loading store chat rooms', err));
-    }
-
-    document.getElementById('chatForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const params = new URLSearchParams(window.location.search);
-      const productId = params.get('id');
-      const username = localStorage.getItem('username');
-      const message = document.getElementById('chatInput').value.trim();
-      if (!message) return;
-      fetch(`${API_BASE}/chat/${productId}/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, message })
-      })
-        .then(res => {
-          if (!res.ok) throw new Error('Failed to send message');
-          return res.json();
-        })
-        .then(() => {
-          document.getElementById('chatInput').value = '';
-          loadChat(productId);
-        })
-        .catch(err => console.error('Error sending message', err));
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-      if (localStorage.getItem('loggedIn') === 'true') {
-        document.getElementById('navLinks').style.display = '';
+          renderProduct(data);
+        } catch (err) {
+          document.getElementById('productContainer').innerHTML = `<p>${err.message || 'Error loading product'}</p>`;
+        }
       }
-      loadProduct();
-    });
+      function renderProduct(prod) {
+        const container = document.getElementById('productContainer');
+        // Build pricing list
+        let pricingHtml = '';
+        if (Array.isArray(prod.pricing) && prod.pricing.length > 0) {
+          pricingHtml += '<ul style="list-style:none; padding-left:0; margin:0;">';
+          prod.pricing.forEach(tier => {
+            const p = Number(tier.price || 0).toFixed(2);
+            let desc = '';
+            if (tier.type === 'free') {
+              desc = 'Free';
+            } else if (tier.type === 'one-time') {
+              desc = '$' + p + ' one-time';
+            } else {
+              desc = '$' + p + ' / ' + tier.interval;
+            }
+            const label = tier.label || (tier.type === 'free' ? 'Free' : 'Plan');
+            pricingHtml += `<li>${label}: ${desc}</li>`;
+          });
+          pricingHtml += '</ul>';
+        } else {
+          const price = Number(prod.price || 0).toFixed(2);
+          pricingHtml = `<p><strong>Price:</strong> $${price}</p>`;
+        }
+        const imgSrc = prod.imageUrl && prod.imageUrl.trim()
+          ? (prod.imageUrl.match(/^https?:\/\//) ? prod.imageUrl : prod.imageUrl)
+          : 'https://via.placeholder.com/600x300?text=Product';
+        // Build features list
+        let featuresHtml = '';
+        if (Array.isArray(prod.features) && prod.features.length > 0) {
+          featuresHtml += '<h4>Features</h4><ul style="padding-left:1rem;">';
+          prod.features.forEach(f => {
+            featuresHtml += `<li>${f}</li>`;
+          });
+          featuresHtml += '</ul>';
+        }
+        // Build FAQs list
+        let faqsHtml = '';
+        if (Array.isArray(prod.faqs) && prod.faqs.length > 0) {
+          faqsHtml += '<h4>FAQs</h4><div>';
+          prod.faqs.forEach(faq => {
+            faqsHtml += `<p><strong>${faq.question}</strong><br>${faq.answer}</p>`;
+          });
+          faqsHtml += '</div>';
+        }
+        container.innerHTML = `
+          <div class="card" style="overflow:hidden;">
+            <img src="${imgSrc}" alt="${prod.title}" style="height:250px; object-fit:cover; width:100%;" />
+            <div style="padding:1rem;">
+              <h2>${prod.title}</h2>
+              <p><strong>Type:</strong> ${prod.type}</p>
+              <div>${pricingHtml}</div>
+              <p>${prod.description || ''}</p>
+              ${featuresHtml}
+              ${faqsHtml}
+              <button id="buyButton" class="button">Buy Now</button>
+            </div>
+          </div>
+        `;
+        const buyBtn = document.getElementById('buyButton');
+        buyBtn.addEventListener('click', async function() {
+          // Attempt to purchase; for now we just simulate checkout.
+          const loggedIn = localStorage.getItem('loggedIn') === 'true';
+          if (!loggedIn) {
+            alert('Please sign in to purchase this product.');
+            window.location.href = 'login.html';
+            return;
+          }
+          try {
+            const res = await fetch(`${API_BASE}/products/${encodeURIComponent(prod.id)}/checkout`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+              },
+              body: JSON.stringify({ quantity: 1 })
+            });
+            const contentType = res.headers.get('content-type') || '';
+            let data = null;
+            if (contentType.includes('application/json')) {
+              try { data = await res.json(); } catch { data = null; }
+            } else {
+              await res.text();
+            }
+            if (!res.ok) {
+              throw new Error((data && (data.error || data.message)) || res.statusText || 'Purchase failed');
+            }
+            alert((data && data.message) || 'Purchase successful!');
+          } catch (err) {
+            alert(err.message || 'Error during purchase');
+          }
+        });
+      }
+    })();
   </script>
 </body>
 </html>
