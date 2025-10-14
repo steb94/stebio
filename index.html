@@ -54,8 +54,53 @@
     </div>
 
     <footer>
-        © 2025 Steb.io. All rights reserved.
+        &copy; 2025 Steb.io. All rights reserved.
     </footer>
+
+    <!-- Global chat panel -->
+    <div id="global-chat" class="chat-container">
+        <div id="global-messages" class="chat-messages"></div>
+        <form id="global-chat-form" class="chat-input">
+            <textarea id="global-input" placeholder="Type a message..."></textarea>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Load Socket.IO client and initialise global chat -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Extract the API base URL from the meta tag (e.g., http://localhost:3000/api)
+        const apiBase = document.querySelector('meta[name="steb-api-base"]').getAttribute('content');
+        // Remove the trailing /api to get the WebSocket origin
+        const socketUrl = apiBase.replace(/\/api$/, '');
+        const socketGlobal = io(socketUrl, { path: '/socket.io' });
+
+        // Join the global chat room
+        socketGlobal.emit('joinRoom', 'global');
+
+        const globalForm     = document.getElementById('global-chat-form');
+        const globalInput    = document.getElementById('global-input');
+        const globalMessages = document.getElementById('global-messages');
+
+        globalForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const message = globalInput.value.trim();
+            if (message) {
+                // Send the message with optional token for identification
+                socketGlobal.emit('sendMessage', { roomId: 'global', content: message, token: localStorage.getItem('token') });
+                globalInput.value = '';
+            }
+        });
+
+        socketGlobal.on('message', ({ sender, content, roomId }) => {
+            if (roomId !== 'global') return;
+            const msg = document.createElement('div');
+            msg.classList.add('chat-message');
+            msg.innerHTML = '<span class="author">' + sender + ':</span> ' + content;
+            globalMessages.appendChild(msg);
+            globalMessages.scrollTop = globalMessages.scrollHeight;
+        });
+    </script>
 
     <!-- Common auth script to toggle nav links based on login/role -->
     <script src="auth.js"></script>
