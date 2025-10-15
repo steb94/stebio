@@ -1,116 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Product – Steb.io</title>
-  <!-- Set the API base URL here if your back‑end is deployed separately -->
-  <meta name="steb-api-base" content="/api" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <!-- Top navigation -->
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">Steb.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore" style="display:none;">My Store</a>
-        <a href="create-store.html" id="navCreateStore" style="display:none;">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct" class="active" style="display:none;">Add Product</a>
-        <a href="dashboard.html" id="navDashboard" style="display:none;">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts" style="display:none;">My Products</a>
-        <a href="reviews.html">Reviews</a>
-        <a href="support.html">Support</a>
-        <a href="#" id="navLogout" style="display:none;">Logout</a>
-        <a href="login.html" id="navLogin">Sign in</a>
-        <a href="signup.html" id="navSignup">Sign up</a>
-      </nav>
+  <nav>
+    <div class="brand">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTT..." alt="Steb Logo" class="logo">
     </div>
-  </header>
-  <!-- Main content -->
-  <main class="container" style="padding:2rem 0; max-width:800px;">
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="store.html" id="navMyStore">My Store</a>
+      <a href="create-store.html" id="navCreateStore">Create Store</a>
+      <a href="create-product.html" id="navCreateProduct" class="active">Add Product</a>
+      <a href="dashboard.html" id="navDashboard">Dashboard</a>
+      <a href="my-products.html" id="navMyProducts">My Products</a>
+      <a href="login.html" id="navLogin">Login</a>
+      <a href="signup.html" id="navSignup">Sign Up</a>
+      <a href="#" id="navLogout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container" style="max-width:800px;">
     <h2>Create a New Product</h2>
     <form id="productForm">
-      <div class="stack">
+      <div class="form-group">
         <label for="prodTitle">Product Title</label>
-        <input id="prodTitle" type="text" placeholder="e.g. Trading Bot" required />
+        <input id="prodTitle" type="text" placeholder="e.g. Trading Bot" required>
       </div>
-      <div class="stack">
-        <label for="prodHeadline">Headline</label>
-        <input id="prodHeadline" type="text" placeholder="Short tagline (optional)" />
-      </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="prodDesc">Description</label>
-        <textarea id="prodDesc" placeholder="Describe your product..." required></textarea>
+        <textarea id="prodDesc" placeholder="Describe your product…" required></textarea>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="prodImage">Image URL</label>
-        <input id="prodImage" type="text" placeholder="https://example.com/image.jpg" />
+        <input id="prodImage" type="url" placeholder="https://example.com/image.jpg">
       </div>
-      <div class="stack">
-        <label for="prodType">Product Type</label>
-        <select id="prodType" required>
-          <option value="">Select type</option>
-          <option value="Trading">Trading</option>
-          <option value="Communities">Communities</option>
-          <option value="Courses">Courses</option>
-          <option value="Software">Software</option>
-          <option value="Services">Services</option>
-          <option value="Templates">Templates</option>
-          <option value="ChatRoom">Chat Room</option>
-        </select>
-      </div>
-      <!-- Chat link container; hidden by default. Shown when product type is Chat Room -->
-      <div class="stack">
+      <div class="form-group">
         <label for="prodVideo">Video URL</label>
-        <input id="prodVideo" type="url" placeholder="https://example.com/video.mp4 or https://youtu.be/…" />
+        <input id="prodVideo" type="url" placeholder="https://example.com/video.mp4 or https://youtu.be/…">
       </div>
-      <div class="stack">
-        <label><input type="checkbox" id="includeChat" /> Include Chat Room</label>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <h3>Pricing Plans</h3>
-        <div id="pricingRows"></div>
-        <button type="button" id="addPricingBtn" class="button" style="margin-top:0.5rem;">Add Pricing Tier</button>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <h3>Payment Methods</h3>
-        <div style="display:flex; flex-wrap:wrap; gap:1rem;">
-          <label><input type="checkbox" id="payCard" value="card"> Credit Card</label>
-          <label><input type="checkbox" id="payPaypal" value="paypal"> PayPal</label>
-          <label><input type="checkbox" id="payCrypto" value="crypto"> Crypto</label>
-        </div>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <h3>Features</h3>
-        <div id="featureRows"></div>
-        <button type="button" id="addFeatureBtn" class="button" style="margin-top:0.5rem;">Add Feature</button>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <h3>FAQs</h3>
-        <div id="faqRows"></div>
-        <button type="button" id="addFaqBtn" class="button" style="margin-top:0.5rem;">Add FAQ</button>
-      </div>
-      <div style="margin-top:1.5rem;">
-        <h3>Advanced Options</h3>
-        <div class="stack">
-          <label for="affiliateRate">Affiliate Rate (%)</label>
-          <input id="affiliateRate" type="number" min="0" max="100" step="0.1" placeholder="e.g. 10" />
-        </div>
-        <div class="stack">
-          <label for="redirectUrl">Redirect After Checkout</label>
-          <input id="redirectUrl" type="url" placeholder="https://example.com/thank-you" />
-        </div>
-      </div>
-      <button type="submit" class="button" style="margin-top:1rem;">Create Product</button>
+      <button type="submit">Create Product</button>
     </form>
-  </main>
+  </div>
+
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
-      // Require that the user is logged in as a seller and has a store
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
         const role = localStorage.getItem('role');
@@ -129,220 +70,30 @@
           window.location.href = 'create-store.html';
           return;
         }
-        // Add an initial pricing row by default
-        addPricingRow();
       });
-
-      // Add event listeners for adding rows
-      document.getElementById('addPricingBtn').addEventListener('click', addPricingRow);
-      document.getElementById('addFeatureBtn').addEventListener('click', addFeatureRow);
-      document.getElementById('addFaqBtn').addEventListener('click', addFaqRow);
-
-      // Function to add a pricing row
-      function addPricingRow() {
-        const container = document.getElementById('pricingRows');
-        const row = document.createElement('div');
-        row.className = 'pricing-row row g-2';
-        row.innerHTML = `
-          <div class=\"col-md-3\">
-            <input type=\"text\" class=\"form-control labelInput\" placeholder=\"Label (e.g. Basic)\" />
-          </div>
-          <div class=\"col-md-3\">
-            <select class=\"form-control typeSelect\">
-              <option value=\"free\">Free</option>
-              <option value=\"one-time\">One-time</option>
-              <option value=\"recurring\">Recurring</option>
-            </select>
-          </div>
-          <div class=\"col-md-3\">
-            <input type=\"number\" class=\"form-control priceInput\" min=\"0\" step=\"0.01\" placeholder=\"Price\" />
-          </div>
-          <div class=\"col-md-2\">
-            <select class=\"form-control intervalSelect\">
-              <option value=\"Daily\">Daily</option>
-              <option value=\"Weekly\">Weekly</option>
-              <option value=\"Monthly\">Monthly</option>
-              <option value=\"Yearly\">Yearly</option>
-            </select>
-          </div>
-          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
-            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
-          </div>
-        `;
-        container.appendChild(row);
-        const typeSelect = row.querySelector('.typeSelect');
-        const intervalSelect = row.querySelector('.intervalSelect');
-        const priceInput = row.querySelector('.priceInput');
-        // Function to show/hide interval select and price requirement
-        function updateVisibility() {
-          const type = typeSelect.value;
-          if (type === 'recurring') {
-            intervalSelect.style.display = '';
-            priceInput.required = true;
-          } else if (type === 'one-time') {
-            intervalSelect.style.display = 'none';
-            priceInput.required = true;
-          } else {
-            intervalSelect.style.display = 'none';
-            priceInput.value = '';
-            priceInput.required = false;
-          }
-        }
-        updateVisibility();
-        typeSelect.addEventListener('change', updateVisibility);
-        row.querySelector('.remove-btn').addEventListener('click', () => {
-          container.removeChild(row);
-        });
-      }
-
-      // Function to add a feature row
-      function addFeatureRow() {
-        const container = document.getElementById('featureRows');
-        const row = document.createElement('div');
-        row.className = 'feature-row row g-2';
-        row.innerHTML = `
-          <div class=\"col-md-11\">
-            <input type=\"text\" class=\"form-control featureInput\" placeholder=\"Feature description\" />
-          </div>
-          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
-            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
-          </div>
-        `;
-        container.appendChild(row);
-        row.querySelector('.remove-btn').addEventListener('click', () => {
-          container.removeChild(row);
-        });
-      }
-
-      // Function to add a FAQ row
-      function addFaqRow() {
-        const container = document.getElementById('faqRows');
-        const row = document.createElement('div');
-        row.className = 'faq-row row g-2';
-        row.innerHTML = `
-          <div class=\"col-md-5\">
-            <input type=\"text\" class=\"form-control faqQuestionInput\" placeholder=\"Question\" />
-          </div>
-          <div class=\"col-md-6\">
-            <input type=\"text\" class=\"form-control faqAnswerInput\" placeholder=\"Answer\" />
-          </div>
-          <div class=\"col-md-1\" style=\"display:flex;align-items:center;\">
-            <button type=\"button\" class=\"remove-btn\" style=\"font-size:1.2rem;\">&times;</button>
-          </div>
-        `;
-        container.appendChild(row);
-        row.querySelector('.remove-btn').addEventListener('click', () => {
-          container.removeChild(row);
-        });
-      }
-
-      // Form submission
       document.getElementById('productForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        // Basic fields
-        const title     = document.getElementById('prodTitle').value.trim();
-        const headline  = document.getElementById('prodHeadline').value.trim();
+        const title       = document.getElementById('prodTitle').value.trim();
         const description = document.getElementById('prodDesc').value.trim();
-        const imageUrl  = document.getElementById('prodImage').value.trim();
-        const videoUrl  = document.getElementById('prodVideo').value.trim();
-        const type      = document.getElementById('prodType').value;
-        // Pricing
-        const pricing = [];
-        document.querySelectorAll('#pricingRows .pricing-row').forEach(row => {
-          const label = row.querySelector('.labelInput').value.trim();
-          const ttype = row.querySelector('.typeSelect').value;
-          const priceVal = row.querySelector('.priceInput').value;
-          const interval = row.querySelector('.intervalSelect').value;
-          const tier = { type: ttype };
-          if (label) tier.label = label;
-          if (ttype === 'recurring') {
-            tier.price = priceVal || '0';
-            tier.interval = interval;
-          } else if (ttype === 'one-time') {
-            tier.price = priceVal || '0';
-          } else {
-            tier.price = '0';
-          }
-          pricing.push(tier);
-        });
-        // Payment methods
-        const paymentMethods = [];
-        if (document.getElementById('payCard').checked) paymentMethods.push('card');
-        if (document.getElementById('payPaypal').checked) paymentMethods.push('paypal');
-        if (document.getElementById('payCrypto').checked) paymentMethods.push('crypto');
-        // Features
-        const features = [];
-        document.querySelectorAll('#featureRows .featureInput').forEach(input => {
-          const val = input.value.trim();
-          if (val) features.push(val);
-        });
-        // FAQs
-        const faqs = [];
-        document.querySelectorAll('#faqRows .faq-row').forEach(row => {
-          const q = row.querySelector('.faqQuestionInput').value.trim();
-          const a = row.querySelector('.faqAnswerInput').value.trim();
-          if (q && a) faqs.push({ question: q, answer: a });
-        });
-        // Advanced options
-        const affiliateRate = document.getElementById('affiliateRate').value.trim();
-        const redirectUrl   = document.getElementById('redirectUrl').value.trim();
-        const payload = {
-          title,
-          headline,
-          description,
-          imageUrl,
-          videoUrl,
-          type,
-          pricing,
-          paymentMethods,
-          features,
-          faqs
-        };
-        // If the seller wants to include a chat room, create one on the server
-        const includeChat = document.getElementById('includeChat').checked;
-        if (includeChat) {
-          try {
-            const chatRes = await fetch(`${API_BASE}/chatrooms`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-              },
-              body: JSON.stringify({})
-            });
-            const chatContentType = chatRes.headers.get('content-type') || '';
-            let chatData = null;
-            if (chatContentType.includes('application/json')) {
-              try { chatData = await chatRes.json(); } catch { chatData = null; }
-            } else {
-              await chatRes.text();
-            }
-            if (!chatRes.ok) {
-              throw new Error((chatData && (chatData.error || chatData.message)) || chatRes.statusText || 'Failed to create chat room');
-            }
-            if (chatData && chatData.id) {
-              payload.chatRoomId = chatData.id;
-            }
-          } catch (err) {
-            alert(err.message || 'Error creating chat room');
-            return;
-          }
-        }
-        if (affiliateRate) payload.affiliateRate = parseFloat(affiliateRate);
-        if (redirectUrl) payload.redirectUrl = redirectUrl;
+        const imageUrl    = document.getElementById('prodImage').value.trim();
+        const videoUrl    = document.getElementById('prodVideo').value.trim();
+        const payload = { name: title, description, price: 0 };
+        if (imageUrl) payload.imageUrl = imageUrl;
+        if (videoUrl) payload.videoUrl = videoUrl;
+        const storeId = localStorage.getItem('storeId');
         try {
-          const res = await fetch(`${API_BASE}/products`, {
+          const res = await fetch(`${API_BASE}/stores/${storeId}/products`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+              'Authorization': localStorage.getItem('token') || ''
             },
             body: JSON.stringify(payload)
           });
           const contentType = res.headers.get('content-type') || '';
           let data = null;
           if (contentType.includes('application/json')) {
-            try { data = await res.json(); } catch { data = null; }
+            data = await res.json().catch(() => null);
           } else {
             await res.text();
           }
@@ -350,7 +101,6 @@
             throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to create product');
           }
           alert((data && data.message) || 'Product created successfully!');
-          // Redirect to My Products to view the new product
           window.location.href = 'my-products.html';
         } catch (err) {
           alert(err.message || 'Error creating product');
