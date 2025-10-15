@@ -1,61 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Store – Steb.io</title>
-  <!-- API base: update this if your back‑end is deployed separately -->
-  <meta name="steb-api-base" content="/api" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <!-- Top navigation -->
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">Steb.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore">My Store</a>
-        <a href="create-store.html" id="navCreateStore">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct">Add Product</a>
-        <a href="dashboard.html" id="navDashboard">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts">My Products</a>
-        <a href="reviews.html">Reviews</a>
-        <a href="support.html">Support</a>
-        <a href="#" id="navLogout">Logout</a>
-        <a href="login.html" id="navLogin">Sign in</a>
-        <a href="signup.html" id="navSignup">Sign up</a>
-      </nav>
+  <nav>
+    <div class="brand">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTkSuQmCC" alt="Steb Logo" class="logo">
     </div>
-  </header>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="store.html" id="navMyStore">My Store</a>
+      <a href="create-store.html" id="navCreateStore" class="active">Create Store</a>
+      <a href="create-product.html" id="navCreateProduct">Add Product</a>
+      <a href="dashboard.html" id="navDashboard">Dashboard</a>
+      <a href="my-products.html" id="navMyProducts">My Products</a>
+      <a href="login.html" id="navLogin">Login</a>
+      <a href="signup.html" id="navSignup">Sign Up</a>
+      <a href="#" id="navLogout">Logout</a>
+    </div>
+  </nav>
 
-  <!-- Main content -->
-  <main class="container" style="padding:2rem 0; max-width:600px;">
+  <div class="container" style="max-width:600px;">
     <h2>Create Your Store</h2>
     <p>Start selling by setting up your store. Fill out the form below.</p>
     <form id="storeForm">
-      <div class="stack">
+      <div class="form-group">
         <label for="storeName">Store Name</label>
-        <input id="storeName" type="text" placeholder="e.g. My Awesome Store" required />
+        <input id="storeName" type="text" placeholder="e.g. My Awesome Store" required>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="storeDesc">Description</label>
-        <textarea id="storeDesc" placeholder="Describe what you sell..." required></textarea>
+        <textarea id="storeDesc" placeholder="Describe what you sell…" required></textarea>
       </div>
-      <!-- Store image URL field -->
-      <div class="stack">
+      <div class="form-group">
         <label for="storeImage">Store Image URL</label>
-        <input id="storeImage" type="url" placeholder="https://example.com/store.jpg" />
+        <input id="storeImage" type="url" placeholder="https://example.com/store.jpg">
       </div>
-      <button type="submit" class="button w-100">Create Store</button>
+      <button type="submit">Create Store</button>
     </form>
-  </main>
+  </div>
 
   <script src="auth.js"></script>
   <script>
     (function() {
-      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
-      // Require login and seller role
+      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
       document.addEventListener('DOMContentLoaded', () => {
         const loggedIn = localStorage.getItem('loggedIn') === 'true';
         const role = localStorage.getItem('role');
@@ -68,34 +61,31 @@
           window.location.href = 'index.html';
           return;
         }
-        // If store already exists, redirect to dashboard
         if (localStorage.getItem('storeId')) {
+          // If user already has a store, send them to dashboard
           window.location.href = 'dashboard.html';
-          return;
         }
       });
-      // Submit handler
       document.getElementById('storeForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const name = document.getElementById('storeName').value.trim();
         const description = document.getElementById('storeDesc').value.trim();
         const imageUrl = document.getElementById('storeImage').value.trim();
-        // Build payload with optional image URL
         const payload = { name, description };
         if (imageUrl) payload.imageUrl = imageUrl;
         try {
-          const res = await fetch(`${API_BASE}/stores`, {
+          const res = await fetch(API_BASE + '/stores', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+              'Authorization': localStorage.getItem('token') || ''
             },
             body: JSON.stringify(payload)
           });
           const contentType = res.headers.get('content-type') || '';
           let data = null;
           if (contentType.includes('application/json')) {
-            try { data = await res.json(); } catch { data = null; }
+            data = await res.json().catch(() => null);
           } else {
             await res.text();
           }
