@@ -14,7 +14,7 @@
     <!-- Primary navigation -->
     <nav>
         <div class="brand">
-            <!-- Replace the brand text with the new logo image -->
+            <!-- Logo image must be present in the same folder -->
             <img src="steb-logo.png" alt="STEB Logo" class="logo">
         </div>
         <div class="nav-links">
@@ -69,7 +69,16 @@
     <!-- Load Socket.IO client and initialise global chat -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Extract the API base URL from the meta tag (e.g., http://localhost:3000/api)
+        /*
+         * Chat client initialization.  We connect to the Socket.IO server,
+         * join the global chat room, and wire up the chat UI.  Input is
+         * disabled for unauthenticated users; attempting to send a message
+         * without logging in displays a notice with links to sign up or log in.
+         * Messages from the server are appended to the chat container and the
+         * view is scrolled to the bottom so users cannot scroll up to read
+         * older messages.
+         */
+        // Extract the API base URL from the meta tag (e.g. http://localhost:3000/api)
         const apiBase = document.querySelector('meta[name="steb-api-base"]').getAttribute('content');
         // Remove the trailing /api to get the WebSocket origin
         const socketUrl = apiBase.replace(/\/api$/, '');
@@ -82,22 +91,48 @@
         const globalInput    = document.getElementById('global-input');
         const globalMessages = document.getElementById('global-messages');
 
+        // Disable typing for unauthenticated users and update placeholder
+        function updateInputState() {
+            const tkn = localStorage.getItem('token');
+            if (!tkn) {
+                globalInput.disabled = true;
+                globalInput.placeholder = 'Please sign up or log in to chat';
+            } else {
+                globalInput.disabled = false;
+                globalInput.placeholder = 'Type a message...';
+            }
+        }
+        updateInputState();
+
         globalForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            const message = globalInput.value.trim();
+            const message      = globalInput.value.trim();
+            const currentToken = localStorage.getItem('token');
+            // If not logged in, display a notice instead of sending
+            if (!currentToken) {
+                const notice = document.createElement('div');
+                notice.classList.add('chat-message');
+                notice.innerHTML = '<span class="author">System:</span> You must be logged in to chat. <a href="signup.html">Sign up</a> or <a href="login.html">log in</a>.';
+                globalMessages.appendChild(notice);
+                globalMessages.scrollTop = globalMessages.scrollHeight;
+                return;
+            }
             if (message) {
-                // Send the message with optional token for identification
-                socketGlobal.emit('sendMessage', { roomId: 'global', content: message, token: localStorage.getItem('token') });
+                socketGlobal.emit('sendMessage', { roomId: 'global', content: message, token: currentToken });
                 globalInput.value = '';
             }
         });
 
+        // Receive messages from the server
         socketGlobal.on('message', ({ sender, content, roomId }) => {
             if (roomId !== 'global') return;
             const msg = document.createElement('div');
             msg.classList.add('chat-message');
             msg.innerHTML = '<span class="author">' + sender + ':</span> ' + content;
             globalMessages.appendChild(msg);
+            // Always scroll to the bottom.  Because the CSS hides overflow,
+            // users cannot scroll back up, giving the effect of a continuously
+            // moving feed where older messages disappear off the top.
             globalMessages.scrollTop = globalMessages.scrollHeight;
         });
     </script>
