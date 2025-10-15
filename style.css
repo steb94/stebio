@@ -1,8 +1,4 @@
 /* Modernized stylesheet for the Steb.io marketplace */
-/* This file defines a simple design system using CSS variables
-   inspired by 2025 logo trends. Royal blues and teal accents 
-   convey trust, stability and innovation:contentReference[oaicite:0]{index=0}. */
-
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 /* Theme variables */
@@ -229,7 +225,10 @@ table tbody tr:nth-child(even) {
 
 .chat-messages {
     flex-grow: 1;
-    overflow-y: auto;
+    /* Hide the vertical scrollbar so users cannot scroll back up.  Messages
+       still accumulate and JavaScript scrolls to the bottom on each new
+       message, creating a continuously moving feed. */
+    overflow-y: hidden;
     padding: 1rem;
     background-color: var(--background-color);
 }
@@ -260,6 +259,12 @@ table tbody tr:nth-child(even) {
     padding: 0.5rem;
     margin-right: 1rem;
     font-family: 'Poppins', sans-serif;
+}
+
+/* Style disabled chat input to indicate it is inactive */
+.chat-input textarea:disabled {
+    background-color: #eceff4;
+    cursor: not-allowed;
 }
 
 .chat-input button {
