@@ -1,12 +1,12 @@
-/* 
- * Steb.io back‑end server
+/*
+ * Steb.io back-end server
  *
- * This file provides a simple Express server with in‑memory JSON data
- * storage and a Socket.IO instance for real‑time chat.  It supports
+ * This file provides a simple Express server with in-memory JSON data
+ * storage and a Socket.IO instance for real-time chat.  It supports
  * user signup/login, store and product creation, listing products,
- * and per‑room chat.  A special `global` room powers the main site
+ * and per-room chat.  A special `global` room powers the main site
  * chat.  Clients can join any room by ID and send messages to that
- * room, leveraging Socket.IO rooms:contentReference[oaicite:0]{index=0}.
+ * room, leveraging Socket.IO rooms.
  *
  * To run this server you will need to install a few packages:
  *   npm install express cors socket.io uuid
@@ -78,7 +78,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Simple token‑based authentication middleware
+// Simple token-based authentication middleware
 function auth(req, res, next) {
   const token = req.headers.authorization || '';
   const users = loadJson(USERS_FILE);
@@ -212,42 +212,42 @@ io.on('connection', (socket) => {
 
   // Join a room (product chat or global chat)
   socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
-    // Optionally notify others in the room
-    socket.to(roomId).emit('message', {
-      sender: 'System',
-      content: 'A new participant has joined the chat',
-      roomId
-    });
+  	socket.join(roomId);
+  	// Optionally notify others in the room
+  	socket.to(roomId).emit('message', {
+  	  sender: 'System',
+  	  content: 'A new participant has joined the chat',
+  	  roomId
+  	});
   });
 
   // Handle incoming messages with token validation
   socket.on('sendMessage', ({ roomId, content, token }) => {
-    /*
-     * Only authenticated users should be allowed to send chat messages.  We
-     * validate the provided token against our user store.  If the token is
-     * invalid or absent, notify the sender that they need to log in before
-     * sending messages.  Otherwise, broadcast the message to the specified
-     * room, attributing it to the authenticated user's username.  This
-     * server‑side check prevents unauthenticated posts:contentReference[oaicite:1]{index=1}.
-     */
-    const users = loadJson(USERS_FILE);
-    const user  = users.find(u => u.token === token);
-    if (!user) {
-      // Notify only the sender that they must log in to chat
-      socket.emit('message', {
-        sender: 'System',
-        content: 'You must be logged in to chat. Please sign up or log in.',
-        roomId
-      });
-      return;
-    }
-    const sender = user.username || 'Anonymous';
-    io.to(roomId).emit('message', { sender, content, roomId });
+  	/*
+  	 * Only authenticated users should be allowed to send chat messages.  We
+  	 * validate the provided token against our user store.  If the token is
+  	 * invalid or absent, notify the sender that they need to log in before
+  	 * sending messages.  Otherwise, broadcast the message to the specified
+  	 * room, attributing it to the authenticated user's username.  This
+  	 * server-side check prevents unauthenticated posts.
+  	 */
+  	const users = loadJson(USERS_FILE);
+  	const user  = users.find(u => u.token === token);
+  	if (!user) {
+  	  // Notify only the sender that they must log in to chat
+  	  socket.emit('message', {
+  	    sender: 'System',
+  	    content: 'You must be logged in to chat. Please sign up or log in.',
+  	    roomId
+  	  });
+  	  return;
+  	}
+  	const sender = user.username || 'Anonymous';
+  	io.to(roomId).emit('message', { sender, content, roomId });
   });
 
   socket.on('disconnect', () => {
-    console.log('Socket disconnected:', socket.id);
+  	console.log('Socket disconnected:', socket.id);
   });
 });
 
