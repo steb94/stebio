@@ -1,113 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up – Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
-  <!--
-    The API base is relative by default.  If you deploy your back‑end
-    separately (e.g., on a different Render service), update this value
-    to the full API base URL (e.g. https://my‑api.onrender.com/api).
-  -->
-  <meta name="steb-api-base" content="/api" />
+  <link rel="stylesheet" href="style.css">
+  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">STEB.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore">My Store</a>
-        <a href="create-store.html" id="navCreateStore">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct">Add Product</a>
-        <a href="dashboard.html" id="navDashboard">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts">My Products</a>
-        <a href="login.html" id="navLogin">Sign in</a>
-        <a href="signup.html" id="navSignup" class="active">Sign up</a>
-        <a href="#" id="navLogout">Logout</a>
-      </nav>
+  <nav>
+    <div class="brand">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTkSuQmCC" alt="Steb Logo" class="logo">
     </div>
-  </header>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="store.html" id="navMyStore">My Store</a>
+      <a href="create-store.html" id="navCreateStore">Create Store</a>
+      <a href="create-product.html" id="navCreateProduct">Add Product</a>
+      <a href="dashboard.html" id="navDashboard">Dashboard</a>
+      <a href="my-products.html" id="navMyProducts">My Products</a>
+      <a href="login.html" id="navLogin">Login</a>
+      <a href="signup.html" id="navSignup" class="active">Sign Up</a>
+      <a href="#" id="navLogout">Logout</a>
+    </div>
+  </nav>
 
-  <main class="container" style="padding:2rem 0;">
+  <div class="container">
     <h2>Create an Account</h2>
-    <form id="signupForm" style="max-width:400px;margin-top:1rem;">
-      <div class="stack">
-        <label for="signupEmail">Email</label>
-        <input id="signupEmail" type="email" placeholder="Your email" required />
-      </div>
-      <div class="stack">
+    <form id="signupForm" style="max-width:400px;">
+      <div class="form-group">
         <label for="signupUsername">Username</label>
-        <input id="signupUsername" type="text" placeholder="Choose a username" required />
+        <input id="signupUsername" type="text" placeholder="Choose a username" required>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="signupPass">Password</label>
-        <input id="signupPass" type="password" placeholder="Create a password" required />
+        <input id="signupPass" type="password" placeholder="Create a password" required>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="signupConfirm">Confirm Password</label>
-        <input id="signupConfirm" type="password" placeholder="Confirm your password" required />
+        <input id="signupConfirm" type="password" placeholder="Confirm your password" required>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="signupRole">Account Type</label>
         <select id="signupRole">
           <option value="buyer">Buyer</option>
           <option value="seller">Seller</option>
         </select>
       </div>
-      <button type="submit" class="button" style="width:100%;">Sign Up</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">Already have an account? <a href="login.html">Sign in here</a></p>
+      <button type="submit">Sign Up</button>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">Already have an account? <a href="login.html">Log in here</a></p>
     </form>
-  </main>
+  </div>
 
   <script src="auth.js"></script>
   <script>
     (function() {
-      // Determine the API base from the meta tag, falling back to '/api'
       const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
-      // Handle form submission
-      document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email    = document.getElementById('signupEmail').value.trim();
         const username = document.getElementById('signupUsername').value.trim();
         const pass     = document.getElementById('signupPass').value;
         const confirm  = document.getElementById('signupConfirm').value;
         const role     = document.getElementById('signupRole').value;
-        // Validate matching passwords
         if (pass !== confirm) {
           alert('Passwords do not match');
           return;
         }
         try {
-          // Send the request to the back‑end
-          const res = await fetch(`${API_BASE}/users/signup`, {
+          const res = await fetch(API_BASE + '/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, username, password: pass, role })
+            body: JSON.stringify({ username, password: pass, role })
           });
-          // Inspect Content‑Type to safely parse JSON
           const contentType = res.headers.get('content-type') || '';
           let data = null;
           if (contentType.includes('application/json')) {
-            try {
-              data = await res.json();
-            } catch {
-              data = null;
-            }
+            data = await res.json().catch(() => null);
           } else {
-            // Consume non‑JSON body to avoid JSON.parse errors
             await res.text();
           }
-          // Handle non‑OK responses gracefully
           if (!res.ok) {
             throw new Error((data && (data.error || data.message)) || res.statusText || 'Signup failed');
           }
-          // Success message and redirect
-          alert((data && data.message) || 'Signup successful! Please verify your email and then log in.');
+          alert((data && data.message) || 'Signup successful! You can now log in.');
           window.location.href = 'login.html';
         } catch (err) {
-          alert(err.message || 'Error signing up.');
+          alert(err.message || 'Error signing up');
         }
       });
     })();
