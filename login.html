@@ -1,91 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign In – Steb.io</title>
-  <link rel="stylesheet" href="style.css" />
-  <!--
-    The API base is relative by default.  If you deploy your back‑end
-    separately (e.g., on a different Render service), update this value
-    to the full API base URL (e.g. https://my‑api.onrender.com/api).
-  -->
-  <meta name="steb-api-base" content="/api" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – Steb.io</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">STEB.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore">My Store</a>
-        <a href="create-store.html" id="navCreateStore">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct">Add Product</a>
-        <a href="dashboard.html" id="navDashboard">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts">My Products</a>
-        <a href="login.html" id="navLogin" class="active">Sign in</a>
-        <a href="signup.html" id="navSignup">Sign up</a>
-        <a href="#" id="navLogout">Logout</a>
-      </nav>
+  <nav>
+    <div class="brand">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTkSuQmCC" alt="Steb Logo" class="logo">
     </div>
-  </header>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="store.html" id="navMyStore">My Store</a>
+      <a href="create-store.html" id="navCreateStore">Create Store</a>
+      <a href="create-product.html" id="navCreateProduct">Add Product</a>
+      <a href="dashboard.html" id="navDashboard">Dashboard</a>
+      <a href="my-products.html" id="navMyProducts">My Products</a>
+      <a href="login.html" id="navLogin" class="active">Login</a>
+      <a href="signup.html" id="navSignup">Sign Up</a>
+      <a href="#" id="navLogout">Logout</a>
+    </div>
+  </nav>
 
-  <main class="container" style="padding:2rem 0;">
-    <h2>Sign In</h2>
-    <form id="loginForm" style="max-width:400px;margin-top:1rem;">
-      <div class="stack">
-        <label for="loginEmail">Email or Username</label>
-        <input id="loginEmail" type="text" placeholder="Your email or username" required />
+  <div class="container">
+    <h2>Log In</h2>
+    <form id="loginForm" style="max-width:400px;">
+      <div class="form-group">
+        <label for="loginUsername">Username</label>
+        <input id="loginUsername" type="text" placeholder="Your username" required>
       </div>
-      <div class="stack">
+      <div class="form-group">
         <label for="loginPassword">Password</label>
-        <input id="loginPassword" type="password" placeholder="Your password" required />
+        <input id="loginPassword" type="password" placeholder="Your password" required>
       </div>
-      <button type="submit" class="button" style="width:100%;">Sign In</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">Don't have an account? <a href="signup.html">Sign up here</a></p>
-      <p style="font-size:0.9rem;"><a href="forgot-password.html">Forgot your password?</a></p>
+      <button type="submit">Log In</button>
+      <p style="margin-top:0.5rem;font-size:0.9rem;">Don’t have an account? <a href="signup.html">Sign up here</a></p>
     </form>
-  </main>
+  </div>
 
   <script src="auth.js"></script>
   <script>
     (function() {
-      // Determine the API base from the meta tag, falling back to '/api'
       const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
-      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const identifier = document.getElementById('loginEmail').value.trim();
-        const password   = document.getElementById('loginPassword').value.trim();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
         try {
-          const res = await fetch(`${API_BASE}/users/login`, {
+          const res = await fetch(API_BASE + '/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ identifier, password })
+            body: JSON.stringify({ username, password })
           });
-          // Inspect Content‑Type to safely parse JSON
           const contentType = res.headers.get('content-type') || '';
           let data = null;
           if (contentType.includes('application/json')) {
-            try {
-              data = await res.json();
-            } catch {
-              data = null;
-            }
+            data = await res.json().catch(() => null);
           } else {
-            // Consume non‑JSON body to avoid JSON.parse errors
             await res.text();
           }
-          // Handle errors
           if (!res.ok || (data && data.error)) {
             throw new Error((data && (data.error || data.message)) || res.statusText || 'Login failed');
           }
-          // Persist auth details in localStorage
+          // Persist auth details
           localStorage.setItem('loggedIn', 'true');
-          if (data && data.username) localStorage.setItem('username', data.username);
-          if (data && data.token)    localStorage.setItem('token', data.token);
-          if (data && data.role)     localStorage.setItem('role', data.role);
-          if (data && data.storeId)  localStorage.setItem('storeId', data.storeId);
-          alert('Login successful');
+          if (data.username) localStorage.setItem('username', data.username);
+          if (data.token)    localStorage.setItem('token', data.token);
+          if (data.role)     localStorage.setItem('role', data.role);
+          if (data.storeId)  localStorage.setItem('storeId', data.storeId);
+          alert('Login successful!');
           window.location.href = 'index.html';
         } catch (err) {
           alert(err.message || 'Login failed');
