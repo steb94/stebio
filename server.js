@@ -6,7 +6,7 @@
  * user signup/login, store and product creation, listing products,
  * and per‑room chat.  A special `global` room powers the main site
  * chat.  Clients can join any room by ID and send messages to that
- * room, leveraging Socket.IO rooms:contentReference[oaicite:1]{index=1}.
+ * room, leveraging Socket.IO rooms:contentReference[oaicite:0]{index=0}.
  *
  * To run this server you will need to install a few packages:
  *   npm install express cors socket.io uuid
@@ -27,9 +27,9 @@ const { v4: uuidv4 } = require('uuid');
 // Data persistence helpers
 // -----------------------------------------------------------------------------
 
-const DATA_DIR     = path.join(__dirname, 'data');
-const USERS_FILE   = path.join(DATA_DIR, 'users.json');
-const STORES_FILE  = path.join(DATA_DIR, 'stores.json');
+const DATA_DIR      = path.join(__dirname, 'data');
+const USERS_FILE    = path.join(DATA_DIR, 'users.json');
+const STORES_FILE   = path.join(DATA_DIR, 'stores.json');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 
 function ensureDataFiles() {
@@ -213,7 +213,7 @@ io.on('connection', (socket) => {
   // Join a room (product chat or global chat)
   socket.on('joinRoom', (roomId) => {
     socket.join(roomId);
-    // Optionally send a system message to others in the room
+    // Optionally notify others in the room
     socket.to(roomId).emit('message', {
       sender: 'System',
       content: 'A new participant has joined the chat',
@@ -221,10 +221,28 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Handle incoming messages
+  // Handle incoming messages with token validation
   socket.on('sendMessage', ({ roomId, content, token }) => {
-    // In a real app you would decode the token and look up the user
-    const sender = token || 'Guest';
+    /*
+     * Only authenticated users should be allowed to send chat messages.  We
+     * validate the provided token against our user store.  If the token is
+     * invalid or absent, notify the sender that they need to log in before
+     * sending messages.  Otherwise, broadcast the message to the specified
+     * room, attributing it to the authenticated user's username.  This
+     * server‑side check prevents unauthenticated posts:contentReference[oaicite:1]{index=1}.
+     */
+    const users = loadJson(USERS_FILE);
+    const user  = users.find(u => u.token === token);
+    if (!user) {
+      // Notify only the sender that they must log in to chat
+      socket.emit('message', {
+        sender: 'System',
+        content: 'You must be logged in to chat. Please sign up or log in.',
+        roomId
+      });
+      return;
+    }
+    const sender = user.username || 'Anonymous';
     io.to(roomId).emit('message', { sender, content, roomId });
   });
 
