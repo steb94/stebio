@@ -2,93 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up – Steb.io</title>
+  <title>Sign Up - Steb.io</title>
   <link rel="stylesheet" href="style.css">
-  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <nav>
-    <div class="brand">
-      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTkSuQmCC" alt="Steb Logo" class="logo">
-    </div>
-    <div class="nav-links">
+  <header class="site-header">
+    <div class="brand">Steb.io</div>
+    <nav class="nav-links">
       <a href="index.html">Home</a>
-      <a href="store.html" id="navMyStore">My Store</a>
-      <a href="create-store.html" id="navCreateStore">Create Store</a>
-      <a href="create-product.html" id="navCreateProduct">Add Product</a>
-      <a href="dashboard.html" id="navDashboard">Dashboard</a>
-      <a href="my-products.html" id="navMyProducts">My Products</a>
-      <a href="login.html" id="navLogin">Login</a>
-      <a href="signup.html" id="navSignup" class="active">Sign Up</a>
-      <a href="#" id="navLogout">Logout</a>
-    </div>
-  </nav>
-
-  <div class="container">
-    <h2>Create an Account</h2>
-    <form id="signupForm" style="max-width:400px;">
-      <div class="form-group">
-        <label for="signupUsername">Username</label>
-        <input id="signupUsername" type="text" placeholder="Choose a username" required>
-      </div>
-      <div class="form-group">
-        <label for="signupPass">Password</label>
-        <input id="signupPass" type="password" placeholder="Create a password" required>
-      </div>
-      <div class="form-group">
-        <label for="signupConfirm">Confirm Password</label>
-        <input id="signupConfirm" type="password" placeholder="Confirm your password" required>
-      </div>
-      <div class="form-group">
-        <label for="signupRole">Account Type</label>
-        <select id="signupRole">
-          <option value="buyer">Buyer</option>
-          <option value="seller">Seller</option>
-        </select>
-      </div>
+      <a href="login.html">Login</a>
+    </nav>
+  </header>
+  <main class="container">
+    <h2>Sign Up</h2>
+    <form id="signupForm" class="form">
+      <label for="su_username">Username</label>
+      <input type="text" id="su_username" required />
+      <label for="su_password">Password</label>
+      <input type="password" id="su_password" required />
+      <label for="su_role">Role</label>
+      <select id="su_role">
+        <option value="buyer">Buyer</option>
+        <option value="seller">Seller</option>
+      </select>
       <button type="submit">Sign Up</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">Already have an account? <a href="login.html">Log in here</a></p>
     </form>
-  </div>
-
+    <p>Already have an account? <a href="login.html">Login</a></p>
+    <div id="signupError" class="error-message"></div>
+  </main>
   <script src="auth.js"></script>
+  <script src="app.js"></script>
   <script>
-    (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
-      document.getElementById('signupForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const username = document.getElementById('signupUsername').value.trim();
-        const pass     = document.getElementById('signupPass').value;
-        const confirm  = document.getElementById('signupConfirm').value;
-        const role     = document.getElementById('signupRole').value;
-        if (pass !== confirm) {
-          alert('Passwords do not match');
-          return;
-        }
-        try {
-          const res = await fetch(API_BASE + '/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password: pass, role })
-          });
-          const contentType = res.headers.get('content-type') || '';
-          let data = null;
-          if (contentType.includes('application/json')) {
-            data = await res.json().catch(() => null);
-          } else {
-            await res.text();
-          }
-          if (!res.ok) {
-            throw new Error((data && (data.error || data.message)) || res.statusText || 'Signup failed');
-          }
-          alert((data && data.message) || 'Signup successful! You can now log in.');
-          window.location.href = 'login.html';
-        } catch (err) {
-          alert(err.message || 'Error signing up');
-        }
-      });
-    })();
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('su_username').value.trim();
+      const password = document.getElementById('su_password').value.trim();
+      const role     = document.getElementById('su_role').value;
+      const result   = await signup(username, password, role);
+      if (result.error) {
+        document.getElementById('signupError').textContent = result.error;
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
   </script>
 </body>
 </html>
