@@ -2,82 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login – Steb.io</title>
+  <title>Login - Steb.io</title>
   <link rel="stylesheet" href="style.css">
-  <meta name="steb-api-base" content="/api">
 </head>
 <body>
-  <nav>
-    <div class="brand">
-      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAABQCAIAAACoK28rAAAHm0lEQVR4nO3ce1hTZRwH8HMml20MmYwElItKXBQeBfUBrxl4QY28pSJKVvpEVop5TS0pzTRNxfSxVCzRUsvA9JEyU4PAR1GQKcZlgOCGCFPGZTB2g53+4Il82EEHnO3wvv0+f8G7c7Yv23fnec/ZO0j++CUEALjgsB0AACZBoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBliBQgOsQKEBVqDQACtQaIAVKDTAChQaYAUKDbAChQZYgUIDrEChAVag0AArUGiAFSg0wAoUGmAFCg2wAoUGWIFCA6xAoQFWoNAAK1BogBUoNMAKFBpgBQoNsAKFBlj5ByhpavO1TOj6AAAAAElFTkSuQmCC" alt="Steb Logo" class="logo">
-    </div>
-    <div class="nav-links">
+  <header class="site-header">
+    <div class="brand">Steb.io</div>
+    <nav class="nav-links">
       <a href="index.html">Home</a>
-      <a href="store.html" id="navMyStore">My Store</a>
-      <a href="create-store.html" id="navCreateStore">Create Store</a>
-      <a href="create-product.html" id="navCreateProduct">Add Product</a>
-      <a href="dashboard.html" id="navDashboard">Dashboard</a>
-      <a href="my-products.html" id="navMyProducts">My Products</a>
-      <a href="login.html" id="navLogin" class="active">Login</a>
-      <a href="signup.html" id="navSignup">Sign Up</a>
-      <a href="#" id="navLogout">Logout</a>
-    </div>
-  </nav>
-
-  <div class="container">
-    <h2>Log In</h2>
-    <form id="loginForm" style="max-width:400px;">
-      <div class="form-group">
-        <label for="loginUsername">Username</label>
-        <input id="loginUsername" type="text" placeholder="Your username" required>
-      </div>
-      <div class="form-group">
-        <label for="loginPassword">Password</label>
-        <input id="loginPassword" type="password" placeholder="Your password" required>
-      </div>
-      <button type="submit">Log In</button>
-      <p style="margin-top:0.5rem;font-size:0.9rem;">Don’t have an account? <a href="signup.html">Sign up here</a></p>
+      <a href="signup.html">Sign Up</a>
+    </nav>
+  </header>
+  <main class="container">
+    <h2>Login</h2>
+    <form id="loginForm" class="form">
+      <label for="username">Username</label>
+      <input type="text" id="username" required />
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+      <button type="submit">Login</button>
     </form>
-  </div>
-
+    <p>Don't have an account? <a href="signup.html">Sign up</a></p>
+    <div id="loginError" class="error-message"></div>
+  </main>
   <script src="auth.js"></script>
+  <script src="app.js"></script>
   <script>
-    (function() {
-      const API_BASE = document.querySelector('meta[name="steb-api-base"]').getAttribute('content') || '/api';
-      document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const username = document.getElementById('loginUsername').value.trim();
-        const password = document.getElementById('loginPassword').value;
-        try {
-          const res = await fetch(API_BASE + '/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-          });
-          const contentType = res.headers.get('content-type') || '';
-          let data = null;
-          if (contentType.includes('application/json')) {
-            data = await res.json().catch(() => null);
-          } else {
-            await res.text();
-          }
-          if (!res.ok || (data && data.error)) {
-            throw new Error((data && (data.error || data.message)) || res.statusText || 'Login failed');
-          }
-          // Persist auth details
-          localStorage.setItem('loggedIn', 'true');
-          if (data.username) localStorage.setItem('username', data.username);
-          if (data.token)    localStorage.setItem('token', data.token);
-          if (data.role)     localStorage.setItem('role', data.role);
-          if (data.storeId)  localStorage.setItem('storeId', data.storeId);
-          alert('Login successful!');
-          window.location.href = 'index.html';
-        } catch (err) {
-          alert(err.message || 'Login failed');
-        }
-      });
-    })();
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const result   = await login(username, password);
+      if (result.error) {
+        document.getElementById('loginError').textContent = result.error;
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
   </script>
 </body>
 </html>
