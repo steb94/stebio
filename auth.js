@@ -1,78 +1,31 @@
-(function() {
-  /**
-   * Update the top navigation based on login state and user role.
-   * Shows or hides links by ID. Expects that nav elements exist on the page.
-   */
-  function updateNav() {
-    const loggedIn = localStorage.getItem('loggedIn') === 'true';
-    const role = localStorage.getItem('role');
+/*
+ * Client-side authentication helpers.
+ *
+ * This script manages login state in localStorage, updates navigation links
+ * according to whether the user is logged in, and provides a logout function.
+ */
 
-    // Helper to show/hide an element by ID
-    function show(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = '';
-    }
-    function hide(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    }
-
-    if (loggedIn) {
-      // When logged in, hide login/signup and show logout
-      hide('navLogin');
-      hide('navSignup');
-      show('navLogout');
-      if (role === 'seller') {
-        // Determine if seller already has a store
-        const storeId = localStorage.getItem('storeId');
-        // Only show create store link if no store exists
-        if (storeId) {
-          hide('navCreateStore');
-        } else {
-          show('navCreateStore');
-        }
-        show('navCreateProduct');
-        show('navDashboard');
-        show('navMyProducts');
-        show('navMyStore');
-      } else {
-        // Buyers: hide seller options
-        hide('navCreateStore');
-        hide('navCreateProduct');
-        hide('navDashboard');
-        hide('navMyProducts');
-        hide('navMyStore');
-      }
-    } else {
-      // Not logged in: show login/signup; hide seller/buyer specific links
-      show('navLogin');
-      show('navSignup');
-      hide('navLogout');
-      hide('navCreateStore');
-      hide('navCreateProduct');
-      hide('navDashboard');
-      hide('navMyProducts');
-      hide('navMyStore');
-    }
-
-    // Attach logout behaviour once
-    const logoutLink = document.getElementById('navLogout');
-    if (logoutLink && !logoutLink.dataset.bound) {
-      logoutLink.dataset.bound = 'true';
-      logoutLink.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Clear auth-related localStorage keys
-        localStorage.removeItem('loggedIn');
-        localStorage.removeItem('username');
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('storeId');
-        // Redirect to login page
-        window.location.href = 'login.html';
-      });
-    }
+function updateNav() {
+  const token        = localStorage.getItem('token');
+  const loginLink    = document.getElementById('loginLink');
+  const signupLink   = document.getElementById('signupLink');
+  const logoutLink   = document.getElementById('logoutLink');
+  const dashboardLink= document.getElementById('dashboardLink');
+  if (token) {
+    if (loginLink)     loginLink.style.display     = 'none';
+    if (signupLink)    signupLink.style.display    = 'none';
+    if (logoutLink)    logoutLink.style.display    = 'inline';
+    if (dashboardLink) dashboardLink.style.display = 'inline';
+  } else {
+    if (loginLink)     loginLink.style.display     = 'inline';
+    if (signupLink)    signupLink.style.display    = 'inline';
+    if (logoutLink)    logoutLink.style.display    = 'none';
+    if (dashboardLink) dashboardLink.style.display = 'none';
   }
+}
 
-  // Run updateNav on page load
-  document.addEventListener('DOMContentLoaded', updateNav);
-})();
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  localStorage.removeItem('role');
+}
