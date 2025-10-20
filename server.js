@@ -1,246 +1,236 @@
-/* Steb.io Extended Marketplace Server (no external dependencies) */
+// Simple Express API skeleton for STEB.io marketplace
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
-const http = require('http');
-const fs   = require('fs');
-const path = require('path');
-const { randomUUID } = require('crypto');
-const { URL } = require('url');
+const app = express();
+const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 
-const DATA_DIR      = path.join(__dirname, 'data');
-const USERS_FILE    = path.join(DATA_DIR, 'users.json');
-const STORES_FILE   = path.join(DATA_DIR, 'stores.json');
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
-const ORDERS_FILE   = path.join(DATA_DIR, 'orders.json');
-const REVIEWS_FILE  = path.join(DATA_DIR, 'reviews.json');
+// In-memory stores (for demonstration only). In production, use a database.
+const users = [];
+const products = [];
 
-function ensureDataFiles() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR);
+// Simple order store. In production, store orders in a database.
+// Each order contains an id, buyerId, items (array of {productId, quantity}), total and status.
+const orders = [];
+
+app.use(cors());
+app.use(express.json());
+
+// Helper function to generate JWT tokens
+function generateToken(user) {
+  return jwt.sign(
+    { id: user.id, role: user.role, email: user.email },
+    JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+}
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'Missing token' });
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+}
+
+// Authorization middleware for seller routes
+function requireSeller(req, res, next) {
+  if (req.user.role !== 'seller') {
+    return res.status(403).json({ message: 'Seller role required' });
   }
-  const files = [USERS_FILE, STORES_FILE, PRODUCTS_FILE, ORDERS_FILE, REVIEWS_FILE];
-  files.forEach(f => {
-    if (!fs.existsSync(f)) {
-      fs.writeFileSync(f, '[]');
-    }
-  });
+  next();
 }
 
-function loadJson(filePath) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    return [];
+// Routes
+
+/**
+ * User registration
+ * Expects: { username, email, password, role }
+ * Role can be 'buyer' or 'seller'.
+ */
+app.post('/api/auth/register', async (req, res) => {
+  const { username, email, password, role } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Missing required fields' });
   }
-}
-
-function saveJson(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-}
-
-function sendJson(res, status, data) {
-  const body = JSON.stringify(data);
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) });
-  res.end(body);
-}
-
-function sendText(res, status, text, contentType = 'text/plain') {
-  res.writeHead(status, { 'Content-Type': contentType, 'Content-Length': Buffer.byteLength(text) });
-  res.end(text);
-}
-
-function sendFile(res, filePath) {
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      sendText(res, 404, 'Not Found');
-      return;
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    const mimeTypes = {
-      '.html': 'text/html',
-      '.css': 'text/css',
-      '.js': 'application/javascript',
-      '.json': 'application/json',
-      '.png': 'image/png',
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.gif': 'image/gif',
-      '.svg': 'image/svg+xml'
-    };
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
-    res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': data.length });
-    res.end(data);
-  });
-}
-
-async function parseBody(req) {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', () => {
-      if (!body) {
-        resolve({});
-      } else {
-        try {
-          const json = JSON.parse(body);
-          resolve(json);
-        } catch (err) {
-          reject(new Error('Invalid JSON'));
-        }
-      }
-    });
-  });
-}
-
-function authenticate(req) {
-  const token = req.headers['authorization'] || '';
-  if (!token) return null;
-  const users = loadJson(USERS_FILE);
-  return users.find(u => u.token === token) || null;
-}
-
-function computeCategoryStats() {
-  const products = loadJson(PRODUCTS_FILE);
-  const orders   = loadJson(ORDERS_FILE);
-  const categoryMap = {};
-  products.forEach(p => {
-    if (!categoryMap[p.category]) {
-      categoryMap[p.category] = { productCount: 0, orderCount: 0 };
-    }
-    categoryMap[p.category].productCount += 1;
-  });
-  orders.forEach(o => {
-    const prod = products.find(p => p.id === o.productId);
-    if (prod) {
-      categoryMap[prod.category].orderCount += 1;
-    }
-  });
-  const entries = Object.entries(categoryMap).map(([category, stats]) => ({ category, ...stats }));
-  entries.sort((a, b) => b.orderCount - a.orderCount);
-  return entries;
-}
-
-function computeTrendingProducts(days = null) {
-  const products = loadJson(PRODUCTS_FILE);
-  const orders   = loadJson(ORDERS_FILE);
-  const now = new Date();
-  const counts = {};
-  orders.forEach(o => {
-    if (days !== null) {
-      const orderDate = new Date(o.date);
-      const ageMs = now - orderDate;
-      if (ageMs > days * 86400000) return;
-    }
-    counts[o.productId] = (counts[o.productId] || 0) + 1;
-  });
-  const prodsWithCounts = products.map(p => ({ ...p, orderCount: counts[p.id] || 0 }));
-  prodsWithCounts.sort((a, b) => b.orderCount - a.orderCount);
-  return prodsWithCounts;
-}
-
-function computeSellerAnalytics(user) {
-  const orders   = loadJson(ORDERS_FILE);
-  const products = loadJson(PRODUCTS_FILE);
-  const stores   = loadJson(STORES_FILE).filter(s => s.ownerId === user.id);
-  let totalSales = 0;
-  let totalOrders= 0;
-  const prodSales = {};
-  stores.forEach(store => {
-    store.productIds.forEach(pid => {
-      prodSales[pid] = { count: 0, revenue: 0 };
-    });
-  });
-  orders.forEach(o => {
-    if (!prodSales[o.productId]) return;
-    const prod = products.find(p => p.id === o.productId);
-    if (!prod) return;
-    prodSales[o.productId].count += 1;
-    prodSales[o.productId].revenue += prod.price;
-    totalSales += prod.price;
-    totalOrders += 1;
-  });
-  const topProducts = Object.entries(prodSales).map(([pid, stats]) => {
-    const prod = products.find(p => p.id === pid);
-    return {
-      id: pid,
-      name: prod ? prod.name : 'Unknown',
-      count: stats.count,
-      revenue: stats.revenue
-    };
-  }).sort((a, b) => b.count - a.count);
-  const storeStats = stores.map(store => {
-    let ordersCount = 0;
-    let revenue = 0;
-    store.productIds.forEach(pid => {
-      ordersCount += prodSales[pid] ? prodSales[pid].count : 0;
-      revenue     += prodSales[pid] ? prodSales[pid].revenue : 0;
-    });
-    return { storeId: store.id, storeName: store.name, totalOrders: ordersCount, totalSales: revenue };
-  });
-  return { totalSales, totalOrders, topProducts, storeStats };
-}
-
-// API handlers (identical to the previous version, omitted here for brevity)
-
-// ... keep your existing handler functions (signup, login, listProducts, etc.) unchanged ...
-
-// Routing logic
-function route(req, res) {
-  const urlObj   = new URL(req.url, 'http://localhost');
-  const pathname = urlObj.pathname;
-  if (pathname.startsWith('/api')) {
-    const path = pathname.substring(4) || '/';
-    const user = authenticate(req);
-    const routes = [
-      { method: 'POST', pattern: /^\/signup$/, handler: 'signup' },
-      { method: 'POST', pattern: /^\/login$/, handler: 'login' },
-      { method: 'GET',  pattern: /^\/user\/purchases$/, handler: 'userPurchases' },
-      { method: 'GET',  pattern: /^\/user\/stores$/, handler: 'userStores' },
-      { method: 'POST', pattern: /^\/stores$/, handler: 'createStore' },
-      { method: 'GET',  pattern: /^\/stores$/, handler: 'listStores' },
-      { method: 'GET',  pattern: /^\/stores\/([^/]+)$/, handler: 'getStore' },
-      { method: 'GET',  pattern: /^\/stores\/([^/]+)\/products$/, handler: 'listStoreProducts' },
-      { method: 'POST', pattern: /^\/stores\/([^/]+)\/products$/, handler: 'createProduct' },
-      { method: 'GET',  pattern: /^\/products$/, handler: 'listProducts' },
-      { method: 'GET',  pattern: /^\/products\/([^/]+)$/, handler: 'getProduct' },
-      { method: 'GET',  pattern: /^\/products\/([^/]+)\/reviews$/, handler: 'getReviews' },
-      { method: 'POST', pattern: /^\/products\/([^/]+)\/reviews$/, handler: 'postReview' },
-      { method: 'GET',  pattern: /^\/products\/([^/]+)\/content$/, handler: 'getContent' },
-      { method: 'POST', pattern: /^\/purchase$/, handler: 'purchase' },
-      { method: 'GET',  pattern: /^\/stats$/, handler: 'stats' },
-      { method: 'GET',  pattern: /^\/categories$/, handler: 'categories' },
-      { method: 'GET',  pattern: /^\/trending$/, handler: 'trending' },
-      { method: 'GET',  pattern: /^\/seller\/analytics$/, handler: 'sellerAnalytics' }
-    ];
-    for (const routeObj of routes) {
-      if (req.method === routeObj.method && routeObj.pattern.test(path)) {
-        const params = path.match(routeObj.pattern).slice(1);
-        const handlerName = routeObj.handler;
-        // Call the corresponding handler (assuming handlers[handlerName] exists)
-        handlers[handlerName](req, res, user, params, null, null, urlObj);
-        return;
-      }
-    }
-    return sendJson(res, 404, { error: 'Endpoint not found' });
+  if (!['buyer', 'seller'].includes(role)) {
+    return res.status(400).json({ message: 'Invalid role' });
   }
-  // Serve static files
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-  if (!filePath.startsWith(__dirname)) {
-    return sendText(res, 403, 'Forbidden');
+  // Check for existing user
+  if (users.some(u => u.email === email)) {
+    return res.status(409).json({ message: 'Email already registered' });
   }
-  fs.stat(filePath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      return sendText(res, 404, 'Not Found');
-    }
-    sendFile(res, filePath);
-  });
-}
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = {
+    id: uuidv4(),
+    username,
+    email,
+    password: hashedPassword,
+    role
+  };
+  users.push(newUser);
+  // Generate token
+  const token = generateToken(newUser);
+  res.status(201).json({ message: 'User registered', token });
+});
 
-// Initialize and start server
-ensureDataFiles();
-const PORT = process.env.PORT || 3000;
-const server = http.createServer(route);
-server.listen(PORT, () => {
-  console.log(`Steb.io server running at http://localhost:${PORT}`);
+/**
+ * User login
+ * Expects: { email, password }
+ */
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find(u => u.email === email);
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+  const token = generateToken(user);
+  res.json({ message: 'Login successful', token });
+});
+
+/**
+ * Create a new order
+ * Expects: { items: [{ productId, quantity }] }
+ * Computes total from product prices. Only authenticated users can create orders.
+ */
+app.post('/api/orders', authenticateToken, (req, res) => {
+  const { items } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'Order must include at least one item' });
+  }
+  // Validate products exist and compute total
+  let total = 0;
+  const validatedItems = [];
+  for (const item of items) {
+    const product = products.find(p => p.id === item.productId);
+    if (!product) {
+      return res.status(400).json({ message: `Product ${item.productId} does not exist` });
+    }
+    const quantity = Number(item.quantity) || 1;
+    total += product.price * quantity;
+    validatedItems.push({ productId: product.id, quantity });
+  }
+  const order = {
+    id: uuidv4(),
+    buyerId: req.user.id,
+    items: validatedItems,
+    total,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  orders.push(order);
+  res.status(201).json(order);
+});
+
+/**
+ * List orders for the authenticated user
+ * Buyers see their own orders. Sellers see orders containing their products.
+ */
+app.get('/api/orders', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const role = req.user.role;
+  if (role === 'buyer') {
+    const userOrders = orders.filter(o => o.buyerId === userId);
+    return res.json(userOrders);
+  }
+  if (role === 'seller') {
+    // Seller: return orders where any item belongs to seller's products
+    const sellerProductIds = products.filter(p => p.ownerId === userId).map(p => p.id);
+    const sellerOrders = orders.filter(o => o.items.some(item => sellerProductIds.includes(item.productId)));
+    return res.json(sellerOrders);
+  }
+  // For admins or unknown roles, return all orders (in future implement admin role)
+  res.json(orders);
+});
+
+/**
+ * Create product (seller only)
+ * Expects: { name, description, price, type }
+ */
+app.post('/api/products', authenticateToken, requireSeller, (req, res) => {
+  const { name, description, price, type } = req.body;
+  if (!name || !price || !type) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+  const product = {
+    id: uuidv4(),
+    name,
+    description: description || '',
+    price: parseFloat(price),
+    type,
+    ownerId: req.user.id,
+    createdAt: new Date().toISOString()
+  };
+  products.push(product);
+  res.status(201).json(product);
+});
+
+/**
+ * Get all products
+ */
+app.get('/api/products', (req, res) => {
+  res.json(products);
+});
+
+/**
+ * Get product by ID
+ */
+app.get('/api/products/:id', (req, res) => {
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+  res.json(product);
+});
+
+/**
+ * Update product (seller only, must own product)
+ */
+app.put('/api/products/:id', authenticateToken, requireSeller, (req, res) => {
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+  if (product.ownerId !== req.user.id) {
+    return res.status(403).json({ message: 'Not authorized to update this product' });
+  }
+  const { name, description, price, type } = req.body;
+  if (name) product.name = name;
+  if (description) product.description = description;
+  if (price) product.price = parseFloat(price);
+  if (type) product.type = type;
+  res.json(product);
+});
+
+/**
+ * Delete product (seller only, must own product)
+ */
+app.delete('/api/products/:id', authenticateToken, requireSeller, (req, res) => {
+  const index = products.findIndex(p => p.id === req.params.id);
+  if (index === -1) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+  const product = products[index];
+  if (product.ownerId !== req.user.id) {
+    return res.status(403).json({ message: 'Not authorized to delete this product' });
+  }
+  products.splice(index, 1);
+  res.json({ message: 'Product deleted' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
