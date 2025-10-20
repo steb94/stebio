@@ -18,6 +18,11 @@ const products = [];
 // Each order contains an id, buyerId, items (array of {productId, quantity}), total and status.
 const orders = [];
 
+// Root route to indicate server status
+app.get('/', (req, res) => {
+  res.send('STEB.io API server is running');
+});
+
 app.use(cors());
 app.use(express.json());
 
