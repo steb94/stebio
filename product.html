@@ -1,163 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Product Details – Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">Steb.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore">My Store</a>
-        <a href="create-store.html" id="navCreateStore">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct">Add Product</a>
-        <a href="dashboard.html" id="navDashboard">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts">My Products</a>
-        <a href="reviews.html">Reviews</a>
-        <a href="support.html">Support</a>
-        <a href="#" id="navLogout">Logout</a>
-        <a href="login.html" id="navLogin">Sign in</a>
-        <a href="signup.html" id="navSignup">Sign up</a>
-      </nav>
-    </div>
+  <header class="site-header">
+    <div class="brand">Steb.io</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="dashboard.html">Dashboard</a>
+    </nav>
   </header>
-  <main class="container" style="padding:2rem 0; max-width:800px;">
-    <div id="productContainer">
-      <!-- Product details will be injected here -->
-    </div>
+  <main class="container">
+    <div id="productDetails"></div>
+    <div id="purchaseSection"></div>
+    <div id="contentSection"></div>
+    <div id="reviewsSection"></div>
+    <div id="reviewFormSection"></div>
+    <div id="productError" class="error-message"></div>
   </main>
   <script src="auth.js"></script>
+  <script src="app.js"></script>
   <script>
-    (function() {
-      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
-      document.addEventListener('DOMContentLoaded', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        if (!id) {
-          document.getElementById('productContainer').innerHTML = '<p>Product not found.</p>';
-          return;
+    // get id from query string
+    function getProductId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+    let currentProductId = getProductId();
+    let currentProduct = null;
+    let hasPurchased = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!currentProductId) {
+        document.getElementById('productError').textContent = 'No product ID provided';
+        return;
+      }
+      try {
+        currentProduct = await getProduct(currentProductId);
+        renderProduct();
+        // check purchase status if logged in
+        const token = localStorage.getItem('token');
+        if (token) {
+          const purchases = await getPurchases();
+          hasPurchased = purchases.some(p => p.id === currentProductId);
         }
-        loadProduct(id);
-      });
-      async function loadProduct(id) {
+        renderPurchaseSection();
+        loadReviews();
+        if (hasPurchased) {
+          loadContent();
+          renderReviewForm();
+        }
+      } catch (err) {
+        document.getElementById('productError').textContent = err.error || err.message;
+      }
+    });
+
+    function renderProduct() {
+      const div = document.getElementById('productDetails');
+      div.innerHTML = '';
+      const p = currentProduct;
+      const html = `
+        <h2>${p.name}</h2>
+        <p><em>Type:</em> ${p.type}</p>
+        <p><em>Category:</em> ${p.category || 'N/A'}</p>
+        <p>${p.description}</p>
+        <p><strong>Price:</strong> $${p.price}</p>
+        <p><strong>Rating:</strong> ${p.rating || 'No ratings yet'}</p>
+      `;
+      div.innerHTML = html;
+    }
+
+    function renderPurchaseSection() {
+      const section = document.getElementById('purchaseSection');
+      section.innerHTML = '';
+      const token = localStorage.getItem('token');
+      if (!token) {
+        section.innerHTML = '<p>You must <a href="login.html">login</a> to purchase this product.</p>';
+        return;
+      }
+      if (hasPurchased) {
+        section.innerHTML = '<p>You have purchased this product.</p>';
+        return;
+      }
+      // show buy button
+      const btn = document.createElement('button');
+      btn.textContent = `Buy for $${currentProduct.price}`;
+      btn.addEventListener('click', async () => {
         try {
-          const res = await fetch(`${API_BASE}/products/${encodeURIComponent(id)}`);
-          const contentType = res.headers.get('content-type') || '';
-          let data = null;
-          if (contentType.includes('application/json')) {
-            try { data = await res.json(); } catch { data = null; }
-          } else {
-            await res.text();
-          }
-          if (!res.ok) {
-            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load product');
-          }
-          renderProduct(data);
+          const result = await purchaseProduct(currentProductId);
+          alert('Purchase successful');
+          hasPurchased = true;
+          renderPurchaseSection();
+          loadContent();
+          loadReviews();
+          renderReviewForm();
         } catch (err) {
-          document.getElementById('productContainer').innerHTML = `<p>${err.message || 'Error loading product'}</p>`;
+          alert(err.error || err.message);
         }
+      });
+      section.appendChild(btn);
+    }
+
+    async function loadContent() {
+      const res = await getProductContent(currentProductId);
+      const section = document.getElementById('contentSection');
+      section.innerHTML = '';
+      if (currentProduct.type === 'digital') {
+        section.innerHTML = `<p><strong>Download:</strong> <a href="${res.fileUrl}" target="_blank">Download file</a></p>`;
       }
-      function renderProduct(prod) {
-        const container = document.getElementById('productContainer');
-        // Build pricing list
-        let pricingHtml = '';
-        if (Array.isArray(prod.pricing) && prod.pricing.length > 0) {
-          pricingHtml += '<ul style=\"list-style:none; padding-left:0; margin:0;\">';
-          prod.pricing.forEach(tier => {
-            const p = Number(tier.price || 0).toFixed(2);
-            let desc = '';
-            if (tier.type === 'free') {
-              desc = 'Free';
-            } else if (tier.type === 'one-time') {
-              desc = '$' + p + ' one-time';
-            } else {
-              desc = '$' + p + ' / ' + tier.interval;
-            }
-            const label = tier.label || (tier.type === 'free' ? 'Free' : 'Plan');
-            pricingHtml += `<li>${label}: ${desc}</li>`;
-          });
-          pricingHtml += '</ul>';
-        } else {
-          const price = Number(prod.price || 0).toFixed(2);
-          pricingHtml = `<p><strong>Price:</strong> $${price}</p>`;
-        }
-        const imgSrc = prod.imageUrl && prod.imageUrl.trim()
-          ? (prod.imageUrl.match(/^https?:\\/\\//) ? prod.imageUrl : prod.imageUrl)
-          : 'https://via.placeholder.com/600x300?text=Product';
-        // Build features list
-        let featuresHtml = '';
-        if (Array.isArray(prod.features) && prod.features.length > 0) {
-          featuresHtml += '<h4>Features</h4><ul style=\"padding-left:1rem;\">';
-          prod.features.forEach(f => {
-            featuresHtml += `<li>${f}</li>`;
-          });
-          featuresHtml += '</ul>';
-        }
-        // Build FAQs list
-        let faqsHtml = '';
-        if (Array.isArray(prod.faqs) && prod.faqs.length > 0) {
-          faqsHtml += '<h4>FAQs</h4><div>';
-          prod.faqs.forEach(faq => {
-            faqsHtml += `<p><strong>${faq.question}</strong><br>${faq.answer}</p>`;
-          });
-          faqsHtml += '</div>';
-        }
-        container.innerHTML = `
-          <div class=\"card\" style=\"overflow:hidden;\">
-            <img src=\"${imgSrc}\" alt=\"${prod.title}\" style=\"height:250px; object-fit:cover; width:100%;\" />
-            <div style=\"padding:1rem;\">
-              <h2>${prod.title}</h2>
-              <p><strong>Type:</strong> ${prod.type}</p>
-              <div>${pricingHtml}</div>
-              <p>${prod.description || ''}</p>
-              ${prod.videoUrl ? `<video controls src=\"${prod.videoUrl}\" style=\"width:100%; max-height:300px; margin:1rem 0;\"></video>` : ''}
-              ${featuresHtml}
-              ${faqsHtml}
-              <button id=\"buyButton\" class=\"button\">Buy Now</button>
-              ${prod.chatRoomId ? `<a href=\"chatroom.html?room=${encodeURIComponent(prod.chatRoomId)}\" class=\"button\" style=\"margin-left:0.5rem;\">Join Chat</a>` : ''}
-            </div>
-          </div>
-        `;
-        const buyBtn = document.getElementById('buyButton');
-        buyBtn.addEventListener('click', async function() {
-          // Attempt to purchase; for now we just simulate checkout.
-          const loggedIn = localStorage.getItem('loggedIn') === 'true';
-          if (!loggedIn) {
-            alert('Please sign in to purchase this product.');
-            window.location.href = 'login.html';
-            return;
-          }
-          try {
-            const res = await fetch(`${API_BASE}/products/${encodeURIComponent(prod.id)}/checkout`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-              },
-              body: JSON.stringify({ quantity: 1 })
-            });
-            const contentType = res.headers.get('content-type') || '';
-            let data = null;
-            if (contentType.includes('application/json')) {
-              try { data = await res.json(); } catch { data = null; }
-            } else {
-              await res.text();
-            }
-            if (!res.ok) {
-              throw new Error((data && (data.error || data.message)) || res.statusText || 'Purchase failed');
-            }
-            alert((data && data.message) || 'Purchase successful!');
-          } catch (err) {
-            alert(err.message || 'Error during purchase');
-          }
+      if (currentProduct.type === 'membership') {
+        section.innerHTML = `<p>${res.membershipBenefits}</p>`;
+      }
+      if (currentProduct.type === 'course') {
+        const list = document.createElement('ol');
+        res.courseContent.forEach(lesson => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${lesson.title}:</strong> ${lesson.content}`;
+          list.appendChild(li);
         });
+        section.appendChild(list);
       }
-    })();
+    }
+
+    async function loadReviews() {
+      const reviews = await getReviews(currentProductId);
+      const section = document.getElementById('reviewsSection');
+      section.innerHTML = '<h3>Reviews</h3>';
+      if (reviews.length === 0) {
+        section.innerHTML += '<p>No reviews yet.</p>';
+        return;
+      }
+      reviews.forEach(r => {
+        const div = document.createElement('div');
+        div.classList.add('review');
+        div.innerHTML = `<strong>Rating:</strong> ${r.rating}/5 <br/><em>${r.comment}</em> <br/><small>${new Date(r.date).toLocaleDateString()}</small>`;
+        section.appendChild(div);
+      });
+    }
+
+    function renderReviewForm() {
+      const section = document.getElementById('reviewFormSection');
+      section.innerHTML = '';
+      const token = localStorage.getItem('token');
+      if (!token || !hasPurchased) return;
+      const form = document.createElement('form');
+      form.classList.add('form');
+      form.innerHTML = `
+        <h3>Leave a Review</h3>
+        <label>Rating (1-5)</label>
+        <input type="number" name="rating" min="1" max="5" required />
+        <label>Comment</label>
+        <textarea name="comment"></textarea>
+        <button type="submit">Submit Review</button>
+      `;
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const rating = parseInt(form.rating.value);
+        const comment = form.comment.value.trim();
+        try {
+          await submitReview(currentProductId, rating, comment);
+          alert('Review submitted');
+          loadReviews();
+        } catch (err) {
+          alert(err.error || err.message);
+        }
+      });
+      section.appendChild(form);
+    }
+
+    // Chat functionality has been removed.  If you later integrate a real‑time
+    // chat service, define an initChat() function here that connects to
+    // the server and handles message display and sending.
   </script>
 </body>
 </html>
