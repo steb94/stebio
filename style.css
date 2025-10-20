@@ -1,309 +1,196 @@
-/* Modernized stylesheet for the Steb.io marketplace */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
-/* Theme variables */
-:root {
-    --primary-color: #0a3d62;
-    --accent-color: #2ca58d;
-    --background-color: #f5f7fa;
-    --card-background: #ffffff;
-    --text-color: #333333;
-    --border-color: #e0e0e0;
-    --error-color: #e63946;
-}
-
-/* Global resets */
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+/*
+ * Comprehensive stylesheet for the Steb.io marketplace.  This file
+ * defines styles for the site header, navigation links, forms,
+ * product grids, trending sections, categories lists, dashboards and
+ * analytics tables.  The layout is kept clean and responsive using
+ * simple flexbox and grid constructs.
+ */
 
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
-    line-height: 1.6;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f8f8f8;
+  color: #333;
 }
 
-/* Navigation bar */
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: var(--primary-color);
-    color: #ffffff;
-    padding: 1rem 2rem;
+/* Header and navigation */
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #0d6efd;
+  color: #fff;
+}
+.site-header .brand {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+.nav-links a {
+  color: #fff;
+  margin-left: 15px;
+  text-decoration: none;
+}
+.nav-links a:hover {
+  text-decoration: underline;
 }
 
-nav .brand {
-    display: flex;
-    align-items: center;
-}
-
-nav .brand img.logo {
-    height: 40px;
-    width: auto;
-}
-
-nav .nav-links a {
-    color: #ffffff;
-    margin-left: 1rem;
-    text-decoration: none;
-    font-weight: 500;
-    transition: opacity 0.2s ease-in-out;
-}
-
-nav .nav-links a:hover {
-    opacity: 0.8;
-}
-
-/* Layout wrappers */
+/* Containers and sections */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+.search-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.search-section input[type="text"],
+.search-section select {
+  flex: 1;
+  min-width: 150px;
+}
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  background: #0d6efd;
+  color: #fff;
+  cursor: pointer;
+}
+button:hover {
+  background: #0a58ca;
 }
 
-/* Card component */
-.card {
-    background-color: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* Stats section */
+#stats {
+  margin-bottom: 20px;
 }
 
-/* Forms */
-form .form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1rem;
+/* Categories and trending */
+.categories-list,
+.trending-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
 }
-
-form label {
-    margin-bottom: 0.25rem;
-    font-weight: 500;
+.category-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: default;
+  font-size: 0.9em;
 }
-
-form input,
-form textarea,
-form select {
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 1rem;
-    background-color: #ffffff;
-    transition: border-color 0.2s ease-in-out;
+.trending-card {
+  background: #fff;
+  padding: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
-
-form input:focus,
-form textarea:focus,
-form select:focus {
-    outline: none;
-    border-color: var(--primary-color);
+.trending-card h4 {
+  margin: 0 0 5px;
 }
-
-form .error-message {
-    color: var(--error-color);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-form button {
-    background-color: var(--accent-color);
-    color: #ffffff;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s ease-in-out;
-}
-
-form button:hover {
-    background-color: #218c74;
-}
-
-/* Tables (e.g. in dashboards) */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-}
-
-table th,
-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color);
-    text-align: left;
-}
-
-table th {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 600;
-}
-
-table tbody tr:nth-child(even) {
-    background-color: var(--background-color);
+.trending-card a.btn {
+  margin-top: auto;
 }
 
 /* Product grid */
 .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
 }
-
 .product-card {
-    background-color: var(--card-background);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.2s ease-in-out;
+  background: #fff;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
-
-.product-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.product-card img {
-    width: 100%;
-    border-radius: 4px;
-    margin-bottom: 0.5rem;
-    object-fit: cover;
-}
-
 .product-card h3 {
-    font-size: 1.2rem;
-    margin: 0.5rem 0;
-    color: var(--primary-color);
+  margin: 0 0 5px;
 }
-
 .product-card p {
-    flex-grow: 1;
-    margin-bottom: 0.5rem;
+  margin: 0;
+}
+.product-card .btn {
+  margin-top: auto;
+  text-align: center;
 }
 
-.product-card .price {
-    color: var(--accent-color);
-    font-weight: 600;
+/* Forms */
+.form {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 500px;
 }
 
-/* Buttons outside of forms */
-.btn {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    background-color: var(--primary-color);
-    color: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.2s ease-in-out;
+/* Dashboard elements */
+.store {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  background: #fff;
+}
+.product-list {
+  margin-top: 10px;
+}
+.product-item,
+.purchase-item {
+  padding: 5px 0;
+  border-bottom: 1px solid #eee;
+}
+.purchase-item a {
+  text-decoration: none;
+  color: #0d6efd;
 }
 
-.btn:hover {
-    background-color: #093358;
+/* Analytics */
+.analytics {
+  margin-top: 30px;
+  padding: 15px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+.analytics table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.analytics th,
+.analytics td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
 }
 
-/* Chat room */
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 80vh;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background-color: var(--card-background);
-    overflow: hidden;
-}
-
-.chat-messages {
-    flex-grow: 1;
-    /* Hide the vertical scrollbar so users cannot scroll back up.  Messages
-       still accumulate and JavaScript scrolls to the bottom on each new
-       message, creating a continuously moving feed. */
-    overflow-y: hidden;
-    padding: 1rem;
-    background-color: var(--background-color);
-}
-
-.chat-message {
-    margin-bottom: 1rem;
-}
-
-.chat-message .author {
-    font-weight: 600;
-    margin-right: 0.5rem;
-    color: var(--primary-color);
-}
-
-.chat-input {
-    display: flex;
-    align-items: center;
-    border-top: 1px solid var(--border-color);
-    padding: 1rem;
-    background-color: var(--card-background);
-}
-
-.chat-input textarea {
-    flex-grow: 1;
-    resize: none;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 0.5rem;
-    margin-right: 1rem;
-    font-family: 'Poppins', sans-serif;
-}
-
-/* Style disabled chat input to indicate it is inactive */
-.chat-input textarea:disabled {
-    background-color: #eceff4;
-    cursor: not-allowed;
-}
-
-.chat-input button {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.2s ease-in-out;
-}
-
-.chat-input button:hover {
-    background-color: #093358;
-}
-
-/* Footer */
-footer {
-    background-color: var(--primary-color);
-    color: #ffffff;
-    text-align: center;
-    padding: 1rem;
-    margin-top: 2rem;
-}
-
-/* Responsive navigation */
-@media (max-width: 768px) {
-    nav {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    nav .nav-links {
-        display: flex;
-        flex-wrap: wrap;
-        width: 100%;
-        margin-top: 1rem;
-    }
-    nav .nav-links a {
-        margin: 0.25rem 0.5rem;
-    }
+.error-message {
+  color: red;
+  margin-top: 10px;
 }
