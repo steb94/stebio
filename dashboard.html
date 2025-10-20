@@ -1,132 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard – Steb.io</title>
-  <meta name="steb-api-base" content="/api" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Steb.io</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header id="top-nav">
-    <div class="container nav">
-      <div class="brand">Steb.io</div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="store.html" id="navMyStore">My Store</a>
-        <a href="create-store.html" id="navCreateStore">Create Store</a>
-        <a href="create-product.html" id="navCreateProduct">Add Product</a>
-        <a href="dashboard.html" id="navDashboard" class="active">Dashboard</a>
-        <a href="my-products.html" id="navMyProducts">My Products</a>
-        <a href="reviews.html">Reviews</a>
-        <a href="support.html">Support</a>
-        <a href="#" id="navLogout">Logout</a>
-        <a href="login.html" id="navLogin">Sign in</a>
-        <a href="signup.html" id="navSignup">Sign up</a>
-      </nav>
-    </div>
+  <header class="site-header">
+    <div class="brand">Steb.io</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="#" id="logoutLink">Logout</a>
+    </nav>
   </header>
-  <main class="container" style="padding:2rem 0;">
-    <h2>Store Dashboard</h2>
-    <div id="storeInfo" style="margin-bottom:2rem;"></div>
-    <div id="stats" class="row g-3" style="margin-bottom:2rem;"></div>
-    <div id="actions" style="margin-bottom:2rem;">
-      <a href="create-product.html" class="button">Add New Product</a>
-      <a href="my-products.html" class="button" style="margin-left:1rem;">View My Products</a>
+  <main class="container">
+    <h2>Dashboard</h2>
+    <div id="userInfo" class="user-info"></div>
+    <!-- Seller section -->
+    <div id="sellerSection" style="display:none;">
+      <h3>Your Stores</h3>
+      <div id="storesList"></div>
+      <h4>Create New Store</h4>
+      <form id="createStoreForm" class="form">
+        <label for="storeName">Store Name</label>
+        <input type="text" id="storeName" required />
+        <label for="storeDesc">Description</label>
+        <textarea id="storeDesc"></textarea>
+        <button type="submit">Create Store</button>
+      </form>
+      <!-- Seller analytics section (hidden until data loads) -->
+      <div id="analyticsSection" class="analytics" style="display:none;"></div>
     </div>
+    <!-- Buyer section -->
+    <div id="buyerSection" style="display:none;">
+      <h3>Your Purchases</h3>
+      <div id="purchasesList"></div>
+    </div>
+    <div id="dashboardError" class="error-message"></div>
   </main>
   <script src="auth.js"></script>
+  <script src="app.js"></script>
   <script>
-    (function() {
-      const API_BASE = document.querySelector('meta[name=\"steb-api-base\"]').getAttribute('content') || '/api';
-      document.addEventListener('DOMContentLoaded', () => {
-        const loggedIn = localStorage.getItem('loggedIn') === 'true';
-        const role = localStorage.getItem('role');
-        const storeId = localStorage.getItem('storeId');
-        if (!loggedIn) {
-          window.location.href = 'login.html';
-          return;
-        }
-        if (role !== 'seller') {
-          alert('Only sellers can view the dashboard.');
-          window.location.href = 'index.html';
-          return;
-        }
-        if (!storeId) {
-          alert('You need to create a store first.');
-          window.location.href = 'create-store.html';
-          return;
-        }
-        loadStore();
-        loadStats();
+    // On page load, determine role and load dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+      const token    = localStorage.getItem('token');
+      const role     = localStorage.getItem('role');
+      const username = localStorage.getItem('username');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      document.getElementById('userInfo').textContent = `Logged in as ${username} (${role})`;
+      document.getElementById('logoutLink').addEventListener('click', () => {
+        logout();
+        window.location.href = 'index.html';
       });
-      async function loadStore() {
-        const storeId = localStorage.getItem('storeId');
-        try {
-          const res = await fetch(`${API_BASE}/stores/${storeId}`, {
-            headers: {
-              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
-            }
+      if (role === 'seller') {
+        document.getElementById('sellerSection').style.display = 'block';
+        loadSellerDashboard();
+      } else {
+        document.getElementById('buyerSection').style.display = 'block';
+        loadBuyerDashboard();
+      }
+    });
+    /**
+     * Populate the seller's dashboard: list stores, products and
+     * analytics.  Each store includes a form to add new products with
+     * category.
+     */
+    async function loadSellerDashboard() {
+      try {
+        const stores = await getUserStores();
+        const storesList = document.getElementById('storesList');
+        storesList.innerHTML = '';
+        // render each store
+        for (const store of stores) {
+          const storeDiv = document.createElement('div');
+          storeDiv.classList.add('store');
+          storeDiv.innerHTML = `<h4>${store.name}</h4><p>${store.description}</p>`;
+          // products container
+          const prodDiv = document.createElement('div');
+          prodDiv.classList.add('product-list');
+          storeDiv.appendChild(prodDiv);
+          // load products for this store
+          const products = await getStoreProducts(store.id);
+          products.forEach(p => {
+            const item = document.createElement('div');
+            item.classList.add('product-item');
+            const ratingText = p.rating ? `${p.rating}/5` : 'No ratings';
+            item.innerHTML = `<strong>${p.name}</strong> (${p.type}, ${p.category}) - $${p.price} <br/><small>Rating: ${ratingText}</small>`;
+            prodDiv.appendChild(item);
           });
-          const contentType = res.headers.get('content-type') || '';
-          let data = null;
-          if (contentType.includes('application/json')) {
-            try { data = await res.json(); } catch { data = null; }
-          } else {
-            await res.text();
-          }
-          if (!res.ok) {
-            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load store details');
-          }
-          const info = document.getElementById('storeInfo');
-          info.innerHTML = `
-            <h3>${data.name}</h3>
-            <p>${data.description || ''}</p>
+          // form to add a product
+          const form = document.createElement('form');
+          form.classList.add('form');
+          form.innerHTML = `
+            <h5>Add Product</h5>
+            <label>Name</label><input type="text" name="name" required />
+            <label>Category</label><input type="text" name="category" required />
+            <label>Type</label>
+              <select name="type">
+                <option value="digital">Digital Download</option>
+                <option value="membership">Membership</option>
+                <option value="course">Course</option>
+              </select>
+            <label>Description</label><textarea name="description"></textarea>
+            <label>Price ($)</label><input type="number" name="price" step="0.01" min="0" required />
+            <label>File URL (for digital)</label><input type="text" name="fileUrl" />
+            <label>Membership Benefits (for membership)</label><input type="text" name="membershipBenefits" />
+            <label>Course Content (JSON array of lessons)</label><textarea name="courseContent" placeholder='[{\"title\":\"Lesson 1\",\"content\":\"...\"}]'></textarea>
+            <button type="submit">Create Product</button>
           `;
-        } catch (err) {
-          document.getElementById('storeInfo').innerHTML = '';
-          alert(err.message || 'Error loading store');
-        }
-      }
-      async function loadStats() {
-        const storeId = localStorage.getItem('storeId');
-        try {
-          const res = await fetch(`${API_BASE}/stats?storeId=${encodeURIComponent(storeId)}`, {
-            headers: {
-              'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fd = new FormData(form);
+            const body = {
+              type: fd.get('type'),
+              name: fd.get('name'),
+              category: fd.get('category'),
+              description: fd.get('description'),
+              price: parseFloat(fd.get('price')),
+              fileUrl: fd.get('fileUrl') || '',
+              membershipBenefits: fd.get('membershipBenefits') || '',
+              courseContent: []
+            };
+            const cc = (fd.get('courseContent') || '').trim();
+            if (cc) {
+              try {
+                body.courseContent = JSON.parse(cc);
+              } catch (err) {
+                alert('Invalid course content JSON');
+                return;
+              }
+            }
+            const result = await createProduct(store.id, body);
+            if (result.error) {
+              alert(result.error);
+            } else {
+              alert('Product created');
+              loadSellerDashboard();
             }
           });
-          const contentType = res.headers.get('content-type') || '';
-          let data = null;
-          if (contentType.includes('application/json')) {
-            try { data = await res.json(); } catch { data = null; }
-          } else {
-            await res.text();
-          }
-          if (!res.ok) {
-            throw new Error((data && (data.error || data.message)) || res.statusText || 'Failed to load stats');
-          }
-          const statsEl = document.getElementById('stats');
-          statsEl.innerHTML = '';
-          const makeCard = (title, value) => {
-            const col = document.createElement('div');
-            col.className = 'col-md-4';
-            col.innerHTML = `
-              <div class=\"card\">
-                <h3>${value}</h3>
-                <p>${title}</p>
-              </div>
-            `;
-            statsEl.appendChild(col);
-          };
-          makeCard('Products', data.totalProducts || 0);
-          makeCard('Orders', data.totalOrders || 0);
-          makeCard('Revenue', data.totalRevenue ? '$' + Number(data.totalRevenue).toFixed(2) : '$0.00');
-        } catch (err) {
-          alert(err.message || 'Error loading stats');
+          storeDiv.appendChild(form);
+          storesList.appendChild(storeDiv);
         }
+        // After rendering stores, load analytics
+        loadSellerAnalytics();
+      } catch (err) {
+        document.getElementById('dashboardError').textContent = err.error || err.message;
       }
-    })();
+    }
+    /**
+     * Populate the buyer's dashboard: list purchases.
+     */
+    async function loadBuyerDashboard() {
+      try {
+        const purchases = await getPurchases();
+        const list = document.getElementById('purchasesList');
+        list.innerHTML = '';
+        if (purchases.length === 0) {
+          list.textContent = 'You have no purchases.';
+        } else {
+          purchases.forEach(prod => {
+            const item = document.createElement('div');
+            item.classList.add('purchase-item');
+            item.innerHTML = `<a href="product.html?id=${prod.id}"><strong>${prod.name}</strong></a> (${prod.type}, ${prod.category}) - purchased on ${new Date(prod.purchaseDate).toLocaleDateString()}`;
+            list.appendChild(item);
+          });
+        }
+      } catch (err) {
+        document.getElementById('dashboardError').textContent = err.error || err.message;
+      }
+    }
+    // Handle create store form submission
+    document.getElementById('createStoreForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('storeName').value.trim();
+      const description = document.getElementById('storeDesc').value.trim();
+      const res = await createStore(name, description);
+      if (res.error) {
+      document.getElementById('dashboardError').textContent = res.error;
+      } else {
+        alert('Store created');
+        document.getElementById('createStoreForm').reset();
+        loadSellerDashboard();
+      }
+    });
   </script>
 </body>
 </html>
