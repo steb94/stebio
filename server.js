@@ -13,6 +13,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret_in_production';
 // In-memory stores (for demonstration only). In production, use a database.
 const users = [];
 const products = [];
+// Stores created by sellers. Each store has id, name, description, ownerId and createdAt.
+const stores = [];
 
 // Simple order store. In production, store orders in a database.
 // Each order contains an id, buyerId, items (array of {productId, quantity}), total and status.
@@ -234,6 +236,60 @@ app.delete('/api/products/:id', authenticateToken, requireSeller, (req, res) => 
   }
   products.splice(index, 1);
   res.json({ message: 'Product deleted' });
+});
+
+/**
+ * Create a new store (seller only)
+ * Expects: { name, description }
+ */
+app.post('/api/stores', authenticateToken, requireSeller, (req, res) => {
+  const { name, description } = req.body;
+  if (!name) {
+    return res.status(400).json({ message: 'Store name is required' });
+  }
+  // Check if seller already has a store to prevent duplicates (optional)
+  const existingStore = stores.find(s => s.ownerId === req.user.id);
+  if (existingStore) {
+    return res.status(409).json({ message: 'Store already exists for this user' });
+  }
+  const store = {
+    id: uuidv4(),
+    name,
+    description: description || '',
+    ownerId: req.user.id,
+    createdAt: new Date().toISOString(),
+  };
+  stores.push(store);
+  res.status(201).json(store);
+});
+
+/**
+ * Get the authenticated seller's store
+ */
+app.get('/api/stores/me', authenticateToken, requireSeller, (req, res) => {
+  const store = stores.find(s => s.ownerId === req.user.id);
+  if (!store) {
+    return res.status(404).json({ message: 'Store not found' });
+  }
+  res.json(store);
+});
+
+/**
+ * Get all stores (public)
+ */
+app.get('/api/stores', (req, res) => {
+  res.json(stores);
+});
+
+/**
+ * Get store by ID (public)
+ */
+app.get('/api/stores/:id', (req, res) => {
+  const store = stores.find(s => s.id === req.params.id);
+  if (!store) {
+    return res.status(404).json({ message: 'Store not found' });
+  }
+  res.json(store);
 });
 
 app.listen(PORT, () => {
